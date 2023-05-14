@@ -7,8 +7,8 @@ export type Plug = {
   url: string;
   branch?: string;
   enabled?: boolean;
-  before?: (denops: Denops) => void;
-  after?: (denops: Denops) => void;
+  before?: (denops: Denops) => Promise<void>;
+  after?: (denops: Denops) => Promise<void>;
 };
 
 export class Plugin {
@@ -32,23 +32,23 @@ export class Plugin {
 
   async add() {
     if (!(await exists(this.#dst))) {
-      this.install();
+      await this.install();
     }
     await this.register();
   }
 
   async register() {
     if (this.plug.before) {
-      this.plug.before(this.denops);
+      await this.plug.before(this.denops);
     }
 
-    option.runtimepath.set(
+    await option.runtimepath.set(
       this.denops,
       `${(await option.runtimepath.get(this.denops))},${this.#dst}`,
     );
 
     if (this.plug.after) {
-      this.plug.after(this.denops);
+      await this.plug.after(this.denops);
     }
   }
 
