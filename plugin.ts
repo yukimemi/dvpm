@@ -78,11 +78,11 @@ export class Plugin {
   }
   async sourceLuaPre() {
     const target = `${this.#dst}/plugin/**/*.lua`;
-    await this.souceLua(target);
+    await this.sourceLua(target);
   }
   async sourceLuaPost() {
     const target = `${this.#dst}/after/plugin/**/*.lua`;
-    await this.souceLua(target);
+    await this.sourceLua(target);
   }
 
   async install(): Promise<boolean> {
