@@ -4,6 +4,7 @@ import { join } from "https://deno.land/std@0.187.0/path/mod.ts";
 import { execute } from "https://deno.land/x/denops_std@v4.3.0/helper/mod.ts";
 import { exists } from "https://deno.land/std@0.187.0/fs/mod.ts";
 import { expandGlob } from "https://deno.land/std@0.187.0/fs/expand_glob.ts";
+import { Semaphore } from "https://deno.land/x/async@v2.0.2/semaphore.ts";
 
 export type Plug = {
   url: string;
@@ -21,6 +22,7 @@ export class Plugin {
     public denops: Denops,
     public base: string,
     public plug: Plug,
+    public debug = false,
   ) {
     if (this.plug.url.startsWith("http") || this.plug.url.startsWith("git")) {
       this.#url = this.plug.url;
@@ -32,17 +34,30 @@ export class Plugin {
     }
   }
 
-  async add() {
-    if (this.plug.enabled != undefined && !this.plug.enabled) {
-      return;
+  // deno-lint-ignore no-explicit-any
+  clog(data: any) {
+    if (this.debug) {
+      console.log(data);
     }
-    if (!(await exists(this.#dst))) {
-      await this.install();
+  }
+
+  async add(sem: Semaphore) {
+    try {
+      await sem.lock(async () => {
+        this.clog(`[add] ${this.#url} start !`);
+        if (this.plug.enabled != undefined && !this.plug.enabled) {
+          return;
+        }
+        await this.register();
+        this.clog(`[add] ${this.#url} end !`);
+      });
+    } catch (e) {
+      console.log(e);
     }
-    await this.register();
   }
 
   async register() {
+    this.clog(`[register] ${this.#url} start !`);
     if (this.plug.before) {
       await this.plug.before(this.denops);
     }
@@ -57,8 +72,11 @@ export class Plugin {
     await this.sourceLuaPost();
 
     if (this.plug.after) {
+      this.clog(`[after] ${this.#url} start !`);
       await this.plug.after(this.denops);
+      this.clog(`[after] ${this.#url} end !`);
     }
+    this.clog(`[register] ${this.#url} end !`);
   }
 
   async sourceVim(target: string) {
@@ -88,20 +106,24 @@ export class Plugin {
     await this.sourceLua(target);
   }
 
-  async install(): Promise<boolean> {
-    if (await exists(this.#dst)) {
-      return true;
-    }
+  async install(sem: Semaphore) {
+    await sem.lock(async () => {
+      if (await exists(this.#dst)) {
+        return;
+      }
 
-    let cloneOpt: string[] = [];
-    if (this.plug.branch) {
-      cloneOpt = cloneOpt.concat(["--branch", this.plug.branch]);
-    }
-    const cmd = new Deno.Command("git", {
-      args: ["clone", ...cloneOpt, this.#url, this.#dst],
+      let cloneOpt: string[] = [];
+      if (this.plug.branch) {
+        cloneOpt = cloneOpt.concat(["--branch", this.plug.branch]);
+      }
+      const cmd = new Deno.Command("git", {
+        args: ["clone", ...cloneOpt, this.#url, this.#dst],
+      });
+      const status = await cmd.spawn().status;
+      if (!status.success) {
+        throw `Failed to clone ${this.#url}`;
+      }
     });
-    const status = await cmd.spawn().status;
-    return status.success;
   }
 
   async update() {}
