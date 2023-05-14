@@ -26,7 +26,7 @@ export class Plugin {
       throw "Not implemented !";
     } else {
       this.#url = `https://github.com/${plug.url}`;
-      this.#dst = join(base, plug.url);
+      this.#dst = join(base, "github.com", plug.url);
     }
   }
 
@@ -44,7 +44,7 @@ export class Plugin {
 
     await option.runtimepath.set(
       this.denops,
-      `${(await option.runtimepath.get(this.denops))},${this.#dst}`,
+      `${this.#dst},${(await option.runtimepath.get(this.denops))}`,
     );
 
     if (this.plug.after) {
