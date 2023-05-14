@@ -5,6 +5,7 @@ import { execute } from "https://deno.land/x/denops_std@v4.3.0/helper/mod.ts";
 import { exists } from "https://deno.land/std@0.187.0/fs/mod.ts";
 import { expandGlob } from "https://deno.land/std@0.187.0/fs/expand_glob.ts";
 import { Semaphore } from "https://deno.land/x/async@v2.0.2/semaphore.ts";
+import { fnamemodify } from "https://deno.land/x/denops_std@v4.3.0/function/mod.ts";
 
 export type Plug = {
   url: string;
@@ -70,6 +71,7 @@ export class Plugin {
     await this.sourceVimPost();
     await this.sourceLuaPre();
     await this.sourceLuaPost();
+    await this.registerDenops();
 
     if (this.plug.after) {
       this.clog(`[after] ${this.#url} start !`);
@@ -104,6 +106,21 @@ export class Plugin {
   async sourceLuaPost() {
     const target = `${this.#dst}/after/plugin/**/*.lua`;
     await this.sourceLua(target);
+  }
+  async registerDenops() {
+    const target = `${this.#dst}/denops/*/main.ts`;
+    for await (const file of expandGlob(target)) {
+      const name = await fnamemodify(this.denops, file.path, ":h:t");
+      if (await this.denops.call("denops#plugin#is_loaded", name)) {
+        continue;
+      }
+      if (await this.denops.call("denops#server#status") === "running") {
+        await this.denops.call("denops#plugin#register", name, {
+          mode: "skip",
+        });
+      }
+      await this.denops.call("denops#plugin#wait", name);
+    }
   }
 
   async install(sem: Semaphore) {
