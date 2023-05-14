@@ -22,17 +22,20 @@ export class Plugin {
     public base: string,
     public plug: Plug,
   ) {
-    if (plug.url.startsWith("http") || plug.url.startsWith("git")) {
-      this.#url = plug.url;
+    if (this.plug.url.startsWith("http") || this.plug.url.startsWith("git")) {
+      this.#url = this.plug.url;
       // Todo: not implemented.
       throw "Not implemented !";
     } else {
-      this.#url = `https://github.com/${plug.url}`;
-      this.#dst = join(base, "github.com", plug.url);
+      this.#url = `https://github.com/${this.plug.url}`;
+      this.#dst = join(base, "github.com", this.plug.url);
     }
   }
 
   async add() {
+    if (this.plug.enabled != undefined && !this.plug.enabled) {
+      return;
+    }
     if (!(await exists(this.#dst))) {
       await this.install();
     }
@@ -60,7 +63,7 @@ export class Plugin {
 
   async sourceVim(target: string) {
     for await (const file of expandGlob(target)) {
-      execute(this.denops, `source ${file.path}`);
+      await execute(this.denops, `source ${file.path}`);
     }
   }
   async sourceVimPre() {
@@ -73,7 +76,7 @@ export class Plugin {
   }
   async sourceLua(target: string) {
     for await (const file of expandGlob(target)) {
-      execute(this.denops, `luafile ${file.path}`);
+      await execute(this.denops, `luafile ${file.path}`);
     }
   }
   async sourceLuaPre() {
