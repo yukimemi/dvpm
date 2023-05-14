@@ -1,7 +1,7 @@
 import { Denops } from "https://deno.land/x/denops_std@v4.3.0/mod.ts";
 import { type Plug, Plugin } from "./plugin.ts";
 
-export class Dpm {
+export class Dvpm {
   #plugins: Plugin[] = [];
 
   constructor(
