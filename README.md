@@ -71,6 +71,11 @@ export async function main(denops: Denops): Promise<void> {
 }
 ```
 
+See my dotfiles for more complex examples.
+
+[dotfiles/.config/nvim at main · yukimemi/dotfiles · GitHub](https://github.com/yukimemi/dotfiles/tree/main/.config/nvim)
+
+
 ### Vim
 
 TODO.
@@ -123,6 +128,7 @@ export type Plug = {
 - DvpmUpdate [url]
 
 Update installed plugins.
+
 If url is specified, update only target plugins,
 if not specified, update all plugins.
 
