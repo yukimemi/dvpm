@@ -67,7 +67,7 @@ export async function main(denops: Denops): Promise<void> {
     },
   })
 
-  echo(denops, "Load completed !");
+  await echo(denops, "Load completed !");
 }
 ```
 
