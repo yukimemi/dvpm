@@ -1,7 +1,18 @@
 # dvpm - Denops Vim/Neovim Plugin Manager
 
 `dvpm` is a plugin manager for Vim and Neovim, powered by [denops.vim](https://github.com/vim-denops/denops.vim).
-All Vim and Neovim configuration files can be described in typescript.
+
+- Vim / Neovim starts up very fast !
+
+...but plugins are not loaded yet at startup ＼(^o^)／
+
+All plugins are loaded lazily.
+
+- You can write all Vim / Neovim settings in typescript
+
+## Requirement
+
+- [Deno - A modern runtime for JavaScript and TypeScript](https://deno.land/)
 
 ## Sample configuration
 
