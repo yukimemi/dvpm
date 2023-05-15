@@ -1,7 +1,7 @@
-import * as option from "https://deno.land/x/denops_std@v4.3.0/option/mod.ts";
-import { Denops } from "https://deno.land/x/denops_std@v4.3.0/mod.ts";
+import * as option from "https://deno.land/x/denops_std@v4.3.1/option/mod.ts";
+import { Denops } from "https://deno.land/x/denops_std@v4.3.1/mod.ts";
 import { join } from "https://deno.land/std@0.187.0/path/mod.ts";
-import { execute } from "https://deno.land/x/denops_std@v4.3.0/helper/mod.ts";
+import { execute } from "https://deno.land/x/denops_std@v4.3.1/helper/mod.ts";
 import { exists } from "https://deno.land/std@0.187.0/fs/mod.ts";
 import { expandGlob } from "https://deno.land/std@0.187.0/fs/expand_glob.ts";
 import { Semaphore } from "https://deno.land/x/async@v2.0.2/semaphore.ts";
@@ -9,7 +9,7 @@ import { ensureString } from "https://deno.land/x/unknownutil@v2.1.1/mod.ts";
 import {
   expand,
   fnamemodify,
-} from "https://deno.land/x/denops_std@v4.3.0/function/mod.ts";
+} from "https://deno.land/x/denops_std@v4.3.1/function/mod.ts";
 
 export type Plug = {
   url: string;
@@ -20,34 +20,44 @@ export type Plug = {
   after?: (denops: Denops) => Promise<void>;
 };
 
+export type PluginOption = {
+  base: string;
+  debug?: boolean;
+};
+
 export class Plugin {
+  static lock = new Semaphore(1);
+  static semaphore: Semaphore;
+
   #dst: string;
   #url: string;
 
   constructor(
     public denops: Denops,
-    public base: string,
     public plug: Plug,
-    public debug = false,
+    public pluginOption: PluginOption,
   ) {
     this.#dst = "";
     this.#url = "";
+
+    if (this.pluginOption.debug == undefined) {
+      this.pluginOption.debug = false;
+    }
   }
 
   public static async create(
     denops: Denops,
-    base: string,
     plug: Plug,
-    debug = false,
+    pluginOption: PluginOption,
   ): Promise<Plugin> {
-    const p = new Plugin(denops, base, plug, debug);
+    const p = new Plugin(denops, plug, pluginOption);
     if (p.plug.url.startsWith("http") || p.plug.url.startsWith("git")) {
       p.#url = p.plug.url;
       // Todo: not implemented.
       throw "Not implemented !";
     } else {
       p.#url = `https://github.com/${p.plug.url}`;
-      p.#dst = join(base, "github.com", p.plug.url);
+      p.#dst = join(pluginOption.base, "github.com", p.plug.url);
     }
 
     if (p.plug.dst) {
@@ -60,14 +70,14 @@ export class Plugin {
 
   // deno-lint-ignore no-explicit-any
   clog(data: any) {
-    if (this.debug) {
+    if (this.pluginOption.debug) {
       console.log(data);
     }
   }
 
-  async add(sem: Semaphore) {
+  async add() {
     try {
-      await sem.lock(async () => {
+      await Plugin.lock.lock(async () => {
         this.clog(`[add] ${this.#url} start !`);
         if (this.plug.enabled != undefined && !this.plug.enabled) {
           return;
@@ -76,7 +86,7 @@ export class Plugin {
         this.clog(`[add] ${this.#url} end !`);
       });
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
   }
 
@@ -146,8 +156,8 @@ export class Plugin {
     }
   }
 
-  async install(sem: Semaphore) {
-    await sem.lock(async () => {
+  async install() {
+    await Plugin.semaphore.lock(async () => {
       if (await exists(this.#dst)) {
         return;
       }
@@ -166,5 +176,16 @@ export class Plugin {
     });
   }
 
-  async update() {}
+  async update() {
+    await Plugin.semaphore.lock(async () => {
+      console.log(`Update: ${this.#url}`);
+      const cmd = new Deno.Command("git", {
+        args: ["-C", this.#dst, "pull", "--rebase"],
+      });
+      const status = await cmd.spawn().status;
+      if (!status.success) {
+        throw `Failed to update ${this.#url}`;
+      }
+    });
+  }
 }
