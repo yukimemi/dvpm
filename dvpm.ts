@@ -103,7 +103,9 @@ export class Dvpm {
     }
   }
 
-  public async uninstall(url: string) {}
+  public async uninstall(url: string) {
+    // TODO: Not implemented
+  }
 
   public async add(plug: Plug) {
     try {
