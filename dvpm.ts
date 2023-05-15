@@ -21,7 +21,7 @@ export class Dvpm {
   public async uninstall(plug?: Plug) {}
 
   public async add(plug: Plug) {
-    const p = new Plugin(this.denops, this.base, plug, this.debug);
+    const p = await Plugin.create(this.denops, this.base, plug, this.debug);
     await p.install(this.#sem);
     await p.add(this.#sem);
     this.#plugins.push(p);

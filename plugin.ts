@@ -5,10 +5,15 @@ import { execute } from "https://deno.land/x/denops_std@v4.3.0/helper/mod.ts";
 import { exists } from "https://deno.land/std@0.187.0/fs/mod.ts";
 import { expandGlob } from "https://deno.land/std@0.187.0/fs/expand_glob.ts";
 import { Semaphore } from "https://deno.land/x/async@v2.0.2/semaphore.ts";
-import { fnamemodify } from "https://deno.land/x/denops_std@v4.3.0/function/mod.ts";
+import { ensureString } from "https://deno.land/x/unknownutil@v2.1.1/mod.ts";
+import {
+  expand,
+  fnamemodify,
+} from "https://deno.land/x/denops_std@v4.3.0/function/mod.ts";
 
 export type Plug = {
   url: string;
+  dst?: string;
   branch?: string;
   enabled?: boolean;
   before?: (denops: Denops) => Promise<void>;
@@ -25,14 +30,32 @@ export class Plugin {
     public plug: Plug,
     public debug = false,
   ) {
-    if (this.plug.url.startsWith("http") || this.plug.url.startsWith("git")) {
-      this.#url = this.plug.url;
+    this.#dst = "";
+    this.#url = "";
+  }
+
+  public static async create(
+    denops: Denops,
+    base: string,
+    plug: Plug,
+    debug = false,
+  ): Promise<Plugin> {
+    const p = new Plugin(denops, base, plug, debug);
+    if (p.plug.url.startsWith("http") || p.plug.url.startsWith("git")) {
+      p.#url = p.plug.url;
       // Todo: not implemented.
       throw "Not implemented !";
     } else {
-      this.#url = `https://github.com/${this.plug.url}`;
-      this.#dst = join(base, "github.com", this.plug.url);
+      p.#url = `https://github.com/${p.plug.url}`;
+      p.#dst = join(base, "github.com", p.plug.url);
     }
+
+    if (p.plug.dst) {
+      p.clog(`[create] ${p.#url} set dst to ${p.plug.dst}`);
+      p.#dst = ensureString(await expand(denops, p.plug.dst));
+    }
+
+    return p;
   }
 
   // deno-lint-ignore no-explicit-any
