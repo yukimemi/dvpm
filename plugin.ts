@@ -5,7 +5,10 @@ import { execute } from "https://deno.land/x/denops_std@v4.3.1/helper/mod.ts";
 import { exists } from "https://deno.land/std@0.187.0/fs/mod.ts";
 import { expandGlob } from "https://deno.land/std@0.187.0/fs/expand_glob.ts";
 import { Semaphore } from "https://deno.land/x/async@v2.0.2/semaphore.ts";
-import { ensureString } from "https://deno.land/x/unknownutil@v2.1.1/mod.ts";
+import {
+  ensureString,
+  isBoolean,
+} from "https://deno.land/x/unknownutil@v2.1.1/mod.ts";
 import {
   expand,
   fnamemodify,
@@ -15,7 +18,7 @@ export type Plug = {
   url: string;
   dst?: string;
   branch?: string;
-  enabled?: boolean;
+  enabled?: boolean | ((denops: Denops) => Promise<boolean>);
   before?: (denops: Denops) => Promise<void>;
   after?: (denops: Denops) => Promise<void>;
 };
@@ -79,8 +82,18 @@ export class Plugin {
     try {
       await Plugin.lock.lock(async () => {
         this.clog(`[add] ${this.#url} start !`);
-        if (this.plug.enabled != undefined && !this.plug.enabled) {
-          return;
+        if (this.plug.enabled != undefined) {
+          if (isBoolean(this.plug.enabled)) {
+            if (!this.plug.enabled) {
+              this.clog(`[add] ${this.#url} enabled is false. (boolean)`);
+              return;
+            }
+          } else {
+            if (!(await this.plug.enabled(this.denops))) {
+              this.clog(`[add] ${this.#url} enabled is false. (func)`);
+              return;
+            }
+          }
         }
         await this.register();
         this.clog(`[add] ${this.#url} end !`);

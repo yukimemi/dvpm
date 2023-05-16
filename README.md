@@ -34,14 +34,14 @@ vim.opt.runtimepath:prepend(denops)
 import { Denops } from "https://deno.land/x/denops_std@v4.3.1/mod.ts";
 import * as mapping from "https://deno.land/x/denops_std@v4.3.1/mapping/mod.ts";
 import { globals } from "https://deno.land/x/denops_std@v4.3.1/variable/mod.ts";
-import { expand } from "https://deno.land/x/denops_std@v4.3.1/function/mod.ts";
+import { expand, has } from "https://deno.land/x/denops_std@v4.3.1/function/mod.ts";
 import { ensureString } from "https://deno.land/x/unknownutil@v2.1.1/mod.ts";
 import {
   echo,
   execute,
 } from "https://deno.land/x/denops_std@v4.3.1/helper/mod.ts";
 
-import { Dvpm } from "https://deno.land/x/dvpm@0.1.0/mod.ts";
+import { Dvpm } from "https://deno.land/x/dvpm@0.1.1/mod.ts";
 
 export async function main(denops: Denops): Promise<void> {
 
@@ -76,7 +76,19 @@ export async function main(denops: Denops): Promise<void> {
       await mapping.map(denops, "<space>rl", "<cmd>LikeThisColorscheme<cr>", { mode: "n" });
       await mapping.map(denops, "<space>rh", "<cmd>HateThisColorscheme<cr>", { mode: "n" });
     },
-  })
+  });
+  // Disable setting.
+  await dvpm.add({
+    url: "yukimemi/dps-hitori",
+    enabled: false,
+  });
+  // Disable with function.
+  await dvpm.add({
+    url: "editorconfig/editorconfig-vim",
+    enabled: async (denops: Denops) => {
+      return !(await has(denops, "nvim"));
+    },
+  });
 
   await echo(denops, "Load completed !");
 }
@@ -126,7 +138,7 @@ export type Plug = {
   // Git branch name. (Option)
   branch?: string;
   // enable or disable. Default is true.
-  enabled?: boolean;
+  enabled?: boolean | ((denops: Denops) => Promise<boolean>);
   // Processing to be performed before adding runtimepath. (Option)
   before?: (denops: Denops) => Promise<void>;
   // Processing to be performed after adding runtimepath. (Option)
