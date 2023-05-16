@@ -16,9 +16,7 @@ All plugins are loaded lazily.
 
 ## Sample configuration
 
-### Neovim
-
-- ~/.config/nvim/init.lua
+- ~/.config/nvim/init.lua (Neovim)
 
 ```lua
 local denops = vim.fn.expand("~/.cache/nvim/dvpm/github.com/vim-denops/denops.vim")
@@ -27,8 +25,18 @@ if not vim.loop.fs_stat(denops) then
 end
 vim.opt.runtimepath:prepend(denops)
 ```
+- ~/.vimrc (Vim)
 
-- ~/.config/nvim/denops/config/main.ts
+```vim
+let s:denops = expand("~/.cache/vim/dvpm/github.com/vim-denops/denops.vim")
+if !isdirectory(s:denops)
+  execute 'silent! !git clone https://github.com/vim-denops/denops.vim ' .. s:denops
+endif
+execute 'set runtimepath^=' . substitute(fnamemodify(s:denops, ':p') , '[/\\]$', '', '')
+```
+
+- ~/.config/nvim/denops/config/main.ts (Neovim)
+- ~/.config/vim/denops/config/main.ts (Vim)
 
 ```typescript
 import { Denops } from "https://deno.land/x/denops_std@v4.3.1/mod.ts";
@@ -45,7 +53,10 @@ import { Dvpm } from "https://deno.land/x/dvpm@0.1.1/mod.ts";
 
 export async function main(denops: Denops): Promise<void> {
 
-  const base = ensureString(await expand(denops, "~/.cache/nvim/dvpm"));
+  const base_path = (await has(denops, "nvim"))
+    ? "~/.cache/nvim/dvpm"
+    : "~/.cache/vim/dvpm";
+  const base = ensureString(await expand(denops, base_path));
   const dvpm = await Dvpm.create(denops, { base });
 
   // URL only.
@@ -85,9 +96,7 @@ export async function main(denops: Denops): Promise<void> {
   // Disable with function.
   await dvpm.add({
     url: "editorconfig/editorconfig-vim",
-    enabled: async (denops: Denops) => {
-      return !(await has(denops, "nvim"));
-    },
+    enabled: async (denops: Denops) => !(await has(denops, "nvim")),
   });
 
   await echo(denops, "Load completed !");
@@ -97,11 +106,6 @@ export async function main(denops: Denops): Promise<void> {
 See my dotfiles for more complex examples.
 
 [dotfiles/.config/nvim at main · yukimemi/dotfiles · GitHub](https://github.com/yukimemi/dotfiles/tree/main/.config/nvim)
-
-
-### Vim
-
-TODO.
 
 ## API
 
@@ -148,7 +152,9 @@ export type Plug = {
 
 ## Command
 
-- DvpmUpdate [url]
+```vim
+:DvpmUpdate [url]
+```
 
 Update installed plugins.
 
