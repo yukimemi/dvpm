@@ -1,6 +1,6 @@
-import { Denops } from "https://deno.land/x/denops_std@v4.3.1/mod.ts";
+import { Denops } from "https://deno.land/x/denops_std@v4.3.3/mod.ts";
 import { Semaphore } from "https://deno.land/x/async@v2.0.2/semaphore.ts";
-import { execute } from "https://deno.land/x/denops_std@v4.3.1/helper/mod.ts";
+import { execute } from "https://deno.land/x/denops_std@v4.3.3/helper/mod.ts";
 import { type Plug, Plugin, PluginOption } from "./plugin.ts";
 import { assertString } from "https://deno.land/x/unknownutil@v2.1.1/assert.ts";
 
@@ -26,9 +26,9 @@ export class Dvpm {
     }
     if (this.dvpmOption.concurrency == undefined) {
       this.dvpmOption.concurrency = 8;
+    } else {
+      Plugin.semaphore = new Semaphore(this.dvpmOption.concurrency);
     }
-
-    Plugin.semaphore = new Semaphore(this.dvpmOption.concurrency);
   }
 
   public static async create(

@@ -1,9 +1,9 @@
-import * as option from "https://deno.land/x/denops_std@v4.3.1/option/mod.ts";
-import { Denops } from "https://deno.land/x/denops_std@v4.3.1/mod.ts";
-import { join } from "https://deno.land/std@0.187.0/path/mod.ts";
-import { execute } from "https://deno.land/x/denops_std@v4.3.1/helper/mod.ts";
-import { exists } from "https://deno.land/std@0.187.0/fs/mod.ts";
-import { expandGlob } from "https://deno.land/std@0.187.0/fs/expand_glob.ts";
+import * as option from "https://deno.land/x/denops_std@v4.3.3/option/mod.ts";
+import { Denops } from "https://deno.land/x/denops_std@v4.3.3/mod.ts";
+import { join } from "https://deno.land/std@0.188.0/path/mod.ts";
+import { execute } from "https://deno.land/x/denops_std@v4.3.3/helper/mod.ts";
+import { exists } from "https://deno.land/std@0.188.0/fs/mod.ts";
+import { expandGlob } from "https://deno.land/std@0.188.0/fs/expand_glob.ts";
 import { Semaphore } from "https://deno.land/x/async@v2.0.2/semaphore.ts";
 import {
   ensureString,
@@ -11,8 +11,9 @@ import {
 } from "https://deno.land/x/unknownutil@v2.1.1/mod.ts";
 import {
   expand,
+  fnameescape,
   fnamemodify,
-} from "https://deno.land/x/denops_std@v4.3.1/function/mod.ts";
+} from "https://deno.land/x/denops_std@v4.3.3/function/mod.ts";
 
 export type Plug = {
   url: string;
@@ -30,7 +31,7 @@ export type PluginOption = {
 
 export class Plugin {
   static lock = new Semaphore(1);
-  static semaphore: Semaphore;
+  static semaphore = new Semaphore(8);
 
   #dst: string;
   #url: string;
@@ -169,6 +170,16 @@ export class Plugin {
     }
   }
 
+  async genHelptags() {
+    await Plugin.semaphore.lock(async () => {
+      const docDir = join(this.#dst, "doc");
+      await execute(
+        this.denops,
+        `silent! helptags ${await fnameescape(this.denops, docDir)}`,
+      );
+    });
+  }
+
   async install() {
     await Plugin.semaphore.lock(async () => {
       if (await exists(this.#dst)) {
@@ -183,7 +194,9 @@ export class Plugin {
         args: ["clone", ...cloneOpt, this.#url, this.#dst],
       });
       const status = await cmd.spawn().status;
-      if (!status.success) {
+      if (status.success) {
+        await this.genHelptags();
+      } else {
         throw `Failed to clone ${this.#url}`;
       }
     });
@@ -196,7 +209,9 @@ export class Plugin {
         args: ["-C", this.#dst, "pull", "--rebase"],
       });
       const status = await cmd.spawn().status;
-      if (!status.success) {
+      if (status.success) {
+        await this.genHelptags();
+      } else {
         throw `Failed to update ${this.#url}`;
       }
     });
