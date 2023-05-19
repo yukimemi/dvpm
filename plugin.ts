@@ -1,6 +1,10 @@
 import * as option from "https://deno.land/x/denops_std@v4.3.3/option/mod.ts";
 import { Denops } from "https://deno.land/x/denops_std@v4.3.3/mod.ts";
-import { join } from "https://deno.land/std@0.188.0/path/mod.ts";
+import {
+  basename,
+  dirname,
+  join,
+} from "https://deno.land/std@0.188.0/path/mod.ts";
 import { execute } from "https://deno.land/x/denops_std@v4.3.3/helper/mod.ts";
 import { exists } from "https://deno.land/std@0.188.0/fs/mod.ts";
 import { expandGlob } from "https://deno.land/std@0.188.0/fs/expand_glob.ts";
@@ -12,7 +16,6 @@ import {
 import {
   expand,
   fnameescape,
-  fnamemodify,
 } from "https://deno.land/x/denops_std@v4.3.3/function/mod.ts";
 
 export type Plug = {
@@ -193,16 +196,10 @@ export class Plugin {
   private async registerDenops() {
     const target = `${this.#dst}/denops/*/main.ts`;
     for await (const file of expandGlob(target)) {
-      const name = await fnamemodify(this.denops, file.path, ":h:t");
-      if (await this.denops.call("denops#plugin#is_loaded", name)) {
-        continue;
-      }
-      if (await this.denops.call("denops#server#status") === "running") {
-        await this.denops.call("denops#plugin#register", name, {
-          mode: "skip",
-        });
-      }
-      await this.denops.call("denops#plugin#wait", name);
+      const name = basename(dirname(file.path));
+      await this.denops.call("denops#plugin#register", name, {
+        mode: "skip",
+      });
     }
   }
 

@@ -39,20 +39,16 @@ execute 'set runtimepath^=' . substitute(fnamemodify(s:denops, ':p') , '[/\\]$',
 - ~/.config/vim/denops/config/main.ts (Vim)
 
 ```typescript
-import { Denops } from "https://deno.land/x/denops_std@v4.3.1/mod.ts";
-import * as mapping from "https://deno.land/x/denops_std@v4.3.1/mapping/mod.ts";
-import { globals } from "https://deno.land/x/denops_std@v4.3.1/variable/mod.ts";
-import { expand, has } from "https://deno.land/x/denops_std@v4.3.1/function/mod.ts";
+import { Denops } from "https://deno.land/x/denops_std@v4.3.3/mod.ts";
+import * as mapping from "https://deno.land/x/denops_std@v4.3.3/mapping/mod.ts";
+import { globals } from "https://deno.land/x/denops_std@v4.3.3/variable/mod.ts";
+import { expand, has } from "https://deno.land/x/denops_std@v4.3.3/function/mod.ts";
 import { ensureString } from "https://deno.land/x/unknownutil@v2.1.1/mod.ts";
-import {
-  echo,
-  execute,
-} from "https://deno.land/x/denops_std@v4.3.1/helper/mod.ts";
+import { echo, execute } from "https://deno.land/x/denops_std@v4.3.3/helper/mod.ts";
 
-import { Dvpm } from "https://deno.land/x/dvpm@0.2.1/mod.ts";
+import { Dvpm } from "https://deno.land/x/dvpm@0.2.3/mod.ts";
 
 export async function main(denops: Denops): Promise<void> {
-
   const base_path = (await has(denops, "nvim"))
     ? "~/.cache/nvim/dvpm"
     : "~/.cache/vim/dvpm";
@@ -67,7 +63,11 @@ export async function main(denops: Denops): Promise<void> {
   await dvpm.add({
     url: "yukimemi/dps-autobackup",
     before: async (denops: Denops) => {
-      await globals.set(denops, "autobackup_dir", ensureString(await expand(denops, "~/.cache/nvim/autobackup")));
+      await globals.set(
+        denops,
+        "autobackup_dir",
+        ensureString(await expand(denops, "~/.cache/nvim/autobackup")),
+      );
     },
   });
   // after setting.
