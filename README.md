@@ -49,7 +49,7 @@ import {
   execute,
 } from "https://deno.land/x/denops_std@v4.3.1/helper/mod.ts";
 
-import { Dvpm } from "https://deno.land/x/dvpm@0.2.0/mod.ts";
+import { Dvpm } from "https://deno.land/x/dvpm@0.2.1/mod.ts";
 
 export async function main(denops: Denops): Promise<void> {
 
@@ -57,7 +57,7 @@ export async function main(denops: Denops): Promise<void> {
     ? "~/.cache/nvim/dvpm"
     : "~/.cache/vim/dvpm";
   const base = ensureString(await expand(denops, base_path));
-  const dvpm = await Dvpm.create(denops, { base });
+  const dvpm = await Dvpm.begin(denops, { base });
 
   // URL only.
   await dvpm.add({ url: "yukimemi/dps-autocursor" });
@@ -99,6 +99,8 @@ export async function main(denops: Denops): Promise<void> {
     enabled: async (denops: Denops) => !(await has(denops, "nvim")),
   });
 
+  await dvpm.end();
+
   await echo(denops, "Load completed !");
 }
 ```
@@ -109,10 +111,10 @@ See my dotfiles for more complex examples.
 
 ## API
 
-### Dvpm.create
+### Dvpm.begin
 
 ```typescript
-public static async create(denops: Denops, dvpmOption: DvpmOption): Promise<Dvpm>
+public static async begin(denops: Denops, dvpmOption: DvpmOption): Promise<Dvpm>
 ```
 
 ```typescript
@@ -126,6 +128,13 @@ export type DvpmOption = {
 };
 
 ```
+
+### Dvpm.end
+
+```typescript
+public async end(): Promise<void>
+```
+source `after/*.(vim|lua)` files.
 
 ### Dvpm.add
 
