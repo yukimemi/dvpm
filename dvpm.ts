@@ -31,7 +31,7 @@ export class Dvpm {
     }
   }
 
-  public static async create(
+  public static async begin(
     denops: Denops,
     dvpmOption: DvpmOption,
   ): Promise<Dvpm> {
@@ -93,13 +93,13 @@ export class Dvpm {
       const p = this.findPlug(url);
       await p.update();
     } else {
-      this.#plugins.forEach(async (p) => {
+      await Promise.all(this.#plugins.map(async (p) => {
         try {
           await p.update();
         } catch (e) {
           console.error(e);
         }
-      });
+      }));
     }
   }
 
@@ -127,5 +127,15 @@ export class Dvpm {
     } catch (e) {
       console.error(e);
     }
+  }
+
+  public async end() {
+    await Promise.all(this.#plugins.map(async (p) => {
+      try {
+        await p.end();
+      } catch (e) {
+        console.error(e);
+      }
+    }));
   }
 }

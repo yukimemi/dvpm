@@ -30,7 +30,7 @@ export type PluginOption = {
 };
 
 export class Plugin {
-  static lock = new Semaphore(1);
+  static mutex = new Semaphore(1);
   static semaphore = new Semaphore(8);
 
   #dst: string;
@@ -73,88 +73,124 @@ export class Plugin {
   }
 
   // deno-lint-ignore no-explicit-any
-  clog(data: any) {
+  private clog(data: any) {
     if (this.pluginOption.debug) {
       console.log(data);
     }
   }
 
-  async add() {
+  public async add() {
     try {
-      await Plugin.lock.lock(async () => {
-        this.clog(`[add] ${this.#url} start !`);
-        if (this.plug.enabled != undefined) {
-          if (isBoolean(this.plug.enabled)) {
-            if (!this.plug.enabled) {
-              this.clog(`[add] ${this.#url} enabled is false. (boolean)`);
-              return;
-            }
-          } else {
-            if (!(await this.plug.enabled(this.denops))) {
-              this.clog(`[add] ${this.#url} enabled is false. (func)`);
-              return;
-            }
+      this.clog(`[add] ${this.#url} start !`);
+      if (this.plug.enabled != undefined) {
+        if (isBoolean(this.plug.enabled)) {
+          if (!this.plug.enabled) {
+            this.clog(`[add] ${this.#url} enabled is false. (boolean)`);
+            return;
+          }
+        } else {
+          if (!(await this.plug.enabled(this.denops))) {
+            this.clog(`[add] ${this.#url} enabled is false. (func)`);
+            return;
           }
         }
-        await this.register();
-        this.clog(`[add] ${this.#url} end !`);
-      });
+      }
+      await this.before();
+      await this.register();
+      await this.after();
     } catch (e) {
       console.error(e);
+    } finally {
+      this.clog(`[add] ${this.#url} end !`);
     }
   }
 
-  async register() {
+  public async end() {
+    await this.sourceAfter();
+  }
+
+  public async register() {
     this.clog(`[register] ${this.#url} start !`);
-    if (this.plug.before) {
-      await this.plug.before(this.denops);
-    }
-
-    await option.runtimepath.set(
-      this.denops,
-      `${this.#dst},${(await option.runtimepath.get(this.denops))}`,
-    );
-    await this.sourceVimPre();
-    await this.sourceVimPost();
-    await this.sourceLuaPre();
-    await this.sourceLuaPost();
+    await Plugin.mutex.lock(async () => {
+      await option.runtimepath.set(
+        this.denops,
+        `${this.#dst},${(await option.runtimepath.get(this.denops))}`,
+      );
+    });
+    await this.source();
     await this.registerDenops();
+    this.clog(`[register] ${this.#url} end !`);
+  }
 
+  public async before() {
+    if (this.plug.before) {
+      this.clog(`[before] ${this.#url} start !`);
+      await this.plug.before(this.denops);
+      this.clog(`[before] ${this.#url} end !`);
+    }
+  }
+  public async after() {
     if (this.plug.after) {
       this.clog(`[after] ${this.#url} start !`);
       await this.plug.after(this.denops);
       this.clog(`[after] ${this.#url} end !`);
     }
-    this.clog(`[register] ${this.#url} end !`);
   }
 
-  async sourceVim(target: string) {
+  public async source() {
+    try {
+      await Plugin.semaphore.lock(async () => {
+        this.clog(`[source] ${this.#url} start !`);
+        await this.sourceVimPre();
+        await this.sourceLuaPre();
+      });
+    } catch (e) {
+      console.error(e);
+    } finally {
+      this.clog(`[source] ${this.#url} end !`);
+    }
+  }
+  public async sourceAfter() {
+    try {
+      await Plugin.semaphore.lock(async () => {
+        this.clog(`[sourceAfter] ${this.#url} start !`);
+        await this.sourceVimAfter();
+        await this.sourceLuaAfter();
+      });
+    } catch (e) {
+      console.error(e);
+    } finally {
+      this.clog(`[sourceAfter] ${this.#url} end !`);
+    }
+  }
+
+  private async sourceVim(target: string) {
     for await (const file of expandGlob(target)) {
       await execute(this.denops, `source ${file.path}`);
     }
   }
-  async sourceVimPre() {
+  private async sourceVimPre() {
     const target = `${this.#dst}/plugin/**/*.vim`;
     await this.sourceVim(target);
   }
-  async sourceVimPost() {
+  private async sourceVimAfter() {
     const target = `${this.#dst}/after/plugin/**/*.vim`;
     await this.sourceVim(target);
   }
-  async sourceLua(target: string) {
+  private async sourceLua(target: string) {
     for await (const file of expandGlob(target)) {
       await execute(this.denops, `luafile ${file.path}`);
     }
   }
-  async sourceLuaPre() {
+  private async sourceLuaPre() {
     const target = `${this.#dst}/plugin/**/*.lua`;
     await this.sourceLua(target);
   }
-  async sourceLuaPost() {
+  private async sourceLuaAfter() {
     const target = `${this.#dst}/after/plugin/**/*.lua`;
     await this.sourceLua(target);
   }
-  async registerDenops() {
+  private async registerDenops() {
     const target = `${this.#dst}/denops/*/main.ts`;
     for await (const file of expandGlob(target)) {
       const name = await fnamemodify(this.denops, file.path, ":h:t");
@@ -170,7 +206,7 @@ export class Plugin {
     }
   }
 
-  async genHelptags() {
+  public async genHelptags() {
     await Plugin.semaphore.lock(async () => {
       const docDir = join(this.#dst, "doc");
       await execute(
@@ -180,7 +216,7 @@ export class Plugin {
     });
   }
 
-  async install() {
+  public async install() {
     await Plugin.semaphore.lock(async () => {
       if (await exists(this.#dst)) {
         return;
@@ -202,7 +238,7 @@ export class Plugin {
     });
   }
 
-  async update() {
+  public async update() {
     await Plugin.semaphore.lock(async () => {
       console.log(`Update: ${this.#url}`);
       const cmd = new Deno.Command("git", {
