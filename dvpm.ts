@@ -137,5 +137,6 @@ export class Dvpm {
         console.error(e);
       }
     }));
+    await this.denops.cmd(`silent! UpdateRemotePlugins`);
   }
 }
