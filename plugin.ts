@@ -25,6 +25,7 @@ export type Plug = {
   enabled?: boolean | ((denops: Denops) => Promise<boolean>);
   before?: (denops: Denops) => Promise<void>;
   after?: (denops: Denops) => Promise<void>;
+  dependencies?: Plug[];
 };
 
 export type PluginOption = {
@@ -115,10 +116,13 @@ export class Plugin {
   public async register() {
     this.clog(`[register] ${this.#url} start !`);
     await Plugin.mutex.lock(async () => {
-      await option.runtimepath.set(
-        this.denops,
-        `${this.#dst},${(await option.runtimepath.get(this.denops))}`,
-      );
+      const rtp = await option.runtimepath.get(this.denops);
+      if (rtp.indexOf(this.#dst) === -1) {
+        await option.runtimepath.set(
+          this.denops,
+          `${rtp},${this.#dst}`,
+        );
+      }
     });
     await this.source();
     await this.registerDenops();
@@ -194,13 +198,15 @@ export class Plugin {
     await this.sourceLua(target);
   }
   private async registerDenops() {
-    const target = `${this.#dst}/denops/*/main.ts`;
-    for await (const file of expandGlob(target)) {
-      const name = basename(dirname(file.path));
-      await this.denops.call("denops#plugin#register", name, {
-        mode: "skip",
-      });
-    }
+    await Plugin.semaphore.lock(async () => {
+      const target = `${this.#dst}/denops/*/main.ts`;
+      for await (const file of expandGlob(target)) {
+        const name = basename(dirname(file.path));
+        await this.denops.call("denops#plugin#register", name, {
+          mode: "skip",
+        });
+      }
+    });
   }
 
   public async genHelptags() {

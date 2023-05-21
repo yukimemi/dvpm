@@ -109,21 +109,26 @@ export class Dvpm {
 
   public async add(plug: Plug) {
     try {
-      // TODO: plugin dependencies.
-      await Dvpm.lock.lock(async () => {
-        const pluginOption: PluginOption = {
-          base: this.dvpmOption.base,
-          debug: this.dvpmOption.debug,
-        };
-        const p = await Plugin.create(
-          this.denops,
-          plug,
-          pluginOption,
-        );
-        await p.install();
-        await p.add();
-        this.#plugins.push(p);
-      });
+      if (plug.dependencies != undefined) {
+        for (const dep of plug.dependencies) {
+          if (dep.enabled == undefined) {
+            dep.enabled = plug.enabled;
+          }
+          await this.add(dep);
+        }
+      }
+      const pluginOption: PluginOption = {
+        base: this.dvpmOption.base,
+        debug: this.dvpmOption.debug,
+      };
+      const p = await Plugin.create(
+        this.denops,
+        plug,
+        pluginOption,
+      );
+      await p.install();
+      await p.add();
+      this.#plugins.push(p);
     } catch (e) {
       console.error(e);
     }

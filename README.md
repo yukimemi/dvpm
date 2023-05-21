@@ -46,13 +46,14 @@ import { expand, has } from "https://deno.land/x/denops_std@v4.3.3/function/mod.
 import { ensureString } from "https://deno.land/x/unknownutil@v2.1.1/mod.ts";
 import { echo, execute } from "https://deno.land/x/denops_std@v4.3.3/helper/mod.ts";
 
-import { Dvpm } from "https://deno.land/x/dvpm@0.2.4/mod.ts";
+import { Dvpm } from "https://deno.land/x/dvpm@0.3.0/mod.ts";
 
 export async function main(denops: Denops): Promise<void> {
   const base_path = (await has(denops, "nvim"))
     ? "~/.cache/nvim/dvpm"
     : "~/.cache/vim/dvpm";
   const base = ensureString(await expand(denops, base_path));
+  // First, call Dvpm.begin with denops object and base path.
   const dvpm = await Dvpm.begin(denops, { base });
 
   // URL only.
@@ -98,7 +99,16 @@ export async function main(denops: Denops): Promise<void> {
     url: "editorconfig/editorconfig-vim",
     enabled: async (denops: Denops) => !(await has(denops, "nvim")),
   });
+  // With dependencies.
+  await dvpm.add({
+    url: "lambdalisue/gin.vim",
+    dependencies: [
+      { url: "lambdalisue/askpass.vim" },
+      { url: "lambdalisue/guise.vim" },
+    ],
+  });
 
+  // Finally, call Dvpm.end.
   await dvpm.end();
 
   await echo(denops, "Load completed !");
@@ -123,7 +133,8 @@ export type DvpmOption = {
   base: string;
   // debug print. Default is false.
   debug?: boolean;
-  // Number of concurrent Update processes (DvpmUpdate). Default is 8.
+  // Number of concurrent processes. Default is 8.
+  // This is used plugin install, update, source.
   concurrency?: number;
 };
 
@@ -156,6 +167,8 @@ export type Plug = {
   before?: (denops: Denops) => Promise<void>;
   // Processing to be performed after adding runtimepath. (Option)
   after?: (denops: Denops) => Promise<void>;
+  // dependencies.
+  dependencies?: Plug[];
 };
 ```
 
