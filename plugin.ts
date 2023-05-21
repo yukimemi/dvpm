@@ -116,8 +116,8 @@ export class Plugin {
   public async register() {
     this.clog(`[register] ${this.#url} start !`);
     await Plugin.mutex.lock(async () => {
-      const rtp = await option.runtimepath.get(this.denops);
-      if (rtp.indexOf(this.#dst) === -1) {
+      const rtp = (await option.runtimepath.get(this.denops)).split(",");
+      if (!rtp.includes(this.#dst)) {
         await option.runtimepath.set(
           this.denops,
           `${rtp},${this.#dst}`,
