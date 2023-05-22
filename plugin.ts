@@ -83,27 +83,29 @@ export class Plugin {
     }
   }
 
-  public async add() {
+  public async add(): Promise<boolean> {
     try {
       this.clog(`[add] ${this.#url} start !`);
       if (this.plug.enabled != undefined) {
         if (isBoolean(this.plug.enabled)) {
           if (!this.plug.enabled) {
             this.clog(`[add] ${this.#url} enabled is false. (boolean)`);
-            return;
+            return false;
           }
         } else {
           if (!(await this.plug.enabled(this.denops))) {
             this.clog(`[add] ${this.#url} enabled is false. (func)`);
-            return;
+            return false;
           }
         }
       }
       await this.before();
-      await this.register();
+      const registered = await this.register();
       await this.after();
+      return registered;
     } catch (e) {
       console.error(e);
+      return false;
     } finally {
       this.clog(`[add] ${this.#url} end !`);
     }
@@ -113,11 +115,13 @@ export class Plugin {
     await this.sourceAfter();
   }
 
-  public async register() {
+  public async register(): Promise<boolean> {
     this.clog(`[register] ${this.#url} start !`);
+    let registered = false;
     await Plugin.mutex.lock(async () => {
       const rtp = (await option.runtimepath.get(this.denops)).split(",");
       if (!rtp.includes(this.#dst)) {
+        registered = true;
         await option.runtimepath.set(
           this.denops,
           `${rtp},${this.#dst}`,
@@ -127,6 +131,7 @@ export class Plugin {
     await this.source();
     await this.registerDenops();
     this.clog(`[register] ${this.#url} end !`);
+    return registered;
   }
 
   public async before() {
@@ -210,13 +215,11 @@ export class Plugin {
   }
 
   public async genHelptags() {
-    await Plugin.semaphore.lock(async () => {
-      const docDir = join(this.#dst, "doc");
-      await execute(
-        this.denops,
-        `silent! helptags ${await fnameescape(this.denops, docDir)}`,
-      );
-    });
+    const docDir = join(this.#dst, "doc");
+    await execute(
+      this.denops,
+      `silent! helptags ${await fnameescape(this.denops, docDir)}`,
+    );
   }
 
   public async install() {

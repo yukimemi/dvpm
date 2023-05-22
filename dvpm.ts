@@ -127,8 +127,9 @@ export class Dvpm {
         pluginOption,
       );
       await p.install();
-      await p.add();
-      this.#plugins.push(p);
+      if (await p.add()) {
+        this.#plugins.push(p);
+      }
     } catch (e) {
       console.error(e);
     }
