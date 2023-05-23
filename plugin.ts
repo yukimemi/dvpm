@@ -28,9 +28,15 @@ export type Plug = {
   dependencies?: Plug[];
 };
 
+export type PlugState = Plug & {
+  isLoad: boolean;
+  elaps: number;
+};
+
 export type PluginOption = {
   base: string;
   debug?: boolean;
+  profile?: boolean;
 };
 
 export class Plugin {
@@ -40,6 +46,8 @@ export class Plugin {
   #dst: string;
   #url: string;
 
+  public state: PlugState;
+
   constructor(
     public denops: Denops,
     public plug: Plug,
@@ -47,6 +55,11 @@ export class Plugin {
   ) {
     this.#dst = "";
     this.#url = "";
+    this.state = {
+      ...plug,
+      isLoad: false,
+      elaps: 0,
+    };
 
     if (this.pluginOption.debug == undefined) {
       this.pluginOption.debug = false;
@@ -85,24 +98,27 @@ export class Plugin {
 
   public async add(): Promise<boolean> {
     try {
-      this.clog(`[add] ${this.#url} start !`);
-      if (this.plug.enabled != undefined) {
-        if (isBoolean(this.plug.enabled)) {
-          if (!this.plug.enabled) {
-            this.clog(`[add] ${this.#url} enabled is false. (boolean)`);
-            return false;
-          }
-        } else {
-          if (!(await this.plug.enabled(this.denops))) {
-            this.clog(`[add] ${this.#url} enabled is false. (func)`);
-            return false;
+      let added = false;
+      await Plugin.semaphore.lock(async () => {
+        this.clog(`[add] ${this.#url} start !`);
+        if (this.plug.enabled != undefined) {
+          if (isBoolean(this.plug.enabled)) {
+            if (!this.plug.enabled) {
+              this.clog(`[add] ${this.#url} enabled is false. (boolean)`);
+              return;
+            }
+          } else {
+            if (!(await this.plug.enabled(this.denops))) {
+              this.clog(`[add] ${this.#url} enabled is false. (func)`);
+              return;
+            }
           }
         }
-      }
-      await this.before();
-      const registered = await this.register();
-      await this.after();
-      return registered;
+        await this.before();
+        added = await this.register();
+        await this.after();
+      });
+      return added;
     } catch (e) {
       console.error(e);
       return false;
@@ -118,7 +134,11 @@ export class Plugin {
   public async register(): Promise<boolean> {
     this.clog(`[register] ${this.#url} start !`);
     let registered = false;
+    let starttime = 0;
     await Plugin.mutex.lock(async () => {
+      if (this.pluginOption.profile) {
+        starttime = performance.now();
+      }
       const rtp = (await option.runtimepath.get(this.denops)).split(",");
       if (!rtp.includes(this.#dst)) {
         registered = true;
@@ -130,6 +150,12 @@ export class Plugin {
     });
     await this.source();
     await this.registerDenops();
+    if (registered) {
+      if (this.pluginOption.profile) {
+        this.state.elaps = performance.now() - starttime;
+      }
+      this.state.isLoad = true;
+    }
     this.clog(`[register] ${this.#url} end !`);
     return registered;
   }
@@ -151,11 +177,9 @@ export class Plugin {
 
   public async source() {
     try {
-      await Plugin.semaphore.lock(async () => {
-        this.clog(`[source] ${this.#url} start !`);
-        await this.sourceVimPre();
-        await this.sourceLuaPre();
-      });
+      this.clog(`[source] ${this.#url} start !`);
+      await this.sourceVimPre();
+      await this.sourceLuaPre();
     } catch (e) {
       console.error(e);
     } finally {
@@ -164,11 +188,9 @@ export class Plugin {
   }
   public async sourceAfter() {
     try {
-      await Plugin.semaphore.lock(async () => {
-        this.clog(`[sourceAfter] ${this.#url} start !`);
-        await this.sourceVimAfter();
-        await this.sourceLuaAfter();
-      });
+      this.clog(`[sourceAfter] ${this.#url} start !`);
+      await this.sourceVimAfter();
+      await this.sourceLuaAfter();
     } catch (e) {
       console.error(e);
     } finally {
@@ -203,15 +225,13 @@ export class Plugin {
     await this.sourceLua(target);
   }
   private async registerDenops() {
-    await Plugin.semaphore.lock(async () => {
-      const target = `${this.#dst}/denops/*/main.ts`;
-      for await (const file of expandGlob(target)) {
-        const name = basename(dirname(file.path));
-        await this.denops.call("denops#plugin#register", name, {
-          mode: "skip",
-        });
-      }
-    });
+    const target = `${this.#dst}/denops/*/main.ts`;
+    for await (const file of expandGlob(target)) {
+      const name = basename(dirname(file.path));
+      await this.denops.call("denops#plugin#register", name, {
+        mode: "skip",
+      });
+    }
   }
 
   public async genHelptags() {

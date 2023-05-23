@@ -1,25 +1,31 @@
+import * as buffer from "https://deno.land/x/denops_std@v5.0.0/buffer/mod.ts";
+import * as fn from "https://deno.land/x/denops_std@v5.0.0/function/mod.ts";
 import { Denops } from "https://deno.land/x/denops_std@v5.0.0/mod.ts";
 import { Semaphore } from "https://deno.land/x/async@v2.0.2/semaphore.ts";
-import { execute } from "https://deno.land/x/denops_std@v5.0.0/helper/mod.ts";
-import { type Plug, Plugin, PluginOption } from "./plugin.ts";
 import { assertString } from "https://deno.land/x/unknownutil@v2.1.1/assert.ts";
+import { execute } from "https://deno.land/x/denops_std@v5.0.0/helper/mod.ts";
+import { sprintf } from "https://deno.land/std@0.188.0/fmt/printf.ts";
+import { type Plug, Plugin, PluginOption } from "./plugin.ts";
 
 export type DvpmOption = {
   base: string;
   debug?: boolean;
   concurrency?: number;
+  profile?: boolean;
 };
 
 export class Dvpm {
   static lock = new Semaphore(1);
 
   #plugins: Plugin[];
+  #totalElaps: number;
 
   constructor(
     public denops: Denops,
     public dvpmOption: DvpmOption,
   ) {
     this.#plugins = [];
+    this.#totalElaps = performance.now();
 
     if (this.dvpmOption.debug == undefined) {
       this.dvpmOption.debug = false;
@@ -28,6 +34,9 @@ export class Dvpm {
       this.dvpmOption.concurrency = 8;
     } else {
       Plugin.semaphore = new Semaphore(this.dvpmOption.concurrency);
+    }
+    if (this.dvpmOption.profile == undefined) {
+      this.dvpmOption.profile = false;
     }
   }
 
@@ -120,6 +129,7 @@ export class Dvpm {
       const pluginOption: PluginOption = {
         base: this.dvpmOption.base,
         debug: this.dvpmOption.debug,
+        profile: this.dvpmOption.profile,
       };
       const p = await Plugin.create(
         this.denops,
@@ -143,6 +153,25 @@ export class Dvpm {
         console.error(e);
       }
     }));
+    if (this.dvpmOption.profile) {
+      const sortedPlugins = this.#plugins.filter((p) => p.state.isLoad)
+        .sort((a, b) => a.state.elaps - b.state.elaps).map((p) =>
+          sprintf("%-50s: %s", p.plug.url, `${p.state.elaps}`)
+        );
+      this.#totalElaps = performance.now() - this.#totalElaps;
+      const buf = await buffer.open(this.denops, "dvpm://profile");
+      await buffer.ensure(this.denops, buf.bufnr, async () => {
+        await fn.setbufvar(this.denops, buf.bufnr, "&buftype", "nofile");
+        await buffer.replace(this.denops, buf.bufnr, [
+          `--- profile start ---`,
+          ...sortedPlugins,
+          `--- profile end ---`,
+          `Total: ${this.#totalElaps}`,
+        ]);
+        await buffer.concrete(this.denops, buf.bufnr);
+      });
+    }
     await this.denops.cmd(`silent! UpdateRemotePlugins`);
+    await this.denops.cmd(`doautocmd VimEnter`);
   }
 }
