@@ -1,11 +1,11 @@
-import * as option from "https://deno.land/x/denops_std@v4.3.3/option/mod.ts";
-import { Denops } from "https://deno.land/x/denops_std@v4.3.3/mod.ts";
+import * as option from "https://deno.land/x/denops_std@v5.0.0/option/mod.ts";
+import { Denops } from "https://deno.land/x/denops_std@v5.0.0/mod.ts";
 import {
   basename,
   dirname,
   join,
 } from "https://deno.land/std@0.188.0/path/mod.ts";
-import { execute } from "https://deno.land/x/denops_std@v4.3.3/helper/mod.ts";
+import { execute } from "https://deno.land/x/denops_std@v5.0.0/helper/mod.ts";
 import { exists } from "https://deno.land/std@0.188.0/fs/mod.ts";
 import { expandGlob } from "https://deno.land/std@0.188.0/fs/expand_glob.ts";
 import { Semaphore } from "https://deno.land/x/async@v2.0.2/semaphore.ts";
@@ -16,7 +16,7 @@ import {
 import {
   expand,
   fnameescape,
-} from "https://deno.land/x/denops_std@v4.3.3/function/mod.ts";
+} from "https://deno.land/x/denops_std@v5.0.0/function/mod.ts";
 
 export type Plug = {
   url: string;

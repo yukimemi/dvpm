@@ -39,20 +39,21 @@ execute 'set runtimepath^=' . substitute(fnamemodify(s:denops, ':p') , '[/\\]$',
 - ~/.config/vim/denops/config/main.ts (Vim)
 
 ```typescript
-import { Denops } from "https://deno.land/x/denops_std@v4.3.3/mod.ts";
-import * as mapping from "https://deno.land/x/denops_std@v4.3.3/mapping/mod.ts";
-import { globals } from "https://deno.land/x/denops_std@v4.3.3/variable/mod.ts";
-import { expand, has } from "https://deno.land/x/denops_std@v4.3.3/function/mod.ts";
+import * as fn from "https://deno.land/x/denops_std@v5.0.0/function/mod.ts";
+import * as mapping from "https://deno.land/x/denops_std@v5.0.0/mapping/mod.ts";
+import { Denops } from "https://deno.land/x/denops_std@v5.0.0/mod.ts";
 import { ensureString } from "https://deno.land/x/unknownutil@v2.1.1/mod.ts";
-import { echo, execute } from "https://deno.land/x/denops_std@v4.3.3/helper/mod.ts";
+import { execute } from "https://deno.land/x/denops_std@v5.0.0/helper/mod.ts";
+import { globals } from "https://deno.land/x/denops_std@v5.0.0/variable/mod.ts";
 
-import { Dvpm } from "https://deno.land/x/dvpm@0.3.2/mod.ts";
+import { Dvpm } from "https://deno.land/x/dvpm@0.3.3/mod.ts";
 
 export async function main(denops: Denops): Promise<void> {
-  const base_path = (await has(denops, "nvim"))
+  const base_path = (await fn.has(denops, "nvim"))
     ? "~/.cache/nvim/dvpm"
     : "~/.cache/vim/dvpm";
-  const base = ensureString(await expand(denops, base_path));
+  const base = ensureString(await fn.expand(denops, base_path));
+
   // First, call Dvpm.begin with denops object and base path.
   const dvpm = await Dvpm.begin(denops, { base });
 
@@ -67,7 +68,7 @@ export async function main(denops: Denops): Promise<void> {
       await globals.set(
         denops,
         "autobackup_dir",
-        ensureString(await expand(denops, "~/.cache/nvim/autobackup")),
+        ensureString(await fn.expand(denops, "~/.cache/nvim/autobackup")),
       );
     },
   });
@@ -83,10 +84,21 @@ export async function main(denops: Denops): Promise<void> {
     url: "yukimemi/dps-randomcolorscheme",
     dst: "~/src/github.com/yukimemi/dps-randomcolorscheme",
     before: async (denops: Denops) => {
-      await mapping.map(denops, "<space>ro", "<cmd>ChangeColorscheme<cr>", { mode: "n" });
-      await mapping.map(denops, "<space>rd", "<cmd>DisableThisColorscheme<cr>", { mode: "n" });
-      await mapping.map(denops, "<space>rl", "<cmd>LikeThisColorscheme<cr>", { mode: "n" });
-      await mapping.map(denops, "<space>rh", "<cmd>HateThisColorscheme<cr>", { mode: "n" });
+      await mapping.map(denops, "<space>ro", "<cmd>ChangeColorscheme<cr>", {
+        mode: "n",
+      });
+      await mapping.map(
+        denops,
+        "<space>rd",
+        "<cmd>DisableThisColorscheme<cr>",
+        { mode: "n" },
+      );
+      await mapping.map(denops, "<space>rl", "<cmd>LikeThisColorscheme<cr>", {
+        mode: "n",
+      });
+      await mapping.map(denops, "<space>rh", "<cmd>HateThisColorscheme<cr>", {
+        mode: "n",
+      });
     },
   });
   // Disable setting.
@@ -97,7 +109,7 @@ export async function main(denops: Denops): Promise<void> {
   // Disable with function.
   await dvpm.add({
     url: "editorconfig/editorconfig-vim",
-    enabled: async (denops: Denops) => !(await has(denops, "nvim")),
+    enabled: async (denops: Denops) => !(await fn.has(denops, "nvim")),
   });
   // With dependencies.
   await dvpm.add({
@@ -111,7 +123,7 @@ export async function main(denops: Denops): Promise<void> {
   // Finally, call Dvpm.end.
   await dvpm.end();
 
-  await echo(denops, "Load completed !");
+  console.log("Load completed !");
 }
 ```
 
