@@ -162,6 +162,7 @@ export class Dvpm {
       const buf = await buffer.open(this.denops, "dvpm://profile");
       await buffer.ensure(this.denops, buf.bufnr, async () => {
         await fn.setbufvar(this.denops, buf.bufnr, "&buftype", "nofile");
+        await fn.setbufvar(this.denops, buf.bufnr, "&swapfile", 0);
         await buffer.replace(this.denops, buf.bufnr, [
           `--- profile start ---`,
           ...sortedPlugins,

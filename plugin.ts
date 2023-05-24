@@ -1,4 +1,4 @@
-import * as option from "https://deno.land/x/denops_std@v5.0.0/option/mod.ts";
+import * as op from "https://deno.land/x/denops_std@v5.0.0/option/mod.ts";
 import { Denops } from "https://deno.land/x/denops_std@v5.0.0/mod.ts";
 import {
   basename,
@@ -139,10 +139,10 @@ export class Plugin {
       if (this.pluginOption.profile) {
         starttime = performance.now();
       }
-      const rtp = (await option.runtimepath.get(this.denops)).split(",");
+      const rtp = (await op.runtimepath.get(this.denops)).split(",");
       if (!rtp.includes(this.#dst)) {
         registered = true;
-        await option.runtimepath.set(
+        await op.runtimepath.set(
           this.denops,
           `${rtp},${this.#dst}`,
         );
