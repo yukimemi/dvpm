@@ -1,22 +1,15 @@
+import * as fn from "https://deno.land/x/denops_std@v5.0.0/function/mod.ts";
 import * as op from "https://deno.land/x/denops_std@v5.0.0/option/mod.ts";
+import * as path from "https://deno.land/std@0.189.0/path/mod.ts";
 import { Denops } from "https://deno.land/x/denops_std@v5.0.0/mod.ts";
-import {
-  basename,
-  dirname,
-  join,
-} from "https://deno.land/std@0.188.0/path/mod.ts";
-import { execute } from "https://deno.land/x/denops_std@v5.0.0/helper/mod.ts";
-import { exists } from "https://deno.land/std@0.188.0/fs/mod.ts";
-import { expandGlob } from "https://deno.land/std@0.188.0/fs/expand_glob.ts";
 import { Semaphore } from "https://deno.land/x/async@v2.0.2/semaphore.ts";
+import { execute } from "https://deno.land/x/denops_std@v5.0.0/helper/mod.ts";
+import { exists } from "https://deno.land/std@0.189.0/fs/mod.ts";
+import { expandGlob } from "https://deno.land/std@0.189.0/fs/expand_glob.ts";
 import {
   ensureString,
   isBoolean,
 } from "https://deno.land/x/unknownutil@v2.1.1/mod.ts";
-import {
-  expand,
-  fnameescape,
-} from "https://deno.land/x/denops_std@v5.0.0/function/mod.ts";
 
 export type Plug = {
   url: string;
@@ -74,16 +67,16 @@ export class Plugin {
     const p = new Plugin(denops, plug, pluginOption);
     if (p.plug.url.startsWith("http") || p.plug.url.startsWith("git")) {
       p.#url = p.plug.url;
-      // Todo: not implemented.
-      throw "Not implemented !";
+      const url = new URL(p.plug.url);
+      p.#dst = path.join(pluginOption.base, url.hostname, url.pathname);
     } else {
       p.#url = `https://github.com/${p.plug.url}`;
-      p.#dst = join(pluginOption.base, "github.com", p.plug.url);
+      p.#dst = path.join(pluginOption.base, "github.com", p.plug.url);
     }
 
     if (p.plug.dst) {
       p.clog(`[create] ${p.#url} set dst to ${p.plug.dst}`);
-      p.#dst = ensureString(await expand(denops, p.plug.dst));
+      p.#dst = ensureString(await fn.expand(denops, p.plug.dst));
     }
 
     return p;
@@ -227,7 +220,7 @@ export class Plugin {
   private async registerDenops() {
     const target = `${this.#dst}/denops/*/main.ts`;
     for await (const file of expandGlob(target)) {
-      const name = basename(dirname(file.path));
+      const name = path.basename(path.dirname(file.path));
       await this.denops.call("denops#plugin#register", name, {
         mode: "skip",
       });
@@ -235,10 +228,10 @@ export class Plugin {
   }
 
   public async genHelptags() {
-    const docDir = join(this.#dst, "doc");
+    const docDir = path.join(this.#dst, "doc");
     await execute(
       this.denops,
-      `silent! helptags ${await fnameescape(this.denops, docDir)}`,
+      `silent! helptags ${await fn.fnameescape(this.denops, docDir)}`,
     );
   }
 

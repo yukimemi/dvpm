@@ -46,7 +46,7 @@ import { ensureString } from "https://deno.land/x/unknownutil@v2.1.1/mod.ts";
 import { execute } from "https://deno.land/x/denops_std@v5.0.0/helper/mod.ts";
 import { globals } from "https://deno.land/x/denops_std@v5.0.0/variable/mod.ts";
 
-import { Dvpm } from "https://deno.land/x/dvpm@0.3.5/mod.ts";
+import { Dvpm } from "https://deno.land/x/dvpm@0.3.6/mod.ts";
 
 export async function main(denops: Denops): Promise<void> {
   const base_path = (await fn.has(denops, "nvim"))
@@ -57,16 +57,17 @@ export async function main(denops: Denops): Promise<void> {
   // First, call Dvpm.begin with denops object and base path.
   const dvpm = await Dvpm.begin(denops, { base });
 
-  // URL only.
+  // URL only (GitHub).
   await dvpm.add({ url: "yukimemi/dps-autocursor" });
+  // URL only (not GitHub).
+  await dvpm.add({ url: "https://notgithub.com/some/other/plugin" });
   // With branch.
   await dvpm.add({ url: "neoclide/coc.nvim", branch: "release" });
   // before setting.
   await dvpm.add({
     url: "yukimemi/dps-autobackup",
     before: async (denops: Denops) => {
-      await globals.set(
-        denops,
+      await globals.set(denops,
         "autobackup_dir",
         ensureString(await fn.expand(denops, "~/.cache/nvim/autobackup")),
       );
@@ -84,21 +85,10 @@ export async function main(denops: Denops): Promise<void> {
     url: "yukimemi/dps-randomcolorscheme",
     dst: "~/src/github.com/yukimemi/dps-randomcolorscheme",
     before: async (denops: Denops) => {
-      await mapping.map(denops, "<space>ro", "<cmd>ChangeColorscheme<cr>", {
-        mode: "n",
-      });
-      await mapping.map(
-        denops,
-        "<space>rd",
-        "<cmd>DisableThisColorscheme<cr>",
-        { mode: "n" },
-      );
-      await mapping.map(denops, "<space>rl", "<cmd>LikeThisColorscheme<cr>", {
-        mode: "n",
-      });
-      await mapping.map(denops, "<space>rh", "<cmd>HateThisColorscheme<cr>", {
-        mode: "n",
-      });
+      await mapping.map(denops, "<space>ro", "<cmd>ChangeColorscheme<cr>", { mode: "n" });
+      await mapping.map( denops, "<space>rd", "<cmd>DisableThisColorscheme<cr>", { mode: "n" });
+      await mapping.map(denops, "<space>rl", "<cmd>LikeThisColorscheme<cr>", { mode: "n" });
+      await mapping.map(denops, "<space>rh", "<cmd>HateThisColorscheme<cr>", { mode: "n" });
     },
   });
   // Disable setting.
@@ -170,7 +160,7 @@ public async add(plug: Plug): Promise<void>
 
 ```typescript
 export type Plug = {
-  // Github `username/repository`. Other URLs starting with https are todo.
+  // Github `username/repository` or URL that can be cloned with git.
   url: string;
   // The path to git clone. (Option)
   dst?: string;
