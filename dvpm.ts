@@ -7,6 +7,8 @@ import { execute } from "https://deno.land/x/denops_std@v5.0.0/helper/mod.ts";
 import { sprintf } from "https://deno.land/std@0.189.0/fmt/printf.ts";
 import { type Plug, Plugin, PluginOption } from "./plugin.ts";
 
+const concurrency = 8;
+
 export type DvpmOption = {
   base: string;
   debug?: boolean;
@@ -15,25 +17,27 @@ export type DvpmOption = {
 };
 
 export class Dvpm {
-  static lock = new Semaphore(1);
+  #logLock = new Semaphore(1);
+  #semaphore = new Semaphore(concurrency);
 
-  #plugins: Plugin[];
+  #plugins: Plugin[] = [];
   #totalElaps: number;
+  #installLogs: string[] = [];
+  #updateLogs: string[] = [];
 
   constructor(
     public denops: Denops,
     public dvpmOption: DvpmOption,
   ) {
-    this.#plugins = [];
     this.#totalElaps = performance.now();
 
     if (this.dvpmOption.debug == undefined) {
       this.dvpmOption.debug = false;
     }
     if (this.dvpmOption.concurrency == undefined) {
-      this.dvpmOption.concurrency = 8;
+      this.dvpmOption.concurrency = concurrency;
     } else {
-      Plugin.semaphore = new Semaphore(this.dvpmOption.concurrency);
+      this.#semaphore = new Semaphore(this.dvpmOption.concurrency);
     }
     if (this.dvpmOption.profile == undefined) {
       this.dvpmOption.profile = false;
@@ -82,14 +86,62 @@ export class Dvpm {
     return p;
   }
 
+  private async bufWrite(bufname: string, data: string[]) {
+    const buf = await buffer.open(this.denops, bufname);
+    await buffer.ensure(this.denops, buf.bufnr, async () => {
+      await fn.setbufvar(this.denops, buf.bufnr, "&buftype", "nofile");
+      await fn.setbufvar(this.denops, buf.bufnr, "&swapfile", 0);
+      await buffer.replace(this.denops, buf.bufnr, data);
+      await buffer.concrete(this.denops, buf.bufnr);
+    });
+  }
+
+  private async writeLogs(
+    plug: Plugin,
+    target: string[],
+    output: Deno.CommandOutput,
+  ) {
+    await this.#logLock.lock(() => {
+      target.push(`---------- ${plug.plug.url} --------------------`);
+      if (output.stdout) {
+        new TextDecoder().decode(output.stdout).split("\n").forEach((s) =>
+          target.push(s)
+        );
+      }
+      if (output.stderr) {
+        new TextDecoder().decode(output.stderr).split("\n").forEach((s) =>
+          target.push(s)
+        );
+      }
+      target.push(``);
+    });
+  }
+
+  private async _install(p: Plugin) {
+    await this.#semaphore.lock(async () => {
+      const output = await p.install();
+      if (output) {
+        await this.writeLogs(p, this.#installLogs, output);
+      }
+    });
+  }
+  private async _update(p: Plugin) {
+    await this.#semaphore.lock(async () => {
+      const output = await p.update();
+      if (output) {
+        await this.writeLogs(p, this.#updateLogs, output);
+      }
+    });
+  }
+
   public async install(url?: string) {
     if (url) {
       const p = this.findPlug(url);
-      await p.install();
+      await this._install(p);
     } else {
       this.#plugins.forEach(async (p) => {
         try {
-          await p.install();
+          await this._install(p);
         } catch (e) {
           console.error(e);
         }
@@ -100,15 +152,19 @@ export class Dvpm {
   public async update(url?: string) {
     if (url) {
       const p = this.findPlug(url);
-      await p.update();
+      await this._update(p);
     } else {
       await Promise.all(this.#plugins.map(async (p) => {
         try {
-          await p.update();
+          await this._update(p);
         } catch (e) {
           console.error(e);
         }
       }));
+    }
+
+    if (this.#updateLogs.length > 0) {
+      await this.bufWrite("dvpm://update", this.#updateLogs);
     }
   }
 
@@ -136,41 +192,44 @@ export class Dvpm {
         plug,
         pluginOption,
       );
-      await p.install();
-      if (await p.add()) {
+      await this._install(p);
+
+      await this.#semaphore.lock(async () => {
+        await p.add();
         this.#plugins.push(p);
-      }
+      });
     } catch (e) {
       console.error(e);
     }
   }
 
   public async end() {
-    await Promise.all(this.#plugins.map(async (p) => {
-      try {
-        await p.end();
-      } catch (e) {
-        console.error(e);
-      }
-    }));
+    await Promise.all(
+      this.#plugins.filter((p) => p.state.isLoad).map(async (p) => {
+        try {
+          await this.#semaphore.lock(async () => {
+            await p.end();
+          });
+        } catch (e) {
+          console.error(e);
+        }
+      }),
+    );
+    if (this.#installLogs.length > 0) {
+      await this.bufWrite("dvpm://install", this.#installLogs);
+    }
     if (this.dvpmOption.profile) {
       const sortedPlugins = this.#plugins.filter((p) => p.state.isLoad)
         .sort((a, b) => a.state.elaps - b.state.elaps).map((p) =>
           sprintf("%-50s: %s", p.plug.url, `${p.state.elaps}`)
         );
       this.#totalElaps = performance.now() - this.#totalElaps;
-      const buf = await buffer.open(this.denops, "dvpm://profile");
-      await buffer.ensure(this.denops, buf.bufnr, async () => {
-        await fn.setbufvar(this.denops, buf.bufnr, "&buftype", "nofile");
-        await fn.setbufvar(this.denops, buf.bufnr, "&swapfile", 0);
-        await buffer.replace(this.denops, buf.bufnr, [
-          `--- profile start ---`,
-          ...sortedPlugins,
-          `--- profile end ---`,
-          `Total: ${this.#totalElaps}`,
-        ]);
-        await buffer.concrete(this.denops, buf.bufnr);
-      });
+      await this.bufWrite("dvpm://profile", [
+        `--- profile start ---`,
+        ...sortedPlugins,
+        `--- profile end ---`,
+        `Total: ${this.#totalElaps}`,
+      ]);
     }
     await this.denops.cmd(`silent! UpdateRemotePlugins`);
     await this.denops.cmd(`doautocmd VimEnter`);

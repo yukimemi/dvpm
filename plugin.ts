@@ -34,7 +34,6 @@ export type PluginOption = {
 
 export class Plugin {
   static mutex = new Semaphore(1);
-  static semaphore = new Semaphore(8);
 
   #dst: string;
   #url: string;
@@ -89,29 +88,25 @@ export class Plugin {
     }
   }
 
-  public async add(): Promise<boolean> {
+  public async add() {
     try {
-      let added = false;
-      await Plugin.semaphore.lock(async () => {
-        this.clog(`[add] ${this.#url} start !`);
-        if (this.plug.enabled != undefined) {
-          if (isBoolean(this.plug.enabled)) {
-            if (!this.plug.enabled) {
-              this.clog(`[add] ${this.#url} enabled is false. (boolean)`);
-              return;
-            }
-          } else {
-            if (!(await this.plug.enabled(this.denops))) {
-              this.clog(`[add] ${this.#url} enabled is false. (func)`);
-              return;
-            }
+      this.clog(`[add] ${this.#url} start !`);
+      if (this.plug.enabled != undefined) {
+        if (isBoolean(this.plug.enabled)) {
+          if (!this.plug.enabled) {
+            this.clog(`[add] ${this.#url} enabled is false. (boolean)`);
+            return;
+          }
+        } else {
+          if (!(await this.plug.enabled(this.denops))) {
+            this.clog(`[add] ${this.#url} enabled is false. (func)`);
+            return;
           }
         }
-        await this.before();
-        added = await this.register();
-        await this.after();
-      });
-      return added;
+      }
+      await this.before();
+      await this.register();
+      await this.after();
     } catch (e) {
       console.error(e);
       return false;
@@ -124,7 +119,7 @@ export class Plugin {
     await this.sourceAfter();
   }
 
-  public async register(): Promise<boolean> {
+  public async register() {
     this.clog(`[register] ${this.#url} start !`);
     let registered = false;
     let starttime = 0;
@@ -150,7 +145,7 @@ export class Plugin {
       this.state.isLoad = true;
     }
     this.clog(`[register] ${this.#url} end !`);
-    return registered;
+    return;
   }
 
   public async before() {
@@ -235,40 +230,41 @@ export class Plugin {
     );
   }
 
-  public async install() {
-    await Plugin.semaphore.lock(async () => {
-      if (await exists(this.#dst)) {
-        return;
-      }
+  public async install(): Promise<void | Deno.CommandOutput> {
+    if (await exists(this.#dst)) {
+      return;
+    }
 
-      let cloneOpt: string[] = [];
-      if (this.plug.branch) {
-        cloneOpt = cloneOpt.concat(["--branch", this.plug.branch]);
-      }
-      const cmd = new Deno.Command("git", {
-        args: ["clone", ...cloneOpt, this.#url, this.#dst],
-      });
-      const status = await cmd.spawn().status;
-      if (status.success) {
-        await this.genHelptags();
-      } else {
-        throw `Failed to clone ${this.#url}`;
-      }
+    let cloneOpt: string[] = [];
+    if (this.plug.branch) {
+      cloneOpt = cloneOpt.concat(["--branch", this.plug.branch]);
+    }
+    const cmd = new Deno.Command("git", {
+      args: ["clone", ...cloneOpt, this.#url, this.#dst],
     });
+    console.log(`git clone ${cloneOpt.join(" ")} ${this.#url} ${this.#dst}`);
+    const output = await cmd.output();
+
+    if (output.success) {
+      await this.genHelptags();
+    } else {
+      console.error(`Failed to clone ${this.#url}`);
+    }
+    return output;
   }
 
-  public async update() {
-    await Plugin.semaphore.lock(async () => {
-      console.log(`Update: ${this.#url}`);
-      const cmd = new Deno.Command("git", {
-        args: ["-C", this.#dst, "pull", "--rebase"],
-      });
-      const status = await cmd.spawn().status;
-      if (status.success) {
-        await this.genHelptags();
-      } else {
-        throw `Failed to update ${this.#url}`;
-      }
+  public async update(): Promise<void | Deno.CommandOutput> {
+    const cmd = new Deno.Command("git", {
+      args: ["-C", this.#dst, "pull"],
     });
+    console.log(`git -C ${this.#dst} pull`);
+    const output = await cmd.output();
+
+    if (output.success) {
+      await this.genHelptags();
+    } else {
+      console.error(`Failed to update ${this.#url}`);
+    }
+    return output;
   }
 }
