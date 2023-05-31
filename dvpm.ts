@@ -156,7 +156,7 @@ export class Dvpm {
     } else {
       await Promise.all(this.#plugins.map(async (p) => {
         try {
-          await this._update(p);
+          return await this._update(p);
         } catch (e) {
           console.error(e);
         }
@@ -207,7 +207,7 @@ export class Dvpm {
     await Promise.all(
       this.#plugins.filter((p) => p.state.isLoad).map(async (p) => {
         try {
-          await this.#semaphore.lock(async () => {
+          return await this.#semaphore.lock(async () => {
             await p.end();
           });
         } catch (e) {
