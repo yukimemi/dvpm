@@ -14,6 +14,7 @@ export type DvpmOption = {
   debug?: boolean;
   concurrency?: number;
   profile?: boolean;
+  notify?: boolean;
 };
 
 export class Dvpm {
@@ -31,16 +32,10 @@ export class Dvpm {
   ) {
     this.#totalElaps = performance.now();
 
-    if (this.dvpmOption.debug == undefined) {
-      this.dvpmOption.debug = false;
-    }
     if (this.dvpmOption.concurrency == undefined) {
       this.dvpmOption.concurrency = concurrency;
     } else {
       this.#semaphore = new Semaphore(this.dvpmOption.concurrency);
-    }
-    if (this.dvpmOption.profile == undefined) {
-      this.dvpmOption.profile = false;
     }
   }
 
@@ -186,6 +181,7 @@ export class Dvpm {
         base: this.dvpmOption.base,
         debug: this.dvpmOption.debug,
         profile: this.dvpmOption.profile,
+        notify: this.dvpmOption.notify,
       };
       const p = await Plugin.create(
         this.denops,

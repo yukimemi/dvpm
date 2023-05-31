@@ -10,6 +10,7 @@ import {
   ensureString,
   isBoolean,
 } from "https://deno.land/x/unknownutil@v2.1.1/mod.ts";
+import { notify } from "./util.ts";
 
 export type Plug = {
   url: string;
@@ -30,6 +31,7 @@ export type PluginOption = {
   base: string;
   debug?: boolean;
   profile?: boolean;
+  notify?: boolean;
 };
 
 export class Plugin {
@@ -52,10 +54,6 @@ export class Plugin {
       isLoad: false,
       elaps: 0,
     };
-
-    if (this.pluginOption.debug == undefined) {
-      this.pluginOption.debug = false;
-    }
   }
 
   public static async create(
@@ -242,7 +240,14 @@ export class Plugin {
     const cmd = new Deno.Command("git", {
       args: ["clone", ...cloneOpt, this.#url, this.#dst],
     });
-    console.log(`git clone ${cloneOpt.join(" ")} ${this.#url} ${this.#dst}`);
+    if (this.pluginOption.notify) {
+      await notify(
+        this.denops,
+        `git clone ${cloneOpt.join(" ")} ${this.#url} ${this.#dst}`,
+      );
+    } else {
+      console.log(`git clone ${cloneOpt.join(" ")} ${this.#url} ${this.#dst}`);
+    }
     const output = await cmd.output();
 
     if (output.success) {
@@ -257,7 +262,11 @@ export class Plugin {
     const cmd = new Deno.Command("git", {
       args: ["-C", this.#dst, "pull"],
     });
-    console.log(`git -C ${this.#dst} pull`);
+    if (this.pluginOption.notify) {
+      await notify(this.denops, `git -C ${this.#dst} pull`);
+    } else {
+      console.log(`git -C ${this.#dst} pull`);
+    }
     const output = await cmd.output();
 
     if (output.success) {
