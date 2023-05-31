@@ -154,9 +154,9 @@ export class Dvpm {
       const p = this.findPlug(url);
       await this._update(p);
     } else {
-      await Promise.all(this.#plugins.map(async (p) => {
+      await Promise.all(this.#plugins.map((p) => {
         try {
-          return await this._update(p);
+          return this._update(p);
         } catch (e) {
           console.error(e);
         }
@@ -205,9 +205,9 @@ export class Dvpm {
 
   public async end() {
     await Promise.all(
-      this.#plugins.filter((p) => p.state.isLoad).map(async (p) => {
+      this.#plugins.filter((p) => p.state.isLoad).map((p) => {
         try {
-          return await this.#semaphore.lock(async () => {
+          return this.#semaphore.lock(async () => {
             await p.end();
           });
         } catch (e) {
