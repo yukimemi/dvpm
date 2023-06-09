@@ -176,7 +176,11 @@ export class Dvpm {
   }
 
   public async update(url?: string) {
-    console.log(`Update start`);
+    if (this.dvpmOption.notify) {
+      await notify(this.denops, `Update start`);
+    } else {
+      console.log(`Update start`);
+    }
     if (url) {
       const p = this.findPlug(url);
       await this._update(p);
@@ -203,7 +207,11 @@ export class Dvpm {
       ]);
       await this.bufWrite("dvpm://update", updateLogs);
     }
-    console.log(`Update done`);
+    if (this.dvpmOption.notify) {
+      await notify(this.denops, `Update done`);
+    } else {
+      console.log(`Update done`);
+    }
   }
 
   public async uninstall(url: string) {
