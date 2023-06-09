@@ -16,7 +16,10 @@ All plugins are loaded lazily.
 
 ## Sample configuration
 
-- ~/.config/nvim/init.lua (Neovim)
+### Neovim
+
+- ~/.config/nvim/init.lua (Mac / Linux)
+- ~/AppData/Local/nvim/init.lua (Windows)
 
 ```lua
 local denops = vim.fn.expand("~/.cache/nvim/dvpm/github.com/vim-denops/denops.vim")
@@ -25,7 +28,11 @@ if not vim.loop.fs_stat(denops) then
 end
 vim.opt.runtimepath:prepend(denops)
 ```
-- ~/.vimrc (Vim)
+
+### Vim
+
+- ~/.vimrc (Mac / Linux)
+- ~/_vimrc (Windows)
 
 ```vim
 let s:denops = expand("~/.cache/vim/dvpm/github.com/vim-denops/denops.vim")
@@ -35,8 +42,15 @@ endif
 execute 'set runtimepath^=' . substitute(fnamemodify(s:denops, ':p') , '[/\\]$', '', '')
 ```
 
-- ~/.config/nvim/denops/config/main.ts (Neovim)
-- ~/.config/vim/denops/config/main.ts (Vim)
+---
+
+### Neovim
+- ~/.config/nvim/denops/config/main.ts (Mac / Linux)
+- ~/AppData/Local/nvim/denops/config/main.ts (Windows)
+
+### Vim
+- ~/.vim/denops/config/main.ts (Mac / Linux)
+- ~/vimfiles/denops/config/main.ts (Windows)
 
 ```typescript
 import * as fn from "https://deno.land/x/denops_std@v5.0.0/function/mod.ts";
