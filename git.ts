@@ -16,11 +16,15 @@ export class Git {
     return cloneResult;
   }
 
-  public async pull() {
+  public async pull(branch?: string) {
     const head = await this.g.revparse("HEAD");
-    const branch = (await this.g.branch()).current;
+    const currentBranch = (await this.g.branch()).current;
+    branch ??= currentBranch;
     const remote = (await this.g.getRemotes())[0].name;
     console.log(`Update ${this.base}, remote: ${remote}, branch: ${branch}`);
+    if (branch !== currentBranch) {
+      this.g.checkout(branch);
+    }
     const pullResult = await this.g.pull(remote, branch);
     if (pullResult && pullResult.summary.changes) {
       return this.g.log({ from: head });
