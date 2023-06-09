@@ -10,7 +10,7 @@ import {
   ensureString,
   isBoolean,
 } from "https://deno.land/x/unknownutil@v2.1.1/mod.ts";
-import { notify } from "./util.ts";
+import { Git } from "./git.ts";
 
 export type Plug = {
   url: string;
@@ -31,7 +31,6 @@ export type PluginOption = {
   base: string;
   debug?: boolean;
   profile?: boolean;
-  notify?: boolean;
 };
 
 export class Plugin {
@@ -228,52 +227,22 @@ export class Plugin {
     );
   }
 
-  public async install(): Promise<void | Deno.CommandOutput> {
+  public async install() {
     if (await exists(this.#dst)) {
       return;
     }
 
-    let cloneOpt: string[] = [];
-    if (this.plug.branch) {
-      cloneOpt = cloneOpt.concat(["--branch", this.plug.branch]);
-    }
-    const cmd = new Deno.Command("git", {
-      args: ["clone", ...cloneOpt, this.#url, this.#dst],
-    });
-    if (this.pluginOption.notify) {
-      await notify(
-        this.denops,
-        `git clone ${cloneOpt.join(" ")} ${this.#url} ${this.#dst}`,
-      );
-    } else {
-      console.log(`git clone ${cloneOpt.join(" ")} ${this.#url} ${this.#dst}`);
-    }
-    const output = await cmd.output();
-
-    if (output.success) {
-      await this.genHelptags();
-    } else {
-      console.error(`Failed to clone ${this.#url}`);
-    }
-    return output;
+    await Git.clone(this.#url, this.#dst, this.plug.branch);
+    return this.plug.branch ? `Git clone ${this.#url} --branch=${this.plug.branch}` : `Git clone ${this.#url}`;
   }
 
-  public async update(): Promise<void | Deno.CommandOutput> {
-    const cmd = new Deno.Command("git", {
-      args: ["-C", this.#dst, "pull"],
-    });
-    if (this.pluginOption.notify) {
-      await notify(this.denops, `git -C ${this.#dst} pull`);
-    } else {
-      console.log(`git -C ${this.#dst} pull`);
+  public async update() {
+    try {
+      const git = new Git(this.#dst);
+      const result = await git.pull();
+      return result;
+    } catch (e) {
+      throw e;
     }
-    const output = await cmd.output();
-
-    if (output.success) {
-      await this.genHelptags();
-    } else {
-      console.error(`Failed to update ${this.#url}`);
-    }
-    return output;
   }
 }

@@ -7,6 +7,8 @@ import { execute } from "https://deno.land/x/denops_std@v5.0.0/helper/mod.ts";
 import { sprintf } from "https://deno.land/std@0.189.0/fmt/printf.ts";
 import { type Plug, Plugin, PluginOption } from "./plugin.ts";
 
+import { notify } from "./util.ts";
+
 const concurrency = 8;
 
 export type DvpmOption = {
@@ -17,14 +19,27 @@ export type DvpmOption = {
   notify?: boolean;
 };
 
+type GitLog = {
+  hash: string;
+  date: string;
+  message: string;
+  body: string;
+  authorName: string;
+  autherEmail: string;
+};
+
+type GitLogs = {
+  url: string;
+  logs: GitLog[];
+};
+
 export class Dvpm {
-  #logLock = new Semaphore(1);
   #semaphore = new Semaphore(concurrency);
 
   #plugins: Plugin[] = [];
   #totalElaps: number;
   #installLogs: string[] = [];
-  #updateLogs: string[] = [];
+  #updateLogs: GitLogs[] = [];
 
   constructor(
     public denops: Denops,
@@ -81,50 +96,62 @@ export class Dvpm {
     return p;
   }
 
-  private async bufWrite(bufname: string, data: string[]) {
-    const buf = await buffer.open(this.denops, bufname);
-    await buffer.ensure(this.denops, buf.bufnr, async () => {
-      await fn.setbufvar(this.denops, buf.bufnr, "&buftype", "nofile");
-      await fn.setbufvar(this.denops, buf.bufnr, "&swapfile", 0);
-      await buffer.replace(this.denops, buf.bufnr, data);
-      await buffer.concrete(this.denops, buf.bufnr);
-    });
+  private uniquePlug(plugins: Plugin[]): Plugin[] {
+    return Array.from(new Set(plugins.map((a) => a.plug.url))).map(
+      (url) => this.findPlug(url),
+    );
   }
 
-  private async writeLogs(
-    plug: Plugin,
-    target: string[],
-    output: Deno.CommandOutput,
-  ) {
-    await this.#logLock.lock(() => {
-      target.push(`---------- ${plug.plug.url} --------------------`);
-      if (output.stdout) {
-        new TextDecoder().decode(output.stdout).split("\n").forEach((s) =>
-          target.push(s)
-        );
-      }
-      if (output.stderr) {
-        new TextDecoder().decode(output.stderr).split("\n").forEach((s) =>
-          target.push(s)
-        );
-      }
-      target.push(``);
-    });
+  private async bufWrite(bufname: string, data: string[]) {
+    const buf = await buffer.open(this.denops, bufname);
+    await fn.setbufvar(this.denops, buf.bufnr, "&buftype", "nofile");
+    await fn.setbufvar(this.denops, buf.bufnr, "&swapfile", 0);
+    await buffer.replace(this.denops, buf.bufnr, data);
+    await buffer.concrete(this.denops, buf.bufnr);
   }
 
   private async _install(p: Plugin) {
     await this.#semaphore.lock(async () => {
-      const output = await p.install();
-      if (output) {
-        await this.writeLogs(p, this.#installLogs, output);
+      const result = await p.install();
+      if (result) {
+        this.#installLogs.push(result);
+        if (this.dvpmOption.notify) {
+          await notify(this.denops, result);
+        }
       }
     });
   }
   private async _update(p: Plugin) {
     await this.#semaphore.lock(async () => {
-      const output = await p.update();
-      if (output) {
-        await this.writeLogs(p, this.#updateLogs, output);
+      try {
+        const result = await p.update();
+        if (result) {
+          const updateLog: GitLogs = { url: p.plug.url, logs: [] };
+          result.all.forEach((x) =>
+            updateLog.logs.push({
+              hash: x.hash,
+              date: x.date,
+              message: x.message,
+              body: x.body,
+              authorName: x.author_name,
+              autherEmail: x.author_email,
+            })
+          );
+          this.#updateLogs.push(updateLog);
+          if (this.dvpmOption.notify) {
+            const updateLogs = [
+              `--- ${updateLog.url} --------------------`,
+              ...updateLog.logs.flatMap((l) => [
+                l.date,
+                l.authorName,
+                l.message,
+              ]),
+            ];
+            await notify(this.denops, updateLogs.join("\r"));
+          }
+        }
+      } catch (e) {
+        throw e;
       }
     });
   }
@@ -142,25 +169,41 @@ export class Dvpm {
         }
       });
     }
+
+    if (this.#installLogs.length > 0) {
+      await this.bufWrite("dvpm://install", this.#installLogs);
+    }
   }
 
   public async update(url?: string) {
+    console.log(`Update start`);
     if (url) {
       const p = this.findPlug(url);
       await this._update(p);
     } else {
-      await Promise.all(this.#plugins.map((p) => {
-        try {
-          return this._update(p);
-        } catch (e) {
-          console.error(e);
-        }
-      }));
+      await Promise.all(
+        this.uniquePlug(this.#plugins).map(async (p) => {
+          try {
+            return await this._update(p);
+          } catch (e) {
+            console.error(e);
+          }
+        }),
+      );
     }
 
     if (this.#updateLogs.length > 0) {
-      await this.bufWrite("dvpm://update", this.#updateLogs);
+      const updateLogs = this.#updateLogs.flatMap((u) => [
+        `--- ${u.url} --------------------`,
+        ...u.logs.flatMap((l) => [
+          l.date,
+          l.authorName,
+          l.message,
+        ]),
+      ]);
+      await this.bufWrite("dvpm://update", updateLogs);
     }
+    console.log(`Update done`);
   }
 
   public async uninstall(url: string) {
@@ -181,7 +224,6 @@ export class Dvpm {
         base: this.dvpmOption.base,
         debug: this.dvpmOption.debug,
         profile: this.dvpmOption.profile,
-        notify: this.dvpmOption.notify,
       };
       const p = await Plugin.create(
         this.denops,
@@ -201,15 +243,17 @@ export class Dvpm {
 
   public async end() {
     await Promise.all(
-      this.#plugins.filter((p) => p.state.isLoad).map((p) => {
-        try {
-          return this.#semaphore.lock(async () => {
-            await p.end();
-          });
-        } catch (e) {
-          console.error(e);
-        }
-      }),
+      this.uniquePlug(this.#plugins.filter((p) => p.state.isLoad)).map(
+        async (p) => {
+          try {
+            return await this.#semaphore.lock(async () => {
+              await p.end();
+            });
+          } catch (e) {
+            console.error(e);
+          }
+        },
+      ),
     );
     if (this.#installLogs.length > 0) {
       await this.bufWrite("dvpm://install", this.#installLogs);
