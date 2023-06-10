@@ -8,7 +8,7 @@ export class Git {
   public gitDir: string;
 
   constructor(public base: string) {
-    this.g = git.simpleGit(base).env({ ...Deno.env.toObject() });
+    this.g = git.simpleGit(base);
     this.gitDir = path.join(base, ".git");
   }
 
@@ -46,26 +46,32 @@ export class Git {
   }
 
   public static async clone(url: string, dst: string, branch?: string) {
-    const cloneResult = branch
-      ? await git.simpleGit().clone(url, dst, { "--branch": branch })
-      : await git.simpleGit().clone(url, dst);
-    return cloneResult;
+    const args = branch
+      ? [
+        "clone",
+        "--branch",
+        branch,
+        url,
+        dst,
+      ]
+      : [
+        "clone",
+        url,
+        dst,
+      ];
+    const cmd = new Deno.Command("git", { args });
+    return await cmd.output();
   }
 
   public async pull(branch?: string) {
-    const head = await this.getRevision();
     const currentBranch = await this.getBranch();
     branch ??= currentBranch;
-    console.log(`Update ${this.base}, branch: ${branch}`);
     if (branch !== currentBranch) {
       this.g.checkout(branch);
     }
-    const pullResult = await this.g.pull([
-      "--ff-only",
-      "--rebase=false",
-    ]);
-    if (pullResult && pullResult.summary.changes) {
-      return this.g.log({ from: head });
-    }
+    console.log(`Update ${this.base}, branch: ${branch}`);
+    const args = ["-C", this.base, "pull", "--ff-only", "--rebase=false"];
+    const cmd = new Deno.Command("git", { args });
+    return await cmd.output();
   }
 }

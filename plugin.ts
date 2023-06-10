@@ -127,10 +127,7 @@ export class Plugin {
       const rtp = (await op.runtimepath.get(this.denops)).split(",");
       if (!rtp.includes(this.#dst)) {
         registered = true;
-        await op.runtimepath.set(
-          this.denops,
-          `${rtp},${this.#dst}`,
-        );
+        await op.runtimepath.set(this.denops, `${rtp},${this.#dst}`);
       }
     });
     await this.source();
@@ -232,19 +229,42 @@ export class Plugin {
       return;
     }
 
-    await Git.clone(this.#url, this.#dst, this.plug.branch);
+    const output = await Git.clone(this.#url, this.#dst, this.plug.branch);
+    if (output.success) {
+      await this.genHelptags();
+    } else {
+      console.error(
+        `Failed to clone ${this.#url}, stdout: [${
+          new TextDecoder().decode(
+            output.stdout,
+          )
+        }], stderr: [${new TextDecoder().decode(output.stderr)}]`,
+      );
+    }
     return this.plug.branch
       ? `Git clone ${this.#url} --branch=${this.plug.branch}`
       : `Git clone ${this.#url}`;
   }
 
   public async update() {
-    try {
-      const git = new Git(this.#dst);
-      const result = await git.pull(this.plug.branch);
-      return result;
-    } catch (e) {
-      throw e;
+    const git = new Git(this.#dst);
+    const beforeRev = await git.getRevision();
+    const output = await git.pull(this.plug.branch);
+    const afterRev = await git.getRevision();
+    if (output.success) {
+      await this.genHelptags();
+      if (beforeRev !== afterRev) {
+        return git.g.log({ from: beforeRev });
+      }
+    } else {
+      console.error(
+        `Failed to pull ${this.#url}, stdout: [${
+          new TextDecoder().decode(
+            output.stdout,
+          )
+        }], stderr: [${new TextDecoder().decode(output.stderr)}]`,
+      );
     }
+    return null;
   }
 }
