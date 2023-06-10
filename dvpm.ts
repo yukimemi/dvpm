@@ -102,6 +102,19 @@ export class Dvpm {
     );
   }
 
+  private gitLogToList(gitLog: GitLogs): string[] {
+    return [
+      `--- ${gitLog.url} ------------------------------`,
+      "",
+      ...gitLog.logs.flatMap((l) => [
+        l.date,
+        l.authorName,
+        l.message,
+        "",
+      ]),
+    ];
+  }
+
   private async bufWrite(bufname: string, data: string[]) {
     const buf = await buffer.open(this.denops, bufname);
     await fn.setbufvar(this.denops, buf.bufnr, "&buftype", "nofile");
@@ -139,15 +152,7 @@ export class Dvpm {
           );
           this.#updateLogs.push(updateLog);
           if (this.dvpmOption.notify) {
-            const updateLogs = [
-              `--- ${updateLog.url} --------------------`,
-              ...updateLog.logs.flatMap((l) => [
-                l.date,
-                l.authorName,
-                l.message,
-              ]),
-            ];
-            await notify(this.denops, updateLogs.join("\r"));
+            await notify(this.denops, this.gitLogToList(updateLog).join("\r"));
           }
         }
       } catch (e) {
@@ -197,14 +202,7 @@ export class Dvpm {
     }
 
     if (this.#updateLogs.length > 0) {
-      const updateLogs = this.#updateLogs.flatMap((u) => [
-        `--- ${u.url} --------------------`,
-        ...u.logs.flatMap((l) => [
-          l.date,
-          l.authorName,
-          l.message,
-        ]),
-      ]);
+      const updateLogs = this.#updateLogs.flatMap((g) => this.gitLogToList(g));
       await this.bufWrite("dvpm://update", updateLogs);
     }
     if (this.dvpmOption.notify) {
