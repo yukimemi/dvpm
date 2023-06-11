@@ -253,8 +253,8 @@ export class Plugin {
     const output = await git.pull(this.plug.branch);
     const afterRev = await git.getRevision();
     if (output.success) {
-      await this.genHelptags();
       if (beforeRev !== afterRev) {
+        await this.genHelptags();
         const output = await git.getLog(
           beforeRev,
           afterRev,
