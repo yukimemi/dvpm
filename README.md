@@ -60,7 +60,7 @@ import { ensureString } from "https://deno.land/x/unknownutil@v2.1.1/mod.ts";
 import { execute } from "https://deno.land/x/denops_std@v5.0.0/helper/mod.ts";
 import { globals } from "https://deno.land/x/denops_std@v5.0.0/variable/mod.ts";
 
-import { Dvpm } from "https://deno.land/x/dvpm@0.4.5/mod.ts";
+import { Dvpm } from "https://deno.land/x/dvpm@0.5.0/mod.ts";
 
 export async function main(denops: Denops): Promise<void> {
   const base_path = (await fn.has(denops, "nvim"))
@@ -155,8 +155,10 @@ export type DvpmOption = {
   // When this option is set, the time taken to source each plug-in is output after Vim is launched.
   // `before` and `after` execution times are not included. Default is false.
   profile?: boolean;
-  // Use `vim.notify` for Install and Update log. (Neovim only)
+  // Use `vim.notify` for Install and Update log. Default is false. (Neovim only)
   notify?: boolean;
+  // git log arg. Used for :DvpmUpdate command output. Default is [].
+  logarg?: string[];
 };
 
 ```

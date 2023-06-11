@@ -17,20 +17,7 @@ export type DvpmOption = {
   concurrency?: number;
   profile?: boolean;
   notify?: boolean;
-};
-
-type GitLog = {
-  hash: string;
-  date: string;
-  message: string;
-  body: string;
-  authorName: string;
-  autherEmail: string;
-};
-
-type GitLogs = {
-  url: string;
-  logs: GitLog[];
+  logarg?: string[];
 };
 
 export class Dvpm {
@@ -39,7 +26,7 @@ export class Dvpm {
   #plugins: Plugin[] = [];
   #totalElaps: number;
   #installLogs: string[] = [];
-  #updateLogs: GitLogs[] = [];
+  #updateLogs: string[] = [];
 
   constructor(
     public denops: Denops,
@@ -102,19 +89,6 @@ export class Dvpm {
     );
   }
 
-  private gitLogToList(gitLog: GitLogs): string[] {
-    return [
-      `--- ${gitLog.url} ------------------------------`,
-      "",
-      ...gitLog.logs.flatMap((l) => [
-        l.date,
-        l.authorName,
-        l.message,
-        "",
-      ]),
-    ];
-  }
-
   private async bufWrite(bufname: string, data: string[]) {
     const buf = await buffer.open(this.denops, bufname);
     await fn.setbufvar(this.denops, buf.bufnr, "&buftype", "nofile");
@@ -136,27 +110,12 @@ export class Dvpm {
   }
   private async _update(p: Plugin) {
     await this.#semaphore.lock(async () => {
-      try {
-        const result = await p.update();
-        if (result) {
-          const updateLog: GitLogs = { url: p.plug.url, logs: [] };
-          result.all.forEach((x) =>
-            updateLog.logs.push({
-              hash: x.hash,
-              date: x.date,
-              message: x.message,
-              body: x.body,
-              authorName: x.author_name,
-              autherEmail: x.author_email,
-            })
-          );
-          this.#updateLogs.push(updateLog);
-          if (this.dvpmOption.notify) {
-            await notify(this.denops, this.gitLogToList(updateLog).join("\r"));
-          }
+      const result = await p.update();
+      if (result) {
+        this.#updateLogs.push(...result);
+        if (this.dvpmOption.notify) {
+          await notify(this.denops, result.join("\r"));
         }
-      } catch (e) {
-        throw e;
       }
     });
   }
@@ -202,8 +161,7 @@ export class Dvpm {
     }
 
     if (this.#updateLogs.length > 0) {
-      const updateLogs = this.#updateLogs.flatMap((g) => this.gitLogToList(g));
-      await this.bufWrite("dvpm://update", updateLogs);
+      await this.bufWrite("dvpm://update", this.#updateLogs);
     }
     if (this.dvpmOption.notify) {
       await notify(this.denops, `Update done`);
@@ -230,6 +188,7 @@ export class Dvpm {
         base: this.dvpmOption.base,
         debug: this.dvpmOption.debug,
         profile: this.dvpmOption.profile,
+        logarg: this.dvpmOption.logarg,
       };
       const p = await Plugin.create(
         this.denops,

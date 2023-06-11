@@ -45,6 +45,12 @@ export class Git {
     return (await this.g.branch()).current;
   }
 
+  public async getLog(from: string, to: string, argOption: string[] = []) {
+    const args = ["-C", this.base, "log", ...argOption, `${from}..${to}`];
+    const cmd = new Deno.Command("git", { args });
+    return await cmd.output();
+  }
+
   public static async clone(url: string, dst: string, branch?: string) {
     const args = branch
       ? [

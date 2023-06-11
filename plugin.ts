@@ -31,6 +31,7 @@ export type PluginOption = {
   base: string;
   debug?: boolean;
   profile?: boolean;
+  logarg?: string[];
 };
 
 export class Plugin {
@@ -254,7 +255,25 @@ export class Plugin {
     if (output.success) {
       await this.genHelptags();
       if (beforeRev !== afterRev) {
-        return git.g.log({ from: beforeRev });
+        const output = await git.getLog(
+          beforeRev,
+          afterRev,
+          this.pluginOption.logarg,
+        );
+        if (output.success) {
+          return [
+            `--- ${this.#dst} --------------------`,
+            ...(new TextDecoder().decode(output.stdout)).split("\n"),
+          ];
+        } else {
+          console.error(
+            `Failed to git log ${this.#dst}, stdout: [${
+              new TextDecoder().decode(
+                output.stdout,
+              )
+            }], stderr: [${new TextDecoder().decode(output.stderr)}]`,
+          );
+        }
       }
     } else {
       console.error(
