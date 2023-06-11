@@ -16,14 +16,26 @@ export type Plug = {
   url: string;
   dst?: string;
   branch?: string;
-  enabled?: boolean | ((denops: Denops) => Promise<boolean>);
-  before?: (denops: Denops) => Promise<void>;
-  after?: (denops: Denops) => Promise<void>;
+  enabled?:
+    | boolean
+    | ((
+      { denops, info }: { denops: Denops; info: PlugInfo },
+    ) => Promise<boolean>);
+  before?: (
+    { denops, info }: { denops: Denops; info: PlugInfo },
+  ) => Promise<void>;
+  after?: (
+    { denops, info }: { denops: Denops; info: PlugInfo },
+  ) => Promise<void>;
+  build?: (
+    { denops, info }: { denops: Denops; info: PlugInfo },
+  ) => Promise<void>;
   dependencies?: Plug[];
 };
 
-export type PlugState = Plug & {
+export type PlugInfo = Plug & {
   isLoad: boolean;
+  isUpdate: boolean;
   elaps: number;
 };
 
@@ -36,22 +48,17 @@ export type PluginOption = {
 
 export class Plugin {
   static mutex = new Semaphore(1);
-
-  #dst: string;
-  #url: string;
-
-  public state: PlugState;
+  public info: PlugInfo;
 
   constructor(
     public denops: Denops,
     public plug: Plug,
     public pluginOption: PluginOption,
   ) {
-    this.#dst = "";
-    this.#url = "";
-    this.state = {
+    this.info = {
       ...plug,
       isLoad: false,
+      isUpdate: false,
       elaps: 0,
     };
   }
@@ -63,17 +70,17 @@ export class Plugin {
   ): Promise<Plugin> {
     const p = new Plugin(denops, plug, pluginOption);
     if (p.plug.url.startsWith("http") || p.plug.url.startsWith("git")) {
-      p.#url = p.plug.url;
+      p.info.url = p.plug.url;
       const url = new URL(p.plug.url);
-      p.#dst = path.join(pluginOption.base, url.hostname, url.pathname);
+      p.info.dst = path.join(pluginOption.base, url.hostname, url.pathname);
     } else {
-      p.#url = `https://github.com/${p.plug.url}`;
-      p.#dst = path.join(pluginOption.base, "github.com", p.plug.url);
+      p.info.url = `https://github.com/${p.plug.url}`;
+      p.info.dst = path.join(pluginOption.base, "github.com", p.plug.url);
     }
 
     if (p.plug.dst) {
-      p.clog(`[create] ${p.#url} set dst to ${p.plug.dst}`);
-      p.#dst = ensureString(await fn.expand(denops, p.plug.dst));
+      p.clog(`[create] ${p.info.dst} set dst to ${p.plug.dst}`);
+      p.info.dst = ensureString(await fn.expand(denops, p.plug.dst));
     }
 
     return p;
@@ -88,28 +95,33 @@ export class Plugin {
 
   public async add() {
     try {
-      this.clog(`[add] ${this.#url} start !`);
+      this.clog(`[add] ${this.info.url} start !`);
       if (this.plug.enabled != undefined) {
         if (isBoolean(this.plug.enabled)) {
           if (!this.plug.enabled) {
-            this.clog(`[add] ${this.#url} enabled is false. (boolean)`);
+            this.clog(`[add] ${this.info.url} enabled is false. (boolean)`);
             return;
           }
         } else {
-          if (!(await this.plug.enabled(this.denops))) {
-            this.clog(`[add] ${this.#url} enabled is false. (func)`);
+          if (
+            !(await this.plug.enabled({ denops: this.denops, info: this.info }))
+          ) {
+            this.clog(`[add] ${this.info.url} enabled is false. (func)`);
             return;
           }
         }
       }
       await this.before();
       await this.register();
+      if (this.info.isLoad && this.info.isUpdate) {
+        await this.build();
+      }
       await this.after();
     } catch (e) {
       console.error(e);
       return false;
     } finally {
-      this.clog(`[add] ${this.#url} end !`);
+      this.clog(`[add] ${this.info.url} end !`);
     }
   }
 
@@ -118,7 +130,7 @@ export class Plugin {
   }
 
   public async register() {
-    this.clog(`[register] ${this.#url} start !`);
+    this.clog(`[register] ${this.info.url} start !`);
     let registered = false;
     let starttime = 0;
     await Plugin.mutex.lock(async () => {
@@ -126,58 +138,65 @@ export class Plugin {
         starttime = performance.now();
       }
       const rtp = (await op.runtimepath.get(this.denops)).split(",");
-      if (!rtp.includes(this.#dst)) {
+      if (!rtp.includes(ensureString(this.info.dst))) {
         registered = true;
-        await op.runtimepath.set(this.denops, `${rtp},${this.#dst}`);
+        await op.runtimepath.set(this.denops, `${rtp},${this.info.dst}`);
       }
     });
     await this.source();
     await this.registerDenops();
     if (registered) {
       if (this.pluginOption.profile) {
-        this.state.elaps = performance.now() - starttime;
+        this.info.elaps = performance.now() - starttime;
       }
-      this.state.isLoad = true;
+      this.info.isLoad = true;
     }
-    this.clog(`[register] ${this.#url} end !`);
+    this.clog(`[register] ${this.info.url} end !`);
     return;
   }
 
   public async before() {
     if (this.plug.before) {
-      this.clog(`[before] ${this.#url} start !`);
-      await this.plug.before(this.denops);
-      this.clog(`[before] ${this.#url} end !`);
+      this.clog(`[before] ${this.info.url} start !`);
+      await this.plug.before({ denops: this.denops, info: this.info });
+      this.clog(`[before] ${this.info.url} end !`);
     }
   }
   public async after() {
     if (this.plug.after) {
-      this.clog(`[after] ${this.#url} start !`);
-      await this.plug.after(this.denops);
-      this.clog(`[after] ${this.#url} end !`);
+      this.clog(`[after] ${this.info.url} start !`);
+      await this.plug.after({ denops: this.denops, info: this.info });
+      this.clog(`[after] ${this.info.url} end !`);
+    }
+  }
+  public async build() {
+    if (this.plug.build) {
+      this.clog(`[build] ${this.info.url} start !`);
+      await this.plug.build({ denops: this.denops, info: this.info });
+      this.clog(`[build] ${this.info.url} end !`);
     }
   }
 
   public async source() {
     try {
-      this.clog(`[source] ${this.#url} start !`);
+      this.clog(`[source] ${this.info.url} start !`);
       await this.sourceVimPre();
       await this.sourceLuaPre();
     } catch (e) {
       console.error(e);
     } finally {
-      this.clog(`[source] ${this.#url} end !`);
+      this.clog(`[source] ${this.info.url} end !`);
     }
   }
   public async sourceAfter() {
     try {
-      this.clog(`[sourceAfter] ${this.#url} start !`);
+      this.clog(`[sourceAfter] ${this.info.url} start !`);
       await this.sourceVimAfter();
       await this.sourceLuaAfter();
     } catch (e) {
       console.error(e);
     } finally {
-      this.clog(`[sourceAfter] ${this.#url} end !`);
+      this.clog(`[sourceAfter] ${this.info.url} end !`);
     }
   }
 
@@ -187,11 +206,11 @@ export class Plugin {
     }
   }
   private async sourceVimPre() {
-    const target = `${this.#dst}/plugin/**/*.vim`;
+    const target = `${this.info.dst}/plugin/**/*.vim`;
     await this.sourceVim(target);
   }
   private async sourceVimAfter() {
-    const target = `${this.#dst}/after/plugin/**/*.vim`;
+    const target = `${this.info.dst}/after/plugin/**/*.vim`;
     await this.sourceVim(target);
   }
   private async sourceLua(target: string) {
@@ -200,15 +219,15 @@ export class Plugin {
     }
   }
   private async sourceLuaPre() {
-    const target = `${this.#dst}/plugin/**/*.lua`;
+    const target = `${this.info.dst}/plugin/**/*.lua`;
     await this.sourceLua(target);
   }
   private async sourceLuaAfter() {
-    const target = `${this.#dst}/after/plugin/**/*.lua`;
+    const target = `${this.info.dst}/after/plugin/**/*.lua`;
     await this.sourceLua(target);
   }
   private async registerDenops() {
-    const target = `${this.#dst}/denops/*/main.ts`;
+    const target = `${this.info.dst}/denops/*/main.ts`;
     for await (const file of expandGlob(target)) {
       const name = path.basename(path.dirname(file.path));
       await this.denops.call("denops#plugin#register", name, {
@@ -218,7 +237,7 @@ export class Plugin {
   }
 
   public async genHelptags() {
-    const docDir = path.join(this.#dst, "doc");
+    const docDir = path.join(ensureString(this.info.dst), "doc");
     await execute(
       this.denops,
       `silent! helptags ${await fn.fnameescape(this.denops, docDir)}`,
@@ -226,16 +245,21 @@ export class Plugin {
   }
 
   public async install() {
-    if (await exists(this.#dst)) {
+    if (await exists(ensureString(this.info.dst))) {
       return;
     }
 
-    const output = await Git.clone(this.#url, this.#dst, this.plug.branch);
+    const output = await Git.clone(
+      this.info.url,
+      ensureString(this.info.dst),
+      this.plug.branch,
+    );
     if (output.success) {
       await this.genHelptags();
+      this.info.isUpdate = true;
     } else {
       console.error(
-        `Failed to clone ${this.#url}, stdout: [${
+        `Failed to clone ${this.info.url}, stdout: [${
           new TextDecoder().decode(
             output.stdout,
           )
@@ -243,18 +267,20 @@ export class Plugin {
       );
     }
     return this.plug.branch
-      ? `Git clone ${this.#url} --branch=${this.plug.branch}`
-      : `Git clone ${this.#url}`;
+      ? `Git clone ${this.info.url} --branch=${this.plug.branch}`
+      : `Git clone ${this.info.url}`;
   }
 
   public async update() {
-    const git = new Git(this.#dst);
+    const git = new Git(ensureString(this.info.dst));
     const beforeRev = await git.getRevision();
     const output = await git.pull(this.plug.branch);
     const afterRev = await git.getRevision();
     if (output.success) {
       if (beforeRev !== afterRev) {
         await this.genHelptags();
+        this.info.isUpdate = true;
+        await this.build();
         const output = await git.getLog(
           beforeRev,
           afterRev,
@@ -262,12 +288,12 @@ export class Plugin {
         );
         if (output.success) {
           return [
-            `--- ${this.#dst} --------------------`,
-            ...(new TextDecoder().decode(output.stdout)).split("\n"),
+            `--- ${this.info.dst} --------------------`,
+            ...new TextDecoder().decode(output.stdout).split("\n"),
           ];
         } else {
           console.error(
-            `Failed to git log ${this.#dst}, stdout: [${
+            `Failed to git log ${this.info.dst}, stdout: [${
               new TextDecoder().decode(
                 output.stdout,
               )
@@ -277,7 +303,7 @@ export class Plugin {
       }
     } else {
       console.error(
-        `Failed to pull ${this.#url}, stdout: [${
+        `Failed to pull ${this.info.url}, stdout: [${
           new TextDecoder().decode(
             output.stdout,
           )

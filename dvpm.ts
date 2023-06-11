@@ -208,7 +208,7 @@ export class Dvpm {
 
   public async end() {
     await Promise.all(
-      this.uniquePlug(this.#plugins.filter((p) => p.state.isLoad)).map(
+      this.uniquePlug(this.#plugins.filter((p) => p.info.isLoad)).map(
         async (p) => {
           try {
             return await this.#semaphore.lock(async () => {
@@ -224,9 +224,9 @@ export class Dvpm {
       await this.bufWrite("dvpm://install", this.#installLogs);
     }
     if (this.dvpmOption.profile) {
-      const sortedPlugins = this.#plugins.filter((p) => p.state.isLoad)
-        .sort((a, b) => a.state.elaps - b.state.elaps).map((p) =>
-          sprintf("%-50s: %s", p.plug.url, `${p.state.elaps}`)
+      const sortedPlugins = this.#plugins.filter((p) => p.info.isLoad)
+        .sort((a, b) => a.info.elaps - b.info.elaps).map((p) =>
+          sprintf("%-50s: %s", p.plug.url, `${p.info.elaps}`)
         );
       this.#totalElaps = performance.now() - this.#totalElaps;
       await this.bufWrite("dvpm://profile", [

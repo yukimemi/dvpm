@@ -8,6 +8,5 @@
     "javascriptreact",
     "typescript",
     "typescriptreact"
-  ],
-  "tsdetect.mode": "manual"
+  ]
 }

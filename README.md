@@ -60,7 +60,7 @@ import { ensureString } from "https://deno.land/x/unknownutil@v2.1.1/mod.ts";
 import { execute } from "https://deno.land/x/denops_std@v5.0.0/helper/mod.ts";
 import { globals } from "https://deno.land/x/denops_std@v5.0.0/variable/mod.ts";
 
-import { Dvpm } from "https://deno.land/x/dvpm@0.5.1/mod.ts";
+import { Dvpm } from "https://deno.land/x/dvpm@1.0.0/mod.ts";
 
 export async function main(denops: Denops): Promise<void> {
   const base_path = (await fn.has(denops, "nvim"))
@@ -76,12 +76,24 @@ export async function main(denops: Denops): Promise<void> {
   // URL only (not GitHub).
   await dvpm.add({ url: "https://notgithub.com/some/other/plugin" });
   // With branch.
-  await dvpm.add({ url: "neoclide/coc.nvim", branch: "release" });
+  // await dvpm.add({ url: "neoclide/coc.nvim", branch: "release" });
+  // build option. Execute after install or update.
+  await dvpm.add({
+    url: "neoclide/coc.nvim",
+    branch: "master",
+    build: async ({ info }) => {
+      const args = ["install", "--frozen-lockfile"];
+      const cmd = new Deno.Command("yarn", { args, cwd: info?.dst });
+      const output = await cmd.output();
+      console.log(new TextDecoder().decode(output.stdout));
+    },
+  });
   // before setting.
   await dvpm.add({
     url: "yukimemi/dps-autobackup",
-    before: async (denops: Denops) => {
-      await globals.set(denops,
+    before: async ({ denops }) => {
+      await globals.set(
+        denops,
         "autobackup_dir",
         ensureString(await fn.expand(denops, "~/.cache/nvim/autobackup")),
       );
@@ -90,7 +102,7 @@ export async function main(denops: Denops): Promise<void> {
   // after setting.
   await dvpm.add({
     url: "folke/which-key.nvim",
-    after: async (denops: Denops) => {
+    after: async ({ denops }) => {
       await execute(denops, `lua require("which-key").setup()`);
     },
   });
@@ -98,9 +110,9 @@ export async function main(denops: Denops): Promise<void> {
   await dvpm.add({
     url: "yukimemi/dps-randomcolorscheme",
     dst: "~/src/github.com/yukimemi/dps-randomcolorscheme",
-    before: async (denops: Denops) => {
+    before: async ({ denops }) => {
       await mapping.map(denops, "<space>ro", "<cmd>ChangeColorscheme<cr>", { mode: "n" });
-      await mapping.map( denops, "<space>rd", "<cmd>DisableThisColorscheme<cr>", { mode: "n" });
+      await mapping.map(denops, "<space>rd", "<cmd>DisableThisColorscheme<cr>", { mode: "n" });
       await mapping.map(denops, "<space>rl", "<cmd>LikeThisColorscheme<cr>", { mode: "n" });
       await mapping.map(denops, "<space>rh", "<cmd>HateThisColorscheme<cr>", { mode: "n" });
     },
@@ -113,7 +125,7 @@ export async function main(denops: Denops): Promise<void> {
   // Disable with function.
   await dvpm.add({
     url: "editorconfig/editorconfig-vim",
-    enabled: async (denops: Denops) => !(await fn.has(denops, "nvim")),
+    enabled: async ({ denops }) => !(await fn.has(denops, "nvim")),
   });
   // With dependencies.
   await dvpm.add({
@@ -185,13 +197,36 @@ export type Plug = {
   // Git branch name. (Option)
   branch?: string;
   // enable or disable. Default is true.
-  enabled?: boolean | ((denops: Denops) => Promise<boolean>);
+  enabled?:
+    | boolean
+    | ((
+      { denops, info }: { denops: Denops; info: PlugInfo },
+    ) => Promise<boolean>);
   // Processing to be performed before adding runtimepath. (Option)
-  before?: (denops: Denops) => Promise<void>;
+  before?: (
+    { denops, info }: { denops: Denops; info: PlugInfo },
+  ) => Promise<void>;
   // Processing to be performed after adding runtimepath. (Option)
-  after?: (denops: Denops) => Promise<void>;
-  // dependencies.
+  after?: (
+    { denops, info }: { denops: Denops; info: PlugInfo },
+  ) => Promise<void>;
+  // build option. Execute after install or update. (Option)
+  build?: (
+    { denops, info }: { denops: Denops; info: PlugInfo },
+  ) => Promise<void>;
+  // dependencies. (Option)
   dependencies?: Plug[];
+};
+```
+
+```typescript
+export type PlugInfo = Plug & {
+  // `true` if added to runtimepath.
+  isLoad: boolean;
+  // `true` if install or update.
+  isUpdate: boolean;
+  // plugin load time. Need to set DvpmOption.profile.
+  elaps: number;
 };
 ```
 
