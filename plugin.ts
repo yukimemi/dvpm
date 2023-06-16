@@ -143,14 +143,14 @@ export class Plugin {
         await op.runtimepath.set(this.denops, `${rtp},${this.info.dst}`);
       }
     });
-    await this.source();
-    await this.registerDenops();
     if (registered) {
+      await this.source();
+      await this.registerDenops();
       if (this.pluginOption.profile) {
         this.info.elaps = performance.now() - starttime;
       }
-      this.info.isLoad = true;
     }
+    this.info.isLoad = true;
     this.clog(`[register] ${this.info.url} end !`);
     return;
   }

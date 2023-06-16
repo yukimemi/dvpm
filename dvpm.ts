@@ -10,6 +10,7 @@ import { type Plug, Plugin, PluginOption } from "./plugin.ts";
 import { notify } from "./util.ts";
 
 const concurrency = 8;
+const listSpace = 3;
 
 export type DvpmOption = {
   base: string;
@@ -48,6 +49,8 @@ export class Dvpm {
     const dvpm = new Dvpm(denops, dvpmOption);
 
     denops.dispatcher = {
+      ...denops.dispatcher,
+
       async update(url: unknown): Promise<void> {
         if (url) {
           assertString(url);
@@ -55,6 +58,10 @@ export class Dvpm {
         } else {
           await dvpm.update();
         }
+      },
+
+      async bufWriteList(): Promise<void> {
+        await dvpm.bufWriteList();
       },
     };
 
@@ -69,6 +76,7 @@ export class Dvpm {
         call denops#request('${denops.name}', a:method, a:params)
       endfunction
       command! -nargs=? DvpmUpdate call s:${denops.name}_notify('update', [<f-args>])
+      command! -nargs=? DvpmList call s:${denops.name}_notify('bufWriteList', [<f-args>])
       `,
     );
 
@@ -83,10 +91,32 @@ export class Dvpm {
     return p;
   }
 
+  private maxUrlLen(plugins: Plugin[]): number {
+    return plugins.reduce((prev, cur) =>
+      prev.plug.url.length < cur.plug.url.length ? cur : prev
+    ).plug.url.length;
+  }
+
   private uniquePlug(plugins: Plugin[]): Plugin[] {
     return Array.from(new Set(plugins.map((a) => a.plug.url))).map(
       (url) => this.findPlug(url),
     );
+  }
+
+  private uniqueUrlByIsLoad(plugins: Plugin[]): Plugin[] {
+    return plugins.filter((value, index, self) => {
+      const found = self.find((v) =>
+        v.plug.url === value.plug.url && v.info.isLoad
+      );
+      if (found) {
+        return found === value;
+      }
+      return self.findIndex((v) => v.plug.url === value.plug.url) === index;
+    }).sort((a, b) => {
+      if (a.info.isLoad && !b.info.isLoad) return -1;
+      if (!a.info.isLoad && b.info.isLoad) return 1;
+      return a.plug.url.localeCompare(b.plug.url);
+    });
   }
 
   private async bufWrite(bufname: string, data: string[]) {
@@ -170,6 +200,39 @@ export class Dvpm {
     }
   }
 
+  public list(): Plugin[] {
+    return this.uniqueUrlByIsLoad(this.#plugins);
+  }
+
+  public async bufWriteList() {
+    const maxLen = this.maxUrlLen(this.#plugins);
+    const uniquePlug = this.uniqueUrlByIsLoad(this.#plugins);
+    await this.bufWrite("dvpm://list", [
+      sprintf(`%-${maxLen + listSpace}s : %s`, `url`, `isLoad`),
+      `${"-".repeat(maxLen + listSpace)} : ------`,
+      ...uniquePlug.map((p) =>
+        sprintf(`%-${maxLen + listSpace}s : %s`, p.plug.url, `${p.info.isLoad}`)
+      ),
+      `${"-".repeat(maxLen + listSpace)} : ------`,
+      sprintf(
+        `%-${maxLen + listSpace}s : %s`,
+        `Loaded count`,
+        `${uniquePlug.filter((p) => p.info.isLoad).length}`,
+      ),
+      sprintf(
+        `%-${maxLen + listSpace}s : %s`,
+        `Not loaded count`,
+        `${uniquePlug.filter((p) => !p.info.isLoad).length}`,
+      ),
+      `${"-".repeat(maxLen + listSpace)} : ------`,
+      sprintf(
+        `%-${maxLen + listSpace}s : %s`,
+        `Total plugin count`,
+        `${uniquePlug.length}`,
+      ),
+    ]);
+  }
+
   public async uninstall(url: string) {
     // TODO: Not implemented
   }
@@ -224,16 +287,26 @@ export class Dvpm {
       await this.bufWrite("dvpm://install", this.#installLogs);
     }
     if (this.dvpmOption.profile) {
+      const maxLen = this.maxUrlLen(this.#plugins);
       const sortedPlugins = this.#plugins.filter((p) => p.info.isLoad)
-        .sort((a, b) => a.info.elaps - b.info.elaps).map((p) =>
-          sprintf("%-50s: %s", p.plug.url, `${p.info.elaps}`)
+        .sort((a, b) => b.info.elaps - a.info.elaps).map((p) =>
+          sprintf(
+            `%-${maxLen + listSpace}s : %s`,
+            p.plug.url,
+            `${Math.round(p.info.elaps * 1000) / 1000}`,
+          )
         );
       this.#totalElaps = performance.now() - this.#totalElaps;
       await this.bufWrite("dvpm://profile", [
-        `--- profile start ---`,
+        sprintf(`%-${maxLen + listSpace}s : %s`, `url`, `elaps`),
+        `${"-".repeat(maxLen + listSpace)} : ------`,
         ...sortedPlugins,
-        `--- profile end ---`,
-        `Total: ${this.#totalElaps}`,
+        `${"-".repeat(maxLen + listSpace)} : ------`,
+        sprintf(
+          `%-${maxLen + listSpace}s : %s`,
+          `Total`,
+          `${Math.round(this.#totalElaps * 1000) / 1000}`,
+        ),
       ]);
     }
     await this.denops.cmd(`silent! UpdateRemotePlugins`);
