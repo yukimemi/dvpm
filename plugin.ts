@@ -289,7 +289,9 @@ export class Plugin {
         if (output.success) {
           return [
             `--- ${this.info.dst} --------------------`,
-            ...new TextDecoder().decode(output.stdout).split("\n"),
+            ...new TextDecoder().decode(output.stdout).split("\n").map((l) =>
+              l.trim()
+            ),
           ];
         } else {
           console.error(
