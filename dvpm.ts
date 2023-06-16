@@ -12,6 +12,8 @@ import { notify } from "./util.ts";
 const concurrency = 8;
 const listSpace = 3;
 
+let isInstallOrUpdate = false;
+
 export type DvpmOption = {
   base: string;
   debug?: boolean;
@@ -135,6 +137,7 @@ export class Dvpm {
         if (this.dvpmOption.notify) {
           await notify(this.denops, result);
         }
+        isInstallOrUpdate = true;
       }
     });
   }
@@ -146,6 +149,7 @@ export class Dvpm {
         if (this.dvpmOption.notify) {
           await notify(this.denops, result.join("\r"));
         }
+        isInstallOrUpdate = true;
       }
     });
   }
@@ -309,7 +313,9 @@ export class Dvpm {
         ),
       ]);
     }
-    await this.denops.cmd(`silent! UpdateRemotePlugins`);
+    if (isInstallOrUpdate) {
+      await this.denops.cmd(`silent! UpdateRemotePlugins`);
+    }
     await this.denops.cmd(`doautocmd VimEnter`);
   }
 }
