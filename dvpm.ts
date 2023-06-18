@@ -3,9 +3,9 @@ import * as fn from "https://deno.land/x/denops_std@v5.0.0/function/mod.ts";
 import * as fs from "https://deno.land/std@0.192.0/fs/mod.ts";
 import { Denops } from "https://deno.land/x/denops_std@v5.0.0/mod.ts";
 import { Semaphore } from "https://deno.land/x/async@v2.0.2/semaphore.ts";
-import { dirname } from "https://deno.land/std@0.191.0/path/mod.ts";
+import { dirname } from "https://deno.land/std@0.192.0/path/mod.ts";
 import { execute } from "https://deno.land/x/denops_std@v5.0.0/helper/mod.ts";
-import { sprintf } from "https://deno.land/std@0.191.0/fmt/printf.ts";
+import { sprintf } from "https://deno.land/std@0.192.0/fmt/printf.ts";
 import { type Plug, Plugin, PluginOption } from "./plugin.ts";
 import {
   assertString,

@@ -1,5 +1,5 @@
 import * as git from "https://esm.sh/simple-git@3.19.0";
-import { assertEquals } from "https://deno.land/std@0.191.0/testing/asserts.ts";
+import { assertEquals } from "https://deno.land/std@0.192.0/testing/asserts.ts";
 
 import { Git } from "./git.ts";
 

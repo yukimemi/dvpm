@@ -1,11 +1,11 @@
 import * as fn from "https://deno.land/x/denops_std@v5.0.0/function/mod.ts";
 import * as op from "https://deno.land/x/denops_std@v5.0.0/option/mod.ts";
-import * as path from "https://deno.land/std@0.191.0/path/mod.ts";
+import * as path from "https://deno.land/std@0.192.0/path/mod.ts";
 import { Denops } from "https://deno.land/x/denops_std@v5.0.0/mod.ts";
 import { Semaphore } from "https://deno.land/x/async@v2.0.2/semaphore.ts";
 import { execute } from "https://deno.land/x/denops_std@v5.0.0/helper/mod.ts";
-import { exists } from "https://deno.land/std@0.191.0/fs/mod.ts";
-import { expandGlob } from "https://deno.land/std@0.191.0/fs/expand_glob.ts";
+import { exists } from "https://deno.land/std@0.192.0/fs/mod.ts";
+import { expandGlob } from "https://deno.land/std@0.192.0/fs/expand_glob.ts";
 import {
   ensureString,
   isBoolean,
