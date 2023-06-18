@@ -60,7 +60,7 @@ import { ensureString } from "https://deno.land/x/unknownutil@v2.1.1/mod.ts";
 import { execute } from "https://deno.land/x/denops_std@v5.0.0/helper/mod.ts";
 import { globals } from "https://deno.land/x/denops_std@v5.0.0/variable/mod.ts";
 
-import { Dvpm } from "https://deno.land/x/dvpm@1.1.3/mod.ts";
+import { Dvpm } from "https://deno.land/x/dvpm@1.2.0/mod.ts";
 
 export async function main(denops: Denops): Promise<void> {
   const base_path = (await fn.has(denops, "nvim"))
@@ -229,6 +229,52 @@ export type PlugInfo = Plug & {
   elaps: number;
 };
 ```
+
+### Dvpm.cache
+
+```typescript
+public async cache(arg: { script: string; path: string }): Promise<void>
+```
+
+Cache the script to path.
+
+e.g.
+```typescript
+await dvpm.cache({
+  script: `
+    if !v:vim_did_enter && has('reltime')
+      let s:startuptime = reltime()
+      au VimEnter * ++once let s:startuptime = reltime(s:startuptime) | redraw
+            \\ | echomsg 'startuptime: ' .. reltimestr(s:startuptime)
+    endif
+  `,
+  path: "~/.config/nvim/plugin/dvpm_cache.vim",
+});
+
+await dvpm.cache({
+  script: `
+    vim.g.loaded_2html_plugin = 1
+    vim.g.loaded_gzip = 1
+    vim.g.loaded_man = 1
+    vim.g.loaded_matchit = 1
+    vim.g.loaded_matchparen = 1
+    vim.g.loaded_netrwPlugin = 1
+    vim.g.loaded_tarPlugin = 1
+    vim.g.loaded_tutor_mode_plugin = 1
+    vim.g.loaded_zipPlugin = 1
+  `,
+  path: "~/.config/nvim/plugin/dvpm_cache.lua",
+});
+```
+
+### Dvpm.list
+
+```typescript
+public list(): Plugin[]
+```
+
+If you want a list of plugin information, you can get it with the dvpm.list() function.
+The return value is `Plugin[]`. See the [doc](https://deno.land/x/dvpm/mod.ts?s=Plugin) for type information.
 
 ## Command
 

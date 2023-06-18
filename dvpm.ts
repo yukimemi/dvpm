@@ -1,11 +1,16 @@
 import * as buffer from "https://deno.land/x/denops_std@v5.0.0/buffer/mod.ts";
 import * as fn from "https://deno.land/x/denops_std@v5.0.0/function/mod.ts";
+import * as fs from "https://deno.land/std@0.192.0/fs/mod.ts";
 import { Denops } from "https://deno.land/x/denops_std@v5.0.0/mod.ts";
 import { Semaphore } from "https://deno.land/x/async@v2.0.2/semaphore.ts";
-import { assertString } from "https://deno.land/x/unknownutil@v2.1.1/assert.ts";
+import { dirname } from "https://deno.land/std@0.191.0/path/mod.ts";
 import { execute } from "https://deno.land/x/denops_std@v5.0.0/helper/mod.ts";
 import { sprintf } from "https://deno.land/std@0.191.0/fmt/printf.ts";
 import { type Plug, Plugin, PluginOption } from "./plugin.ts";
+import {
+  assertString,
+  ensureString,
+} from "https://deno.land/x/unknownutil@v2.1.1/mod.ts";
 
 import { notify } from "./util.ts";
 
@@ -83,6 +88,13 @@ export class Dvpm {
     );
 
     return dvpm;
+  }
+
+  // deno-lint-ignore no-explicit-any
+  private clog(data: any) {
+    if (this.dvpmOption.debug) {
+      console.log(data);
+    }
   }
 
   private findPlug(url: string): Plugin {
@@ -317,5 +329,21 @@ export class Dvpm {
       await this.denops.cmd(`silent! UpdateRemotePlugins`);
     }
     await this.denops.cmd(`doautocmd VimEnter`);
+  }
+
+  public async cache(arg: { script: string; path: string }) {
+    const p = ensureString(await fn.expand(this.denops, arg.path));
+    const s = arg.script.trim();
+    await fs.ensureDir(dirname(p));
+    if (await fs.exists(p)) {
+      const content = (await Deno.readTextFile(p)).trim();
+      if (s !== content) {
+        this.clog(`Updating ${p}`);
+        await Deno.writeTextFile(p, s);
+      }
+    } else {
+      this.clog(`Installing ${p}`);
+      await Deno.writeTextFile(p, s);
+    }
   }
 }
