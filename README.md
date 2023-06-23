@@ -1,6 +1,7 @@
 # dvpm - Denops Vim/Neovim Plugin Manager
 
-`dvpm` is a plugin manager for Vim and Neovim, powered by [denops.vim](https://github.com/vim-denops/denops.vim).
+`dvpm` is a plugin manager for Vim and Neovim, powered by
+[denops.vim](https://github.com/vim-denops/denops.vim).
 
 - Vim / Neovim starts up very fast !
 
@@ -45,10 +46,12 @@ execute 'set runtimepath^=' . substitute(fnamemodify(s:denops, ':p') , '[/\\]$',
 ---
 
 ### Neovim
+
 - ~/.config/nvim/denops/config/main.ts (Mac / Linux)
 - ~/AppData/Local/nvim/denops/config/main.ts (Windows)
 
 ### Vim
+
 - ~/.vim/denops/config/main.ts (Mac / Linux)
 - ~/vimfiles/denops/config/main.ts (Windows)
 
@@ -60,7 +63,7 @@ import { ensureString } from "https://deno.land/x/unknownutil@v2.1.1/mod.ts";
 import { execute } from "https://deno.land/x/denops_std@v5.0.0/helper/mod.ts";
 import { globals } from "https://deno.land/x/denops_std@v5.0.0/variable/mod.ts";
 
-import { Dvpm } from "https://deno.land/x/dvpm@1.2.1/mod.ts";
+import { Dvpm } from "https://deno.land/x/dvpm@1.3.0/mod.ts";
 
 export async function main(denops: Denops): Promise<void> {
   const base_path = (await fn.has(denops, "nvim"))
@@ -111,10 +114,21 @@ export async function main(denops: Denops): Promise<void> {
     url: "yukimemi/dps-randomcolorscheme",
     dst: "~/src/github.com/yukimemi/dps-randomcolorscheme",
     before: async ({ denops }) => {
-      await mapping.map(denops, "<space>ro", "<cmd>ChangeColorscheme<cr>", { mode: "n" });
-      await mapping.map(denops, "<space>rd", "<cmd>DisableThisColorscheme<cr>", { mode: "n" });
-      await mapping.map(denops, "<space>rl", "<cmd>LikeThisColorscheme<cr>", { mode: "n" });
-      await mapping.map(denops, "<space>rh", "<cmd>HateThisColorscheme<cr>", { mode: "n" });
+      await mapping.map(denops, "<space>ro", "<cmd>ChangeColorscheme<cr>", {
+        mode: "n",
+      });
+      await mapping.map(
+        denops,
+        "<space>rd",
+        "<cmd>DisableThisColorscheme<cr>",
+        { mode: "n" },
+      );
+      await mapping.map(denops, "<space>rl", "<cmd>LikeThisColorscheme<cr>", {
+        mode: "n",
+      });
+      await mapping.map(denops, "<space>rh", "<cmd>HateThisColorscheme<cr>", {
+        mode: "n",
+      });
     },
   });
   // Disable setting.
@@ -172,7 +186,6 @@ export type DvpmOption = {
   // git log arg. Used for :DvpmUpdate command output. Default is [].
   logarg?: string[];
 };
-
 ```
 
 ### Dvpm.end
@@ -180,6 +193,7 @@ export type DvpmOption = {
 ```typescript
 public async end(): Promise<void>
 ```
+
 source `after/*.(vim|lua)` files.
 
 ### Dvpm.add
@@ -239,6 +253,7 @@ public async cache(arg: { script: string; path: string }): Promise<void>
 Cache the script to path.
 
 e.g.
+
 ```typescript
 await dvpm.cache({
   script: `
@@ -273,8 +288,9 @@ await dvpm.cache({
 public list(): Plugin[]
 ```
 
-If you want a list of plugin information, you can get it with the dvpm.list() function.
-The return value is `Plugin[]`. See the [doc](https://deno.land/x/dvpm/mod.ts?s=Plugin) for type information.
+If you want a list of plugin information, you can get it with the dvpm.list()
+function. The return value is `Plugin[]`. See the
+[doc](https://deno.land/x/dvpm/mod.ts?s=Plugin) for type information.
 
 ## Command
 
@@ -284,13 +300,11 @@ The return value is `Plugin[]`. See the [doc](https://deno.land/x/dvpm/mod.ts?s=
 
 Update installed plugins.
 
-If url is specified, update only target plugins,
-if not specified, update all plugins.
+If url is specified, update only target plugins, if not specified, update all
+plugins.
 
 ```vim
 :DvpmList
 ```
 
 It outputs the list of plugins to the dvpm://list buffer.
-
-

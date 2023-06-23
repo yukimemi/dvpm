@@ -1,15 +1,12 @@
-import * as fn from "https://deno.land/x/denops_std@v5.0.0/function/mod.ts";
-import * as op from "https://deno.land/x/denops_std@v5.0.0/option/mod.ts";
+import * as fn from "https://deno.land/x/denops_std@v5.0.1/function/mod.ts";
+import * as op from "https://deno.land/x/denops_std@v5.0.1/option/mod.ts";
 import * as path from "https://deno.land/std@0.192.0/path/mod.ts";
-import { Denops } from "https://deno.land/x/denops_std@v5.0.0/mod.ts";
+import { Denops } from "https://deno.land/x/denops_std@v5.0.1/mod.ts";
 import { Semaphore } from "https://deno.land/x/async@v2.0.2/semaphore.ts";
-import { execute } from "https://deno.land/x/denops_std@v5.0.0/helper/mod.ts";
+import { execute } from "https://deno.land/x/denops_std@v5.0.1/helper/mod.ts";
 import { exists } from "https://deno.land/std@0.192.0/fs/mod.ts";
 import { expandGlob } from "https://deno.land/std@0.192.0/fs/expand_glob.ts";
-import {
-  ensureString,
-  isBoolean,
-} from "https://deno.land/x/unknownutil@v2.1.1/mod.ts";
+import { ensure, is } from "https://deno.land/x/unknownutil@v3.2.0/mod.ts";
 import { Git } from "./git.ts";
 
 export type Plug = {
@@ -80,7 +77,7 @@ export class Plugin {
 
     if (p.plug.dst) {
       p.clog(`[create] ${p.info.dst} set dst to ${p.plug.dst}`);
-      p.info.dst = ensureString(await fn.expand(denops, p.plug.dst));
+      p.info.dst = ensure(await fn.expand(denops, p.plug.dst), is.String);
     }
 
     return p;
@@ -97,7 +94,7 @@ export class Plugin {
     try {
       this.clog(`[add] ${this.info.url} start !`);
       if (this.plug.enabled != undefined) {
-        if (isBoolean(this.plug.enabled)) {
+        if (is.Boolean(this.plug.enabled)) {
           if (!this.plug.enabled) {
             this.clog(`[add] ${this.info.url} enabled is false. (boolean)`);
             return;
@@ -138,7 +135,7 @@ export class Plugin {
         starttime = performance.now();
       }
       const rtp = (await op.runtimepath.get(this.denops)).split(",");
-      if (!rtp.includes(ensureString(this.info.dst))) {
+      if (!rtp.includes(ensure(this.info.dst, is.String))) {
         registered = true;
         await op.runtimepath.set(this.denops, `${rtp},${this.info.dst}`);
       }
@@ -237,7 +234,7 @@ export class Plugin {
   }
 
   public async genHelptags() {
-    const docDir = path.join(ensureString(this.info.dst), "doc");
+    const docDir = path.join(ensure(this.info.dst, is.String), "doc");
     await execute(
       this.denops,
       `silent! helptags ${await fn.fnameescape(this.denops, docDir)}`,
@@ -245,13 +242,13 @@ export class Plugin {
   }
 
   public async install() {
-    if (await exists(ensureString(this.info.dst))) {
+    if (await exists(ensure(this.info.dst, is.String))) {
       return;
     }
 
     const output = await Git.clone(
       this.info.url,
-      ensureString(this.info.dst),
+      ensure(this.info.dst, is.String),
       this.plug.branch,
     );
     if (output.success) {
@@ -272,7 +269,7 @@ export class Plugin {
   }
 
   public async update() {
-    const git = new Git(ensureString(this.info.dst));
+    const git = new Git(ensure(this.info.dst, is.String));
     const beforeRev = await git.getRevision();
     const output = await git.pull(this.plug.branch);
     const afterRev = await git.getRevision();

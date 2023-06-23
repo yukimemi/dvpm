@@ -1,1 +1,8 @@
-{}
+{
+  "tasks": {
+    "lint": "deno lint",
+    "test": "deno test",
+    "build": "deno build",
+    "format": "deno fmt"
+  }
+}
