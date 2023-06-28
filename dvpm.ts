@@ -1,19 +1,12 @@
 import * as buffer from "https://deno.land/x/denops_std@v5.0.1/buffer/mod.ts";
 import * as fn from "https://deno.land/x/denops_std@v5.0.1/function/mod.ts";
-import * as fs from "https://deno.land/std@0.192.0/fs/mod.ts";
 import { Denops } from "https://deno.land/x/denops_std@v5.0.1/mod.ts";
 import { Semaphore } from "https://deno.land/x/async@v2.0.2/semaphore.ts";
-import { dirname } from "https://deno.land/std@0.192.0/path/mod.ts";
 import { execute } from "https://deno.land/x/denops_std@v5.0.1/helper/mod.ts";
 import { sprintf } from "https://deno.land/std@0.192.0/fmt/printf.ts";
 import { type Plug, Plugin, PluginOption } from "./plugin.ts";
-import {
-  assert,
-  ensure,
-  is,
-} from "https://deno.land/x/unknownutil@v3.2.0/mod.ts";
-
-import { notify } from "./util.ts";
+import { assert, is } from "https://deno.land/x/unknownutil@v3.2.0/mod.ts";
+import { cache, notify } from "./util.ts";
 
 const concurrency = 8;
 const listSpace = 3;
@@ -333,18 +326,6 @@ export class Dvpm {
   }
 
   public async cache(arg: { script: string; path: string }) {
-    const p = ensure(await fn.expand(this.denops, arg.path), is.String);
-    const s = arg.script.trim();
-    await fs.ensureDir(dirname(p));
-    if (await fs.exists(p)) {
-      const content = (await Deno.readTextFile(p)).trim();
-      if (s !== content) {
-        this.clog(`Updating ${p}`);
-        await Deno.writeTextFile(p, s);
-      }
-    } else {
-      this.clog(`Installing ${p}`);
-      await Deno.writeTextFile(p, s);
-    }
+    await cache(this.denops, { script: arg.script, path: arg.path });
   }
 }
