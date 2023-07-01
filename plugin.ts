@@ -132,24 +132,22 @@ export class Plugin {
     try {
       this.clog(`[cache] ${this.info.url} start !`);
       if (
-        !(await this.isEnabled()) || this.info.cache == undefined) {
+        !(await this.isEnabled()) || this.info.cache == undefined
+      ) {
         return "";
       }
-      return `
-${
-        this.info.cache?.before?.split("\n").map((l) => l.trim()).join(
-          "\n",
-        ) ||
-        ""
-      }
+      if (is.Boolean(this.info.cache)) {
+        if (this.info.cache) {
+          return `set runtimepath+=${this.info.dst}`;
+        }
+        return "";
+      } else {
+        return `
+${this.info.cache?.before?.split("\n").map((l) => l.trim()).join("\n") || ""}
 set runtimepath+=${this.info.dst}
-${
-        this.info.cache?.after?.split("\n").map((l) => l.trim()).join(
-          "\n",
-        ) ||
-        ""
+${this.info.cache?.after?.split("\n").map((l) => l.trim()).join("\n") || ""}
+`;
       }
-      `;
     } catch (e) {
       console.error(e);
       return "";
