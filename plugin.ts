@@ -4,8 +4,7 @@ import * as path from "https://deno.land/std@0.192.0/path/mod.ts";
 import { Denops } from "https://deno.land/x/denops_std@v5.0.1/mod.ts";
 import { Semaphore } from "https://deno.land/x/async@v2.0.2/semaphore.ts";
 import { execute } from "https://deno.land/x/denops_std@v5.0.1/helper/mod.ts";
-import { exists } from "https://deno.land/std@0.192.0/fs/mod.ts";
-import { expandGlob } from "https://deno.land/std@0.192.0/fs/expand_glob.ts";
+import { exists, expandGlob } from "https://deno.land/std@0.192.0/fs/mod.ts";
 import { ensure, is } from "https://deno.land/x/unknownutil@v3.2.0/mod.ts";
 import { Git } from "./git.ts";
 
@@ -27,6 +26,10 @@ export type Plug = {
   build?: (
     { denops, info }: { denops: Denops; info: PlugInfo },
   ) => Promise<void>;
+  cache?: boolean | {
+    before?: string;
+    after?: string;
+  };
   dependencies?: Plug[];
 };
 
@@ -38,6 +41,7 @@ export type PlugInfo = Plug & {
 
 export type PluginOption = {
   base: string;
+  cache?: string;
   debug?: boolean;
   profile?: boolean;
   logarg?: string[];
@@ -68,18 +72,16 @@ export class Plugin {
     const p = new Plugin(denops, plug, pluginOption);
     if (p.plug.url.startsWith("http") || p.plug.url.startsWith("git")) {
       p.info.url = p.plug.url;
-      const url = new URL(p.plug.url);
-      p.info.dst = path.join(pluginOption.base, url.hostname, url.pathname);
     } else {
       p.info.url = `https://github.com/${p.plug.url}`;
-      p.info.dst = path.join(pluginOption.base, "github.com", p.plug.url);
     }
+    const url = new URL(p.info.url);
+    p.info.dst = path.join(pluginOption.base, url.hostname, url.pathname);
 
     if (p.plug.dst) {
       p.clog(`[create] ${p.info.dst} set dst to ${p.plug.dst}`);
       p.info.dst = ensure(await fn.expand(denops, p.plug.dst), is.String);
     }
-
     return p;
   }
 
@@ -90,23 +92,28 @@ export class Plugin {
     }
   }
 
+  private async isEnabled() {
+    if (this.plug.enabled != undefined) {
+      if (is.Boolean(this.plug.enabled)) {
+        if (!this.plug.enabled) {
+          return false;
+        }
+      } else {
+        if (
+          !(await this.plug.enabled({ denops: this.denops, info: this.info }))
+        ) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
   public async add() {
     try {
       this.clog(`[add] ${this.info.url} start !`);
-      if (this.plug.enabled != undefined) {
-        if (is.Boolean(this.plug.enabled)) {
-          if (!this.plug.enabled) {
-            this.clog(`[add] ${this.info.url} enabled is false. (boolean)`);
-            return;
-          }
-        } else {
-          if (
-            !(await this.plug.enabled({ denops: this.denops, info: this.info }))
-          ) {
-            this.clog(`[add] ${this.info.url} enabled is false. (func)`);
-            return;
-          }
-        }
+      if (!(await this.isEnabled())) {
+        return;
       }
       await this.before();
       await this.register();
@@ -116,9 +123,38 @@ export class Plugin {
       await this.after();
     } catch (e) {
       console.error(e);
-      return false;
     } finally {
       this.clog(`[add] ${this.info.url} end !`);
+    }
+  }
+
+  public async cache(): Promise<string> {
+    try {
+      this.clog(`[cache] ${this.info.url} start !`);
+      if (
+        !(await this.isEnabled()) || this.info.cache == undefined) {
+        return "";
+      }
+      return `
+${
+        this.info.cache?.before?.split("\n").map((l) => l.trim()).join(
+          "\n",
+        ) ||
+        ""
+      }
+set runtimepath+=${this.info.dst}
+${
+        this.info.cache?.after?.split("\n").map((l) => l.trim()).join(
+          "\n",
+        ) ||
+        ""
+      }
+      `;
+    } catch (e) {
+      console.error(e);
+      return "";
+    } finally {
+      this.clog(`[cache] ${this.info.url} end !`);
     }
   }
 

@@ -59,17 +59,17 @@ execute 'set runtimepath^=' . substitute(fnamemodify(s:denops, ':p') , '[/\\]$',
 import * as fn from "https://deno.land/x/denops_std@v5.0.0/function/mod.ts";
 import * as mapping from "https://deno.land/x/denops_std@v5.0.0/mapping/mod.ts";
 import { Denops } from "https://deno.land/x/denops_std@v5.0.0/mod.ts";
-import { ensureString } from "https://deno.land/x/unknownutil@v2.1.1/mod.ts";
+import { ensure, is } from "https://deno.land/x/unknownutil@v3.2.0/mod.ts";
 import { execute } from "https://deno.land/x/denops_std@v5.0.0/helper/mod.ts";
 import { globals } from "https://deno.land/x/denops_std@v5.0.0/variable/mod.ts";
 
-import { Dvpm } from "https://deno.land/x/dvpm@1.3.0/mod.ts";
+import { Dvpm } from "https://deno.land/x/dvpm@2.0.0/mod.ts";
 
 export async function main(denops: Denops): Promise<void> {
   const base_path = (await fn.has(denops, "nvim"))
     ? "~/.cache/nvim/dvpm"
     : "~/.cache/vim/dvpm";
-  const base = ensureString(await fn.expand(denops, base_path));
+  const base = ensure(await fn.expand(denops, base_path), is.String);
 
   // First, call Dvpm.begin with denops object and base path.
   const dvpm = await Dvpm.begin(denops, { base });
@@ -98,7 +98,7 @@ export async function main(denops: Denops): Promise<void> {
       await globals.set(
         denops,
         "autobackup_dir",
-        ensureString(await fn.expand(denops, "~/.cache/nvim/autobackup")),
+        ensure(await fn.expand(denops, "~/.cache/nvim/autobackup"), is.String),
       );
     },
   });
@@ -173,6 +173,8 @@ public static async begin(denops: Denops, dvpmOption: DvpmOption): Promise<Dvpm>
 export type DvpmOption = {
   // Base path for git clone.
   base: string;
+  // Cache file path. See `Cache setting`.
+  cache?: string;
   // debug print. Default is false.
   debug?: boolean;
   // Number of concurrent processes. Default is 8.
@@ -228,6 +230,11 @@ export type Plug = {
   build?: (
     { denops, info }: { denops: Denops; info: PlugInfo },
   ) => Promise<void>;
+  // Cache settings. See `Cache setting`.
+  cache?: boolean | {
+    before?: string;
+    after?: string;
+  };
   // dependencies. (Option)
   dependencies?: Plug[];
 };
@@ -308,3 +315,75 @@ plugins.
 ```
 
 It outputs the list of plugins to the dvpm://list buffer.
+
+## Cache setting
+
+If you want some plugins to be loaded before VimEnter, enable the `cache` setting.
+A sample configuration is shown below.
+
+```typescript
+export async function main(denops: Denops): Promise<void> {
+  const base_path = (await fn.has(denops, "nvim"))
+    ? "~/.cache/nvim/dvpm"
+    : "~/.cache/vim/dvpm";
+  const base = ensure(await fn.expand(denops, base_path), is.String);
+  const cache_path = (await fn.has(denops, "nvim"))
+    ? "~/.config/nvim/plugin/dvpm_plugin_cache.vim"
+    : "~/.config/vim/plugin/dvpm_plugin_cache.vim";
+  // This cache path must be pre-appended to the runtimepath.
+  // Add it in vimrc or init.lua by yourself, or specify the path originally added to
+  // runtimepath of Vim / Neovim.
+  const cache = ensure(await fn.expand(denops, cache_path), is.String);
+
+  // Specify `cache` to Dvpm.begin.
+  const dvpm = await Dvpm.begin(denops, { base, cache });
+
+  await dvpm.add({
+    url: "tani/vim-artemis",
+    // Just set `cache` to true if you don't need plugin settings.
+    cache: true,
+  });
+
+  await dvpm.add({
+    url: "rcarriga/nvim-notify",
+    enabled: async ({ denops }) => await fn.has(denops, "nvim"),
+    // Specify `before` or `after` if you need to configure the plugin.
+    // `before` is executed before the plugin is added to the runtimepath.
+    // `after` runs after the plugin is added to the runtimepath.
+    cache: {
+      before: `echomsg "Load nvim-notify !"`,
+      after: `
+        lua << EOB
+          require("notify").setup({
+            stages = "slide",
+          })
+          vim.notify = require("notify")
+        EOB
+      `,
+    },
+  });
+
+  // Finally, call Dvpm.end.
+  await dvpm.end();
+}
+```
+
+After performing the above settings, when you start Vim / Neovim, the following should be output to the file specified as `cache` in `Dvpm.begin`.
+And the next time Vim / Neovim starts, the plugin will be enabled before `VimEnter`.
+
+- `~/.config/nvim/plugin/dvpm_plugin_cache.vim` (for Neovim)
+```
+set runtimepath+=/Users/yukimemi/.cache/nvim/dvpm/github.com/tani/vim-artemis
+
+echomsg "Load nvim-notify !"
+
+set runtimepath+=/Users/yukimemi/.cache/nvim/dvpm/github.com/rcarriga/nvim-notify
+
+lua << EOB
+require("notify").setup({
+stages = "slide",
+})
+vim.notify = require("notify")
+EOB
+```
+

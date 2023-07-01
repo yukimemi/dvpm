@@ -2,11 +2,11 @@ import * as buffer from "https://deno.land/x/denops_std@v5.0.1/buffer/mod.ts";
 import * as fn from "https://deno.land/x/denops_std@v5.0.1/function/mod.ts";
 import { Denops } from "https://deno.land/x/denops_std@v5.0.1/mod.ts";
 import { Semaphore } from "https://deno.land/x/async@v2.0.2/semaphore.ts";
+import { assert, is } from "https://deno.land/x/unknownutil@v3.2.0/mod.ts";
+import { cache, notify } from "./util.ts";
 import { execute } from "https://deno.land/x/denops_std@v5.0.1/helper/mod.ts";
 import { sprintf } from "https://deno.land/std@0.192.0/fmt/printf.ts";
 import { type Plug, Plugin, PluginOption } from "./plugin.ts";
-import { assert, is } from "https://deno.land/x/unknownutil@v3.2.0/mod.ts";
-import { cache, notify } from "./util.ts";
 
 const concurrency = 8;
 const listSpace = 3;
@@ -15,6 +15,7 @@ let isInstallOrUpdate = false;
 
 export type DvpmOption = {
   base: string;
+  cache?: string;
   debug?: boolean;
   concurrency?: number;
   profile?: boolean;
@@ -29,6 +30,7 @@ export class Dvpm {
   #totalElaps: number;
   #installLogs: string[] = [];
   #updateLogs: string[] = [];
+  #cacheScript: string[] = [];
 
   constructor(
     public denops: Denops,
@@ -259,6 +261,7 @@ export class Dvpm {
       }
       const pluginOption: PluginOption = {
         base: this.dvpmOption.base,
+        cache: this.dvpmOption.cache,
         debug: this.dvpmOption.debug,
         profile: this.dvpmOption.profile,
         logarg: this.dvpmOption.logarg,
@@ -271,6 +274,7 @@ export class Dvpm {
       await this._install(p);
 
       await this.#semaphore.lock(async () => {
+        this.#cacheScript.push(await p.cache());
         await p.add();
         this.#plugins.push(p);
       });
@@ -323,6 +327,13 @@ export class Dvpm {
       await this.denops.cmd(`silent! UpdateRemotePlugins`);
     }
     await this.denops.cmd(`doautocmd VimEnter`);
+    if (this.dvpmOption.cache) {
+      this.clog(`Cache: ${this.dvpmOption.cache}`);
+      await cache(this.denops, {
+        script: this.#cacheScript.join("\n"),
+        path: this.dvpmOption.cache,
+      });
+    }
   }
 
   public async cache(arg: { script: string; path: string }) {
