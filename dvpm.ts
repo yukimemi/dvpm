@@ -326,9 +326,6 @@ export class Dvpm {
         ),
       ]);
     }
-    if (isInstallOrUpdate) {
-      await this.denops.cmd(`silent! UpdateRemotePlugins`);
-    }
     await this.denops.cmd(`doautocmd VimEnter`);
     if (this.dvpmOption.cache) {
       this.clog(`Cache: ${this.dvpmOption.cache}`);
