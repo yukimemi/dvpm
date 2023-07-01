@@ -63,7 +63,7 @@ import { ensure, is } from "https://deno.land/x/unknownutil@v3.2.0/mod.ts";
 import { execute } from "https://deno.land/x/denops_std@v5.0.0/helper/mod.ts";
 import { globals } from "https://deno.land/x/denops_std@v5.0.0/variable/mod.ts";
 
-import { Dvpm } from "https://deno.land/x/dvpm@2.0.2/mod.ts";
+import { Dvpm } from "https://deno.land/x/dvpm@2.0.3/mod.ts";
 
 export async function main(denops: Denops): Promise<void> {
   const base_path = (await fn.has(denops, "nvim"))
@@ -343,15 +343,31 @@ export async function main(denops: Denops): Promise<void> {
     // Just set `cache` to true if you don't need plugin settings.
     cache: true,
   });
+  await dvpm.add({
+    url: "nvim-lua/plenary.nvim",
+    cache: true,
+    enabled: async ({ denops }) => await fn.has(denops, "nvim"),
+  });
 
   await dvpm.add({
-    url: "rcarriga/nvim-notify",
+    url: "startup-nvim/startup.nvim",
     enabled: async ({ denops }) => await fn.has(denops, "nvim"),
     // Specify `before` or `after` if you need to configure the plugin.
     // `before` is executed before the plugin is added to the runtimepath.
     // `after` runs after the plugin is added to the runtimepath.
     cache: {
-      before: `echomsg "Load nvim-notify !"`,
+      before: `echomsg "Load startup !"`,
+      after: `
+        lua require("startup").setup({theme = "startify"})
+      `,
+    },
+  });
+
+  await dvpm.add({
+    url: "rcarriga/nvim-notify",
+    enabled: async ({ denops }) => await fn.has(denops, "nvim"),
+    cache: {
+      // `before` and `after` can be set independently.
       after: `
         lua << EOB
           require("notify").setup({
@@ -374,8 +390,13 @@ And the next time Vim / Neovim starts, the plugin will be enabled before `VimEnt
 - `~/.config/nvim/plugin/dvpm_plugin_cache.vim` (for Neovim)
 ```
 set runtimepath+=/Users/yukimemi/.cache/nvim/dvpm/github.com/tani/vim-artemis
+set runtimepath+=/Users/yukimemi/.cache/nvim/dvpm/github.com/nvim-lua/plenary.nvim
 
-echomsg "Load nvim-notify !"
+echomsg "Load startup !"
+
+set runtimepath+=/Users/yukimemi/.cache/nvim/dvpm/github.com/startup-nvim/startup.nvim
+
+lua require("startup").setup({theme = "startify"})
 
 set runtimepath+=/Users/yukimemi/.cache/nvim/dvpm/github.com/rcarriga/nvim-notify
 
