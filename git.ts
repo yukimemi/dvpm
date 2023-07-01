@@ -1,4 +1,4 @@
-import * as git from "https://esm.sh/simple-git@3.19.0";
+import * as git from "https://esm.sh/simple-git@3.19.1/";
 import * as path from "https://deno.land/std@0.192.0/path/mod.ts";
 import { exists } from "https://deno.land/std@0.192.0/fs/exists.ts";
 import { readLines } from "https://deno.land/std@0.192.0/io/mod.ts";

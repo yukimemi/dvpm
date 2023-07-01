@@ -143,10 +143,10 @@ export class Plugin {
         return "";
       } else {
         return `
-${this.info.cache?.before?.split("\n").map((l) => l.trim()).join("\n") || ""}
-set runtimepath+=${this.info.dst}
-${this.info.cache?.after?.split("\n").map((l) => l.trim()).join("\n") || ""}
-`;
+          ${this.info.cache?.before || ""}
+          set runtimepath+=${this.info.dst}
+          ${this.info.cache?.after || ""}
+        `;
       }
     } catch (e) {
       console.error(e);

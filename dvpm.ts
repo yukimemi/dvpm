@@ -274,7 +274,10 @@ export class Dvpm {
       await this._install(p);
 
       await this.#semaphore.lock(async () => {
-        this.#cacheScript.push(await p.cache());
+        const c = await p.cache();
+        if (c !== "") {
+          this.#cacheScript.push(c);
+        }
         await p.add();
         this.#plugins.push(p);
       });
@@ -330,7 +333,9 @@ export class Dvpm {
     if (this.dvpmOption.cache) {
       this.clog(`Cache: ${this.dvpmOption.cache}`);
       await cache(this.denops, {
-        script: this.#cacheScript.join("\n"),
+        script: this.#cacheScript.map((s) =>
+          s.split(/\r?\n/).map((l) => l.trim()).join("\n")
+        ).join("\n"),
         path: this.dvpmOption.cache,
       });
     }
