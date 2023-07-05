@@ -36,6 +36,7 @@ export type Plug = {
 export type PlugInfo = Plug & {
   isLoad: boolean;
   isUpdate: boolean;
+  isCache: boolean;
   elaps: number;
 };
 
@@ -60,6 +61,7 @@ export class Plugin {
       ...plug,
       isLoad: false,
       isUpdate: false,
+      isCache: false,
       elaps: 0,
     };
   }
@@ -138,10 +140,12 @@ export class Plugin {
       }
       if (is.Boolean(this.info.cache)) {
         if (this.info.cache) {
+          this.info.isCache = true;
           return `set runtimepath+=${this.info.dst}`;
         }
         return "";
       } else {
+        this.info.isCache = true;
         return `
           ${this.info.cache?.before || ""}
           set runtimepath+=${this.info.dst}

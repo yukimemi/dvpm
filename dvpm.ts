@@ -220,12 +220,17 @@ export class Dvpm {
     const maxLen = this.maxUrlLen(this.#plugins);
     const uniquePlug = this.uniqueUrlByIsLoad(this.#plugins);
     await this.bufWrite("dvpm://list", [
-      sprintf(`%-${maxLen + listSpace}s : %s`, `url`, `isLoad`),
-      `${"-".repeat(maxLen + listSpace)} : ------`,
+      sprintf(`%-${maxLen + listSpace}s : %s : %s`, `url`, `isLoad`, `isCache`),
+      `${"-".repeat(maxLen + listSpace)} : ------ : ------`,
       ...uniquePlug.map((p) =>
-        sprintf(`%-${maxLen + listSpace}s : %s`, p.plug.url, `${p.info.isLoad}`)
+        sprintf(
+          `%-${maxLen + listSpace}s : %-6s : %s`,
+          p.plug.url,
+          `${p.info.isLoad}`,
+          `${p.info.isCache}`,
+        )
       ),
-      `${"-".repeat(maxLen + listSpace)} : ------`,
+      `${"-".repeat(maxLen + listSpace)} : ------ : ------`,
       sprintf(
         `%-${maxLen + listSpace}s : %s`,
         `Loaded count`,
