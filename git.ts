@@ -1,20 +1,40 @@
-import * as git from "https://esm.sh/simple-git@3.19.0";
 import * as path from "https://deno.land/std@0.192.0/path/mod.ts";
 import { exists } from "https://deno.land/std@0.192.0/fs/exists.ts";
 import { readLines } from "https://deno.land/std@0.192.0/io/mod.ts";
 
 export class Git {
-  public g: git.SimpleGit;
   public gitDir: string;
 
   constructor(public base: string) {
-    this.g = git.simpleGit(base);
     this.gitDir = path.join(base, ".git");
+  }
+
+  private async git(args: string[]): Promise<Deno.CommandOutput> {
+    const cmd = new Deno.Command("git", { args: ["-C", this.base, ...args] });
+    return await cmd.output();
+  }
+
+  private cmdOutToString(output: Deno.CommandOutput): string {
+    return new TextDecoder().decode(output.stdout).trim();
   }
 
   public async getHead(): Promise<string> {
     const headFile = path.join(this.gitDir, "HEAD");
     return (await Deno.readTextFile(headFile)).trim();
+  }
+
+  public async getRevisionGit(): Promise<string> {
+    return this.cmdOutToString(await this.git(["rev-parse", "HEAD"]));
+  }
+
+  public async checkout(rev: string): Promise<void> {
+    await this.git(["checkout", rev]);
+  }
+
+  public async getBranchGit(): Promise<string> {
+    return this.cmdOutToString(
+      await this.git(["rev-parse", "--abbrev-ref", "HEAD"]),
+    );
   }
 
   public async getRevision(): Promise<string> {
@@ -34,7 +54,7 @@ export class Git {
         return line.split(" ")[0];
       }
     }
-    return await this.g.revparse("HEAD");
+    return await this.getRevisionGit();
   }
 
   public async getBranch(): Promise<string> {
@@ -42,29 +62,21 @@ export class Git {
     if (head.match(/^ref: refs\/heads\//)) {
       return head.substring(16);
     }
-    return (await this.g.branch()).current;
+    return await this.getBranchGit();
   }
 
-  public async getLog(from: string, to: string, argOption: string[] = []) {
-    const args = ["-C", this.base, "log", ...argOption, `${from}..${to}`];
-    const cmd = new Deno.Command("git", { args });
-    return await cmd.output();
+  public async getLog(
+    from: string,
+    to: string,
+    argOption: string[] = [],
+  ): Promise<Deno.CommandOutput> {
+    return await this.git(["log", ...argOption, `${from}..${to}`]);
   }
 
   public static async clone(url: string, dst: string, branch?: string) {
     const args = branch
-      ? [
-        "clone",
-        "--branch",
-        branch,
-        url,
-        dst,
-      ]
-      : [
-        "clone",
-        url,
-        dst,
-      ];
+      ? ["clone", "--branch", branch, url, dst]
+      : ["clone", url, dst];
     const cmd = new Deno.Command("git", { args });
     return await cmd.output();
   }
@@ -73,7 +85,7 @@ export class Git {
     const currentBranch = await this.getBranch();
     branch ??= currentBranch;
     if (branch !== currentBranch) {
-      this.g.checkout(branch);
+      await this.checkout(branch);
     }
     console.log(`Update ${this.base}, branch: ${branch}`);
     const args = ["-C", this.base, "pull", "--ff-only", "--rebase=false"];
