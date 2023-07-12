@@ -74,9 +74,7 @@ export class Git {
   }
 
   public static async clone(url: string, dst: string, branch?: string) {
-    const args = branch
-      ? ["clone", "--branch", branch, url, dst]
-      : ["clone", url, dst];
+    const args = branch ? ["clone", "--branch", branch, url, dst] : ["clone", url, dst];
     const cmd = new Deno.Command("git", { args });
     return await cmd.output();
   }

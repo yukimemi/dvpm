@@ -8,15 +8,17 @@ import { exists, expandGlob } from "https://deno.land/std@0.192.0/fs/mod.ts";
 import { ensure, is } from "https://deno.land/x/unknownutil@v3.2.0/mod.ts";
 import { Git } from "./git.ts";
 
+export type TrueFalse =
+  | boolean
+  | ((
+    { denops, info }: { denops: Denops; info: PlugInfo },
+  ) => Promise<boolean>);
+
 export type Plug = {
   url: string;
   dst?: string;
   branch?: string;
-  enabled?:
-    | boolean
-    | ((
-      { denops, info }: { denops: Denops; info: PlugInfo },
-    ) => Promise<boolean>);
+  enabled?: TrueFalse;
   before?: (
     { denops, info }: { denops: Denops; info: PlugInfo },
   ) => Promise<void>;
@@ -30,6 +32,7 @@ export type Plug = {
     before?: string;
     after?: string;
   };
+  clone?: TrueFalse;
   dependencies?: Plug[];
 };
 
@@ -84,6 +87,15 @@ export class Plugin {
       p.clog(`[create] ${p.info.dst} set dst to ${p.plug.dst}`);
       p.info.dst = ensure(await fn.expand(denops, p.plug.dst), is.String);
     }
+    if (p.plug.enabled == undefined) {
+      p.info.enabled = true;
+    }
+    if (await p.isTrueFalse(p.plug.clone, true) === false) {
+      p.info.enabled = false;
+      p.info.clone = false;
+    } else {
+      p.info.clone = true;
+    }
     return p;
   }
 
@@ -94,21 +106,22 @@ export class Plugin {
     }
   }
 
-  private async isEnabled() {
-    if (this.plug.enabled != undefined) {
-      if (is.Boolean(this.plug.enabled)) {
-        if (!this.plug.enabled) {
-          return false;
-        }
-      } else {
-        if (
-          !(await this.plug.enabled({ denops: this.denops, info: this.info }))
-        ) {
-          return false;
-        }
-      }
+  private async isTrueFalse(tf: TrueFalse | undefined, def: boolean) {
+    if (tf == undefined) {
+      return def;
     }
-    return true;
+    if (is.Boolean(tf)) {
+      return tf;
+    }
+    return await tf({ denops: this.denops, info: this.info });
+  }
+
+  private async isEnabled() {
+    return await this.isTrueFalse(this.info.enabled, true);
+  }
+
+  private async isClone() {
+    return await this.isTrueFalse(this.info.clone, true);
   }
 
   public async add() {
@@ -191,23 +204,23 @@ export class Plugin {
   }
 
   public async before() {
-    if (this.plug.before) {
+    if (this.info.before) {
       this.clog(`[before] ${this.info.url} start !`);
-      await this.plug.before({ denops: this.denops, info: this.info });
+      await this.info.before({ denops: this.denops, info: this.info });
       this.clog(`[before] ${this.info.url} end !`);
     }
   }
   public async after() {
-    if (this.plug.after) {
+    if (this.info.after) {
       this.clog(`[after] ${this.info.url} start !`);
-      await this.plug.after({ denops: this.denops, info: this.info });
+      await this.info.after({ denops: this.denops, info: this.info });
       this.clog(`[after] ${this.info.url} end !`);
     }
   }
   public async build() {
-    if (this.plug.build) {
+    if (this.info.build) {
       this.clog(`[build] ${this.info.url} start !`);
-      await this.plug.build({ denops: this.denops, info: this.info });
+      await this.info.build({ denops: this.denops, info: this.info });
       this.clog(`[build] ${this.info.url} end !`);
     }
   }
@@ -284,10 +297,14 @@ export class Plugin {
       return;
     }
 
+    if (!(await this.isClone())) {
+      return;
+    }
+
     const output = await Git.clone(
       this.info.url,
       ensure(this.info.dst, is.String),
-      this.plug.branch,
+      this.info.branch,
     );
     if (output.success) {
       await this.genHelptags();
@@ -301,15 +318,18 @@ export class Plugin {
         }], stderr: [${new TextDecoder().decode(output.stderr)}]`,
       );
     }
-    return this.plug.branch
-      ? `Git clone ${this.info.url} --branch=${this.plug.branch}`
+    return this.info.branch
+      ? `Git clone ${this.info.url} --branch=${this.info.branch}`
       : `Git clone ${this.info.url}`;
   }
 
   public async update() {
+    if (!(await this.isClone())) {
+      return;
+    }
     const git = new Git(ensure(this.info.dst, is.String));
     const beforeRev = await git.getRevision();
-    const output = await git.pull(this.plug.branch);
+    const output = await git.pull(this.info.branch);
     const afterRev = await git.getRevision();
     if (output.success) {
       if (beforeRev !== afterRev) {
@@ -324,9 +344,7 @@ export class Plugin {
         if (output.success) {
           return [
             `--- ${this.info.dst} --------------------`,
-            ...new TextDecoder().decode(output.stdout).split("\n").map((l) =>
-              l.trim()
-            ),
+            ...new TextDecoder().decode(output.stdout).split("\n").map((l) => l.trim()),
           ];
         } else {
           console.error(
