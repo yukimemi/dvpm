@@ -284,8 +284,25 @@ export class Plugin {
     }
   }
 
+  private async isHelptagsOld(docDir: string) {
+    const txts: string[] = [];
+    const tags: string[] = [];
+    for await (const entry of expandGlob(docDir + "/*.{txt,[a-z][a-z]x}")) {
+      txts.push(entry.path);
+    }
+    for await (const entry of expandGlob(docDir + "/tags{-[a-z][a-z],}")) {
+      tags.push(entry.path);
+    }
+    const txtNewest = Math.max(...txts.map((txt) => Deno.statSync(txt).mtime?.getTime() ?? 0));
+    const tagOldest = Math.min(...tags.map((tag) => Deno.statSync(tag).mtime?.getTime() ?? 0));
+    return txtNewest > tagOldest;
+  }
+
   public async genHelptags() {
     const docDir = path.join(ensure(this.info.dst, is.String), "doc");
+    if (!(await this.isHelptagsOld(docDir))) {
+      return;
+    }
     await execute(
       this.denops,
       `silent! helptags ${await fn.fnameescape(this.denops, docDir)}`,
@@ -331,9 +348,9 @@ export class Plugin {
     const beforeRev = await git.getRevision();
     const output = await git.pull(this.info.branch);
     const afterRev = await git.getRevision();
+    await this.genHelptags();
     if (output.success) {
       if (beforeRev !== afterRev) {
-        await this.genHelptags();
         this.info.isUpdate = true;
         await this.build();
         const output = await git.getLog(
