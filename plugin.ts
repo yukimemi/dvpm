@@ -295,7 +295,7 @@ export class Plugin {
     }
     const txtNewest = Math.max(...txts.map((txt) => Deno.statSync(txt).mtime?.getTime() ?? 0));
     const tagOldest = Math.min(...tags.map((tag) => Deno.statSync(tag).mtime?.getTime() ?? 0));
-    return txtNewest > tagOldest;
+    return tags.length === 0 || txtNewest > tagOldest;
   }
 
   public async genHelptags() {
