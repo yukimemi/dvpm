@@ -73,13 +73,17 @@ export class Git {
     return await this.git(["log", ...argOption, `${from}..${to}`]);
   }
 
-  public static async clone(url: string, dst: string, branch?: string) {
+  public static async clone(
+    url: string,
+    dst: string,
+    branch?: string,
+  ): Promise<Deno.CommandOutput> {
     const args = branch ? ["clone", "--branch", branch, url, dst] : ["clone", url, dst];
     const cmd = new Deno.Command("git", { args });
     return await cmd.output();
   }
 
-  public async pull(branch?: string) {
+  public async pull(branch?: string): Promise<Deno.CommandOutput> {
     const currentBranch = await this.getBranch();
     branch ??= currentBranch;
     if (branch !== currentBranch) {

@@ -149,12 +149,14 @@ export class Dvpm {
   private async _update(p: Plugin) {
     await this.#semaphore.lock(async () => {
       const result = await p.update();
-      if (result) {
-        this.#updateLogs.push(...result);
+      if (result[1]) {
+        this.#updateLogs.push(...result[1]);
         if (this.dvpmOption.notify) {
-          await notify(this.denops, result.join("\r"));
+          await notify(this.denops, result[1].join("\r"));
         }
-        isInstallOrUpdate = true;
+        if (result[0]) {
+          isInstallOrUpdate = true;
+        }
       }
     });
   }

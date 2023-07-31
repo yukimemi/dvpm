@@ -340,9 +340,9 @@ export class Plugin {
       : `Git clone ${this.info.url}`;
   }
 
-  public async update() {
+  public async update(): Promise<[boolean, string[]]> {
     if (!(await this.isClone())) {
-      return;
+      return [true, []];
     }
     const git = new Git(ensure(this.info.dst, is.String));
     const beforeRev = await git.getRevision();
@@ -359,29 +359,28 @@ export class Plugin {
           this.pluginOption.logarg,
         );
         if (output.success) {
-          return [
+          return [true, [
             `--- ${this.info.dst} --------------------`,
             ...new TextDecoder().decode(output.stdout).split("\n").map((l) => l.trim()),
-          ];
-        } else {
-          console.error(
-            `Failed to git log ${this.info.dst}, stdout: [${
-              new TextDecoder().decode(
-                output.stdout,
-              )
-            }], stderr: [${new TextDecoder().decode(output.stderr)}]`,
-          );
+          ]];
         }
+        return [false, [
+          `Failed to git log ${this.info.dst}, stdout: [${
+            new TextDecoder().decode(
+              output.stdout,
+            )
+          }], stderr: [${new TextDecoder().decode(output.stderr)}]`,
+        ]];
       }
     } else {
-      console.error(
+      return [false, [
         `Failed to pull ${this.info.url}, stdout: [${
           new TextDecoder().decode(
             output.stdout,
           )
         }], stderr: [${new TextDecoder().decode(output.stderr)}]`,
-      );
+      ]];
     }
-    return null;
+    return [true, []];
   }
 }
