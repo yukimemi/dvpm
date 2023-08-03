@@ -270,6 +270,9 @@ export class Dvpm {
           if (dep.clone == undefined) {
             dep.clone = plug.clone;
           }
+          if (dep.cache == undefined) {
+            dep.cache = plug.cache;
+          }
           await this.add(dep);
         }
       }
