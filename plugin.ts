@@ -28,7 +28,8 @@ export type Plug = {
   build?: (
     { denops, info }: { denops: Denops; info: PlugInfo },
   ) => Promise<void>;
-  cache?: boolean | {
+  cache?: {
+    enabled?: TrueFalse;
     before?: string;
     after?: string;
   };
@@ -45,7 +46,6 @@ export type PlugInfo = Plug & {
 
 export type PluginOption = {
   base: string;
-  cache?: string;
   debug?: boolean;
   profile?: boolean;
   logarg?: string[];
@@ -96,6 +96,12 @@ export class Plugin {
     } else {
       p.info.clone = true;
     }
+    if (p.plug.cache?.before || p.plug.cache?.after) {
+      p.info.cache = {
+        enabled: true,
+        ...p.info.cache,
+      };
+    }
     return p;
   }
 
@@ -124,6 +130,10 @@ export class Plugin {
     return await this.isTrueFalse(this.info.clone, true);
   }
 
+  private async isCache() {
+    return await this.isTrueFalse(this.info.cache?.enabled, false);
+  }
+
   public async add() {
     try {
       this.clog(`[add] ${this.info.url} start !`);
@@ -147,24 +157,16 @@ export class Plugin {
     try {
       this.clog(`[cache] ${this.info.url} start !`);
       if (
-        !(await this.isEnabled()) || this.info.cache == undefined
+        !(await this.isEnabled()) || !(await this.isCache())
       ) {
         return "";
       }
-      if (is.Boolean(this.info.cache)) {
-        if (this.info.cache) {
-          this.info.isCache = true;
-          return `set runtimepath+=${this.info.dst}`;
-        }
-        return "";
-      } else {
-        this.info.isCache = true;
-        return `
+      this.info.isCache = true;
+      return `
           ${this.info.cache?.before || ""}
           set runtimepath+=${this.info.dst}
           ${this.info.cache?.after || ""}
         `;
-      }
     } catch (e) {
       console.error(e);
       return "";

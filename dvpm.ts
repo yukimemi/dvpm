@@ -278,7 +278,6 @@ export class Dvpm {
       }
       const pluginOption: PluginOption = {
         base: this.dvpmOption.base,
-        cache: this.dvpmOption.cache,
         debug: this.dvpmOption.debug,
         profile: this.dvpmOption.profile,
         logarg: this.dvpmOption.logarg,

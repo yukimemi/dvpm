@@ -67,7 +67,7 @@ import { ensure, is } from "https://deno.land/x/unknownutil@v3.2.0/mod.ts";
 import { execute } from "https://deno.land/x/denops_std@v5.0.0/helper/mod.ts";
 import { globals } from "https://deno.land/x/denops_std@v5.0.0/variable/mod.ts";
 
-import { Dvpm } from "https://deno.land/x/dvpm@2.4.5/mod.ts";
+import { Dvpm } from "https://deno.land/x/dvpm@3.0.0/mod.ts";
 
 export async function main(denops: Denops): Promise<void> {
   const base_path = (await fn.has(denops, "nvim")) ? "~/.cache/nvim/dvpm" : "~/.cache/vim/dvpm";
@@ -215,11 +215,7 @@ export type Plug = {
   // Git branch name. (Option)
   branch?: string;
   // enable or disable. Default is true.
-  enabled?:
-    | boolean
-    | ((
-      { denops, info }: { denops: Denops; info: PlugInfo },
-    ) => Promise<boolean>);
+  enabled?: TrueFalse;
   // Processing to be performed before adding runtimepath. (Option)
   before?: (
     { denops, info }: { denops: Denops; info: PlugInfo },
@@ -233,20 +229,25 @@ export type Plug = {
     { denops, info }: { denops: Denops; info: PlugInfo },
   ) => Promise<void>;
   // Cache settings. See `Cache setting`.
-  cache?: boolean | {
+  cache?: {
+    enabled?: TrueFalse;
     before?: string;
     after?: string;
   };
   // Whether to git clone and update. Default is true. (Option)
   // If this option is set to false, then `enabled` is also set to false.
-  clone?:
-    | boolean
-    | ((
-      { denops, info }: { denops: Denops; info: PlugInfo },
-    ) => Promise<boolean>);
+  clone?: TrueFalse;
   // dependencies. (Option)
   dependencies?: Plug[];
 };
+```
+
+```typescript
+export type TrueFalse =
+  | boolean
+  | ((
+    { denops, info }: { denops: Denops; info: PlugInfo },
+  ) => Promise<boolean>);
 ```
 
 ```typescript
@@ -255,6 +256,8 @@ export type PlugInfo = Plug & {
   isLoad: boolean;
   // `true` if install or update.
   isUpdate: boolean;
+  // `true` if cache is enabled.
+  isCache: boolean;
   // plugin load time. Need to set DvpmOption.profile.
   elaps: number;
 };
@@ -345,12 +348,12 @@ export async function main(denops: Denops): Promise<void> {
 
   await dvpm.add({
     url: "tani/vim-artemis",
-    // Just set `cache` to true if you don't need plugin settings.
-    cache: true,
+    // Just set `cache.enabled` to true if you don't need plugin settings.
+    cache: { enabled: true },
   });
   await dvpm.add({
     url: "nvim-lua/plenary.nvim",
-    cache: true,
+    cache: { enabled: true },
     enabled: async ({ denops }) => await fn.has(denops, "nvim"),
   });
 
