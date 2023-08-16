@@ -375,6 +375,7 @@ export class Plugin {
           ...new TextDecoder().decode(output.stderr).split("\n").map((l) => l.trim()),
         ]];
       }
+      return [true, []];
     }
     return [false, [
       `--- ×: ${this.info.dst} --------------------`,
