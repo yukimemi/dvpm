@@ -1,11 +1,11 @@
 import * as fn from "https://deno.land/x/denops_std@v5.0.1/function/mod.ts";
 import * as op from "https://deno.land/x/denops_std@v5.0.1/option/mod.ts";
-import * as path from "https://deno.land/std@0.192.0/path/mod.ts";
+import * as path from "https://deno.land/std@0.198.0/path/mod.ts";
 import { Denops } from "https://deno.land/x/denops_std@v5.0.1/mod.ts";
 import { Semaphore } from "https://deno.land/x/async@v2.0.2/semaphore.ts";
 import { execute } from "https://deno.land/x/denops_std@v5.0.1/helper/mod.ts";
-import { exists, expandGlob } from "https://deno.land/std@0.192.0/fs/mod.ts";
-import { ensure, is } from "https://deno.land/x/unknownutil@v3.2.0/mod.ts";
+import { exists, expandGlob } from "https://deno.land/std@0.198.0/fs/mod.ts";
+import { ensure, is } from "https://deno.land/x/unknownutil@v3.4.0/mod.ts";
 import { Git } from "./git.ts";
 
 export type TrueFalse =
@@ -311,13 +311,13 @@ export class Plugin {
     );
   }
 
-  public async install() {
+  public async install(): Promise<string> {
     if (await exists(ensure(this.info.dst, is.String))) {
-      return;
+      return "";
     }
 
     if (!(await this.isClone())) {
-      return;
+      return "";
     }
 
     const output = await Git.clone(
@@ -362,27 +362,27 @@ export class Plugin {
         );
         if (output.success) {
           return [true, [
-            `--- ${this.info.dst} --------------------`,
+            `--- ○: ${this.info.dst} --------------------`,
             ...new TextDecoder().decode(output.stdout).split("\n").map((l) => l.trim()),
           ]];
         }
         return [false, [
-          `Failed to git log ${this.info.dst}, stdout: [${
-            new TextDecoder().decode(
-              output.stdout,
-            )
-          }], stderr: [${new TextDecoder().decode(output.stderr)}]`,
+          `--- ×: ${this.info.dst} --------------------`,
+          `Failed to git log ${this.info.dst}`,
+          `stdout:`,
+          ...new TextDecoder().decode(output.stdout).split("\n").map((l) => l.trim()),
+          `stderr:`,
+          ...new TextDecoder().decode(output.stderr).split("\n").map((l) => l.trim()),
         ]];
       }
-    } else {
-      return [false, [
-        `Failed to pull ${this.info.url}, stdout: [${
-          new TextDecoder().decode(
-            output.stdout,
-          )
-        }], stderr: [${new TextDecoder().decode(output.stderr)}]`,
-      ]];
     }
-    return [true, []];
+    return [false, [
+      `--- ×: ${this.info.dst} --------------------`,
+      `Failed to git pull ${this.info.url}`,
+      `stdout:`,
+      ...new TextDecoder().decode(output.stdout).split("\n").map((l) => l.trim()),
+      `stderr:`,
+      ...new TextDecoder().decode(output.stderr).split("\n").map((l) => l.trim()),
+    ]];
   }
 }

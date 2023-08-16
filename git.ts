@@ -1,6 +1,6 @@
-import * as path from "https://deno.land/std@0.192.0/path/mod.ts";
-import { exists } from "https://deno.land/std@0.192.0/fs/exists.ts";
-import { readLines } from "https://deno.land/std@0.192.0/io/mod.ts";
+import * as path from "https://deno.land/std@0.198.0/path/mod.ts";
+import { exists } from "https://deno.land/std@0.198.0/fs/exists.ts";
+import { readLines } from "https://deno.land/std@0.198.0/io/mod.ts";
 
 export class Git {
   public gitDir: string;
