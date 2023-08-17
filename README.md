@@ -67,7 +67,7 @@ import { ensure, is } from "https://deno.land/x/unknownutil@v3.2.0/mod.ts";
 import { execute } from "https://deno.land/x/denops_std@v5.0.0/helper/mod.ts";
 import { globals } from "https://deno.land/x/denops_std@v5.0.0/variable/mod.ts";
 
-import { Dvpm } from "https://deno.land/x/dvpm@3.0.4/mod.ts";
+import { Dvpm } from "https://deno.land/x/dvpm@3.0.5/mod.ts";
 
 export async function main(denops: Denops): Promise<void> {
   const base_path = (await fn.has(denops, "nvim")) ? "~/.cache/nvim/dvpm" : "~/.cache/vim/dvpm";

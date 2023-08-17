@@ -34,5 +34,5 @@ export async function cache(
 }
 
 export function cmdOutToString(cmdout: Uint8Array): string[] {
-  return [...new TextDecoder().decode(cmdout).split("\n").map((l) => l.trim())];
+  return new TextDecoder().decode(cmdout).split("\n").map((l) => l.trim());
 }
