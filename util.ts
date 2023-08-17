@@ -32,3 +32,7 @@ export async function cache(
     await Deno.writeTextFile(p, s);
   }
 }
+
+export function cmdOutToString(cmdout: Uint8Array): string[] {
+  return [...new TextDecoder().decode(cmdout).split("\n").map((l) => l.trim())];
+}

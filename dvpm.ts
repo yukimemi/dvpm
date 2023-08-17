@@ -137,10 +137,10 @@ export class Dvpm {
   private async _install(p: Plugin) {
     await this.#semaphore.lock(async () => {
       const result = await p.install();
-      if (result) {
-        this.#installLogs.push(result);
+      if (result.success) {
+        this.#installLogs.push(result.output.join("\r"));
         if (this.dvpmOption.notify) {
-          await notify(this.denops, result);
+          await notify(this.denops, result.output.join("\r"));
         }
         isInstallOrUpdate = true;
       }
@@ -149,12 +149,12 @@ export class Dvpm {
   private async _update(p: Plugin) {
     await this.#semaphore.lock(async () => {
       const result = await p.update();
-      if (result[1]) {
-        this.#updateLogs.push(...result[1]);
+      if (result.success) {
+        this.#updateLogs.push(result.output.join("\r"));
         if (this.dvpmOption.notify) {
-          await notify(this.denops, result[1].join("\r"));
+          await notify(this.denops, result.output.join("\r"));
         }
-        if (result[0]) {
+        if (result.success && result.output.length > 0) {
           isInstallOrUpdate = true;
         }
       }

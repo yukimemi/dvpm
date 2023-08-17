@@ -7,6 +7,7 @@ import { execute } from "https://deno.land/x/denops_std@v5.0.1/helper/mod.ts";
 import { exists, expandGlob } from "https://deno.land/std@0.198.0/fs/mod.ts";
 import { ensure, is } from "https://deno.land/x/unknownutil@v3.4.0/mod.ts";
 import { Git } from "./git.ts";
+import { cmdOutToString } from "./util.ts";
 
 export type TrueFalse =
   | boolean
@@ -49,6 +50,11 @@ export type PluginOption = {
   debug?: boolean;
   profile?: boolean;
   logarg?: string[];
+};
+
+export type CmdOut = {
+  success: boolean;
+  output: string[];
 };
 
 export class Plugin {
@@ -311,13 +317,13 @@ export class Plugin {
     );
   }
 
-  public async install(): Promise<string> {
+  public async install(): Promise<CmdOut> {
     if (await exists(ensure(this.info.dst, is.String))) {
-      return "";
+      return { success: true, output: [] };
     }
 
     if (!(await this.isClone())) {
-      return "";
+      return { success: true, output: [] };
     }
 
     const output = await Git.clone(
@@ -328,23 +334,25 @@ export class Plugin {
     if (output.success) {
       await this.genHelptags();
       this.info.isUpdate = true;
-    } else {
-      console.error(
-        `Failed to clone ${this.info.url}, stdout: [${
-          new TextDecoder().decode(
-            output.stdout,
-          )
-        }], stderr: [${new TextDecoder().decode(output.stderr)}]`,
-      );
+      return this.info.branch
+        ? { success: true, output: [`Git clone ${this.info.url} --branch=${this.info.branch}`] }
+        : { success: true, output: [`Git clone ${this.info.url}`] };
     }
-    return this.info.branch
-      ? `Git clone ${this.info.url} --branch=${this.info.branch}`
-      : `Git clone ${this.info.url}`;
+    return {
+      success: false,
+      output: [
+        `Failed to clone ${this.info.url}`,
+        `stdout:`,
+        ...cmdOutToString(output.stdout),
+        `stderr:`,
+        ...cmdOutToString(output.stderr),
+      ],
+    };
   }
 
-  public async update(): Promise<[boolean, string[]]> {
+  public async update(): Promise<CmdOut> {
     if (!(await this.isClone())) {
-      return [true, []];
+      return { success: true, output: [] };
     }
     const git = new Git(ensure(this.info.dst, is.String));
     const beforeRev = await git.getRevision();
@@ -361,29 +369,38 @@ export class Plugin {
           this.pluginOption.logarg,
         );
         if (output.success) {
-          return [true, [
-            `--- ○: ${this.info.dst} --------------------`,
-            ...new TextDecoder().decode(output.stdout).split("\n").map((l) => l.trim()),
-          ]];
+          return {
+            success: true,
+            output: [
+              `--- ○: ${this.info.dst} --------------------`,
+              ...cmdOutToString(output.stdout),
+            ],
+          };
         }
-        return [false, [
-          `--- ×: ${this.info.dst} --------------------`,
-          `Failed to git log ${this.info.dst}`,
-          `stdout:`,
-          ...new TextDecoder().decode(output.stdout).split("\n").map((l) => l.trim()),
-          `stderr:`,
-          ...new TextDecoder().decode(output.stderr).split("\n").map((l) => l.trim()),
-        ]];
+        return {
+          success: false,
+          output: [
+            `--- ×: ${this.info.dst} --------------------`,
+            `Failed to git log ${this.info.dst}`,
+            `stdout:`,
+            ...cmdOutToString(output.stdout),
+            `stderr:`,
+            ...cmdOutToString(output.stderr),
+          ],
+        };
       }
-      return [true, []];
+      return { success: true, output: [] };
     }
-    return [false, [
-      `--- ×: ${this.info.dst} --------------------`,
-      `Failed to git pull ${this.info.url}`,
-      `stdout:`,
-      ...new TextDecoder().decode(output.stdout).split("\n").map((l) => l.trim()),
-      `stderr:`,
-      ...new TextDecoder().decode(output.stderr).split("\n").map((l) => l.trim()),
-    ]];
+    return {
+      success: false,
+      output: [
+        `--- ×: ${this.info.dst} --------------------`,
+        `Failed to git pull ${this.info.url}`,
+        `stdout:`,
+        ...cmdOutToString(output.stdout),
+        `stderr:`,
+        ...cmdOutToString(output.stderr),
+      ],
+    };
   }
 }
