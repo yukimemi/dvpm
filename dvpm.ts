@@ -141,7 +141,7 @@ export class Dvpm {
         isInstallOrUpdate = true;
       }
       if (result.output.length > 0) {
-        this.#installLogs.push(result.output.join("\r"));
+        this.#installLogs.push(...result.output);
         if (this.dvpmOption.notify) {
           await notify(this.denops, result.output.join("\r"));
         }
@@ -155,7 +155,7 @@ export class Dvpm {
         isInstallOrUpdate = true;
       }
       if (result.output.length > 0) {
-        this.#updateLogs.push(result.output.join("\r"));
+        this.#updateLogs.push(...result.output);
         if (this.dvpmOption.notify) {
           await notify(this.denops, result.output.join("\r"));
         }
