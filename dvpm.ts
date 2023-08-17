@@ -138,24 +138,26 @@ export class Dvpm {
     await this.#semaphore.lock(async () => {
       const result = await p.install();
       if (result.success) {
+        isInstallOrUpdate = true;
+      }
+      if (result.output.length > 0) {
         this.#installLogs.push(result.output.join("\r"));
         if (this.dvpmOption.notify) {
           await notify(this.denops, result.output.join("\r"));
         }
-        isInstallOrUpdate = true;
       }
     });
   }
   private async _update(p: Plugin) {
     await this.#semaphore.lock(async () => {
       const result = await p.update();
-      if (result.success) {
+      if (result.success && result.output.length > 0) {
+        isInstallOrUpdate = true;
+      }
+      if (result.output.length > 0) {
         this.#updateLogs.push(result.output.join("\r"));
         if (this.dvpmOption.notify) {
           await notify(this.denops, result.output.join("\r"));
-        }
-        if (result.success && result.output.length > 0) {
-          isInstallOrUpdate = true;
         }
       }
     });
