@@ -1,0 +1,55 @@
+name: udd
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "0 6 * * *"
+
+jobs:
+  update:
+    permissions: write-all
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup repo
+        uses: actions/checkout@v3
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+
+      - name: Update dependencies with udd
+        id: run-deno-udd
+        env:
+          NO_COLOR: true
+        run: |
+          {
+            echo 'UDD_RESULT<<EOF'
+            deno run --allow-all https://deno.land/x/udd/main.ts $(find . -type f | grep -E ".*\.([mc]?(ts|js)|(ts|js)x?)$" -)
+            echo EOF
+          } >> $GITHUB_OUTPUT
+
+      - name: Check Deno
+        run: deno task ci
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          commit-message: "chore(deps): Update deno dependencies"
+          title: Update Deno dependencies
+          body: |-
+            Some external modules are stale.
+            <details><summary>Details</summary><div>
+
+            ```
+            ${{ steps.run-deno-udd.outputs.UDD_RESULT }}
+            ```
+
+            </div></details>
+          branch: udd-update
+          labels: automerge
+          author: GitHub <noreply@github.com>
+          delete-branch: true

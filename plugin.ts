@@ -318,7 +318,8 @@ export class Plugin {
   }
 
   public async install(): Promise<CmdOut> {
-    if (await exists(ensure(this.info.dst, is.String))) {
+    const gitDir = path.join(ensure(this.info.dst, is.String), ".git");
+    if (await exists(gitDir)) {
       return { success: true, output: [] };
     }
 

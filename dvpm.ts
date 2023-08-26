@@ -11,8 +11,6 @@ import { type Plug, Plugin, PluginOption } from "./plugin.ts";
 const concurrency = 8;
 const listSpace = 3;
 
-let isInstallOrUpdate = false;
-
 export type DvpmOption = {
   base: string;
   cache?: string;
@@ -31,6 +29,8 @@ export class Dvpm {
   #installLogs: string[] = [];
   #updateLogs: string[] = [];
   #cacheScript: string[] = [];
+
+  public isInstallOrUpdate = false;
 
   constructor(
     public denops: Denops,
@@ -138,7 +138,7 @@ export class Dvpm {
     await this.#semaphore.lock(async () => {
       const result = await p.install();
       if (result.success) {
-        isInstallOrUpdate = true;
+        this.isInstallOrUpdate = true;
       }
       if (result.output.length > 0) {
         this.#installLogs.push(...result.output);
@@ -152,7 +152,7 @@ export class Dvpm {
     await this.#semaphore.lock(async () => {
       const result = await p.update();
       if (result.success && result.output.length > 0) {
-        isInstallOrUpdate = true;
+        this.isInstallOrUpdate = true;
       }
       if (result.output.length > 0) {
         this.#updateLogs.push(...result.output);
@@ -258,7 +258,7 @@ export class Dvpm {
     ]);
   }
 
-  public async uninstall(url: string) {
+  public async uninstall(_url: string) {
     // TODO: Not implemented
   }
 
