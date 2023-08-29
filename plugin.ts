@@ -5,7 +5,7 @@ import { Denops } from "https://deno.land/x/denops_std@v5.0.1/mod.ts";
 import { Semaphore } from "https://deno.land/x/async@v2.0.2/semaphore.ts";
 import { execute } from "https://deno.land/x/denops_std@v5.0.1/helper/mod.ts";
 import { exists, expandGlob } from "https://deno.land/std@0.200.0/fs/mod.ts";
-import { ensure, is } from "https://deno.land/x/unknownutil@v3.5.1/mod.ts";
+import { ensure, is } from "https://deno.land/x/unknownutil@v3.6.0/mod.ts";
 import { Git } from "./git.ts";
 import { cmdOutToString } from "./util.ts";
 
