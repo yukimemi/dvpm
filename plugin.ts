@@ -3,7 +3,7 @@ import * as op from "https://deno.land/x/denops_std@v5.0.1/option/mod.ts";
 import * as path from "https://deno.land/std@0.200.0/path/mod.ts";
 import { Denops } from "https://deno.land/x/denops_std@v5.0.1/mod.ts";
 import { Semaphore } from "https://deno.land/x/async@v2.0.2/semaphore.ts";
-import { execute } from "https://deno.land/x/denops_std@v5.0.1/helper/mod.ts";
+import { echo, execute } from "https://deno.land/x/denops_std@v5.0.1/helper/mod.ts";
 import { exists, expandGlob } from "https://deno.land/std@0.200.0/fs/mod.ts";
 import { ensure, is } from "https://deno.land/x/unknownutil@v3.6.0/mod.ts";
 import { Git } from "./git.ts";
@@ -357,6 +357,7 @@ export class Plugin {
     }
     const git = new Git(ensure(this.info.dst, is.String));
     const beforeRev = await git.getRevision();
+    await echo(this.denops, `Update ${this.info.dst}, branch: ${this.info.branch}`);
     const output = await git.pull(this.info.branch);
     const afterRev = await git.getRevision();
     await this.genHelptags();

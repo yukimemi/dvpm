@@ -89,7 +89,6 @@ export class Git {
     if (branch !== currentBranch) {
       await this.checkout(branch);
     }
-    console.log(`Update ${this.base}, branch: ${branch}`);
     const args = ["-C", this.base, "pull", "--ff-only", "--rebase=false"];
     const cmd = new Deno.Command("git", { args });
     return await cmd.output();

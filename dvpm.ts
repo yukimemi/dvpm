@@ -4,7 +4,7 @@ import { Denops } from "https://deno.land/x/denops_std@v5.0.1/mod.ts";
 import { Semaphore } from "https://deno.land/x/async@v2.0.2/semaphore.ts";
 import { assert, is } from "https://deno.land/x/unknownutil@v3.6.0/mod.ts";
 import { cache, notify } from "./util.ts";
-import { execute } from "https://deno.land/x/denops_std@v5.0.1/helper/mod.ts";
+import { echo, execute } from "https://deno.land/x/denops_std@v5.0.1/helper/mod.ts";
 import { sprintf } from "https://deno.land/std@0.200.0/fmt/printf.ts";
 import { type Plug, Plugin, PluginOption } from "./plugin.ts";
 
@@ -186,7 +186,7 @@ export class Dvpm {
     if (this.dvpmOption.notify) {
       await notify(this.denops, `Update start`);
     } else {
-      console.log(`Update start`);
+      await echo(this.denops, `Update start`);
     }
     if (url) {
       const p = this.findPlug(this.#plugins, url);
@@ -209,7 +209,7 @@ export class Dvpm {
     if (this.dvpmOption.notify) {
       await notify(this.denops, `Update done`);
     } else {
-      console.log(`Update done`);
+      await echo(this.denops, `Update done`);
     }
   }
 
