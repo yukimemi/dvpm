@@ -7,5 +7,7 @@
     "javascriptreact",
     "typescript",
     "typescriptreact"
-  ]
+  ],
+  "coc.source.file.trimSameExts": [],
+  "tsdetect.mode": "manual"
 }

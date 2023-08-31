@@ -344,6 +344,16 @@ export class Dvpm {
         ),
       ]);
     }
+    if (await fn.exists(this.denops, "denops_server_addr")) {
+      await execute(
+        this.denops,
+        `
+          augroup denops_plugin_internal_startup
+            autocmd!
+          augroup END
+        `,
+      );
+    }
     await this.denops.cmd(`doautocmd VimEnter`);
     if (this.dvpmOption.cache) {
       this.clog(`Cache: ${this.dvpmOption.cache}`);
