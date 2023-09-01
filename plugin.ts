@@ -6,6 +6,7 @@ import { Semaphore } from "https://deno.land/x/async@v2.0.2/semaphore.ts";
 import { echo, execute } from "https://deno.land/x/denops_std@v5.0.1/helper/mod.ts";
 import { exists, expandGlob } from "https://deno.land/std@0.200.0/fs/mod.ts";
 import { ensure, is } from "https://deno.land/x/unknownutil@v3.6.0/mod.ts";
+import { Result } from "https://esm.sh/result-type-ts@2.1.1";
 import { Git } from "./git.ts";
 import { cmdOutToString } from "./util.ts";
 
@@ -50,11 +51,6 @@ export type PluginOption = {
   debug?: boolean;
   profile?: boolean;
   logarg?: string[];
-};
-
-export type CmdOut = {
-  success: boolean;
-  output: string[];
 };
 
 export class Plugin {
@@ -317,14 +313,14 @@ export class Plugin {
     );
   }
 
-  public async install(): Promise<CmdOut> {
+  public async install(): Promise<Result<string[], string[]>> {
     const gitDir = path.join(ensure(this.info.dst, is.String), ".git");
     if (await exists(gitDir)) {
-      return { success: true, output: [] };
+      return Result.success([]);
     }
 
     if (!(await this.isClone())) {
-      return { success: true, output: [] };
+      return Result.success([]);
     }
 
     const output = await Git.clone(
@@ -336,24 +332,21 @@ export class Plugin {
       await this.genHelptags();
       this.info.isUpdate = true;
       return this.info.branch
-        ? { success: true, output: [`Git clone ${this.info.url} --branch=${this.info.branch}`] }
-        : { success: true, output: [`Git clone ${this.info.url}`] };
+        ? Result.success([`Git clone ${this.info.url} --branch=${this.info.branch}`])
+        : Result.success([`Git clone ${this.info.url}`]);
     }
-    return {
-      success: false,
-      output: [
-        `Failed to clone ${this.info.url}`,
-        `stdout:`,
-        ...cmdOutToString(output.stdout),
-        `stderr:`,
-        ...cmdOutToString(output.stderr),
-      ],
-    };
+    return Result.failure([
+      `Failed to clone ${this.info.url}`,
+      `stdout:`,
+      ...cmdOutToString(output.stdout),
+      `stderr:`,
+      ...cmdOutToString(output.stderr),
+    ]);
   }
 
-  public async update(): Promise<CmdOut> {
+  public async update(): Promise<Result<string[], string[]>> {
     if (!(await this.isClone())) {
-      return { success: true, output: [] };
+      return Result.success([]);
     }
     const git = new Git(ensure(this.info.dst, is.String));
     const beforeRev = await git.getRevision();
@@ -371,38 +364,29 @@ export class Plugin {
           this.pluginOption.logarg,
         );
         if (output.success) {
-          return {
-            success: true,
-            output: [
-              `--- ○: ${this.info.dst} --------------------`,
-              ...cmdOutToString(output.stdout),
-            ],
-          };
-        }
-        return {
-          success: false,
-          output: [
-            `--- ×: ${this.info.dst} --------------------`,
-            `Failed to git log ${this.info.dst}`,
-            `stdout:`,
+          return Result.success([
+            `--- ○: ${this.info.dst} --------------------`,
             ...cmdOutToString(output.stdout),
-            `stderr:`,
-            ...cmdOutToString(output.stderr),
-          ],
-        };
+          ]);
+        }
+        return Result.success([
+          `--- ×: ${this.info.dst} --------------------`,
+          `Failed to git log ${this.info.dst}`,
+          `stdout:`,
+          ...cmdOutToString(output.stdout),
+          `stderr:`,
+          ...cmdOutToString(output.stderr),
+        ]);
       }
-      return { success: true, output: [] };
+      return Result.success([]);
     }
-    return {
-      success: false,
-      output: [
-        `--- ×: ${this.info.dst} --------------------`,
-        `Failed to git pull ${this.info.url}`,
-        `stdout:`,
-        ...cmdOutToString(output.stdout),
-        `stderr:`,
-        ...cmdOutToString(output.stderr),
-      ],
-    };
+    return Result.failure([
+      `--- ×: ${this.info.dst} --------------------`,
+      `Failed to git pull ${this.info.url}`,
+      `stdout:`,
+      ...cmdOutToString(output.stdout),
+      `stderr:`,
+      ...cmdOutToString(output.stderr),
+    ]);
   }
 }
