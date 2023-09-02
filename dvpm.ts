@@ -71,15 +71,15 @@ export class Dvpm {
     await execute(
       denops,
       `
-      function! s:${denops.name}_notify(method, params) abort
-        call denops#plugin#wait_async('${denops.name}', function('denops#notify', ['${denops.name}', a:method, a:params]))
-      endfunction
-      function! s:${denops.name}_request(method, params) abort
-        call denops#plugin#wait('${denops.name}')
-        call denops#request('${denops.name}', a:method, a:params)
-      endfunction
-      command! -nargs=? DvpmUpdate call s:${denops.name}_notify('update', [<f-args>])
-      command! -nargs=? DvpmList call s:${denops.name}_notify('bufWriteList', [<f-args>])
+        function! s:${denops.name}_notify(method, params) abort
+          call denops#plugin#wait_async('${denops.name}', function('denops#notify', ['${denops.name}', a:method, a:params]))
+        endfunction
+        function! s:${denops.name}_request(method, params) abort
+          call denops#plugin#wait('${denops.name}')
+          call denops#request('${denops.name}', a:method, a:params)
+        endfunction
+        command! -nargs=? DvpmUpdate call s:${denops.name}_notify('update', [<f-args>])
+        command! -nargs=? DvpmList call s:${denops.name}_notify('bufWriteList', [<f-args>])
       `,
     );
 

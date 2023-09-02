@@ -1,6 +1,7 @@
 name: udd
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
