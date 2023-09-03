@@ -350,7 +350,9 @@ export class Plugin {
     }
     const git = new Git(ensure(this.info.dst, is.String));
     const beforeRev = await git.getRevision();
-    await echo(this.denops, `Update ${this.info.dst}, branch: ${this.info.branch}`);
+    this.info.branch
+      ? await echo(this.denops, `Update ${this.info.dst}, branch: ${this.info.branch}`)
+      : await echo(this.denops, `Update ${this.info.dst}`);
     const output = await git.pull(this.info.branch);
     const afterRev = await git.getRevision();
     await this.genHelptags();
