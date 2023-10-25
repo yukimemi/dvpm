@@ -1,6 +1,6 @@
 import * as path from "https://deno.land/std@0.204.0/path/mod.ts";
 import { exists } from "https://deno.land/std@0.204.0/fs/exists.ts";
-import { readLines } from "https://deno.land/std@0.204.0/io/mod.ts";
+import { TextLineStream } from "https://deno.land/std@0.204.0/streams/mod.ts";
 
 export class Git {
   public gitDir: string;
@@ -45,11 +45,12 @@ export class Git {
       const ref = await Deno.readTextFile(refFile);
       return ref.split("\n")[0].trim();
     }
-    for await (
-      const line of readLines(
-        await Deno.open(path.join(this.gitDir, "packed-refs")),
-      )
-    ) {
+    const packedRefs = await Deno.open(path.join(this.gitDir, "packed-refs"));
+    const lineStream = packedRefs.readable.pipeThrough(new TextDecoderStream()).pipeThrough(
+      new TextLineStream(),
+    );
+
+    for await (const line of lineStream) {
       if (line.match(`/ ${ref}/`)) {
         return line.split(" ")[0];
       }
