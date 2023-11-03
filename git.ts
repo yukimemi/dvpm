@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : git.ts
 // Author      : yukimemi
-// Last Change : 2023/11/03 19:24:04.
+// Last Change : 2023/11/03 21:24:57.
 // =============================================================================
 
 import * as path from "https://deno.land/std@0.204.0/path/mod.ts";
@@ -80,12 +80,23 @@ export class Git {
     return await this.git(["log", ...argOption, `${from}..${to}`]);
   }
 
+  public async getDiff(
+    from: string,
+    to: string,
+  ): Promise<Deno.CommandOutput> {
+    return await this.git(["diff", `${from}..${to}`, "--", "doc", "README", "README.md"]);
+  }
+
   public static async clone(
     url: string,
     dst: string,
     branch?: string,
   ): Promise<Deno.CommandOutput> {
-    const args = branch ? ["clone", "--branch", branch, url, dst] : ["clone", url, dst];
+    let args = ["clone", "--recursive", "--filter=blob:none"];
+    if (branch) {
+      args.push(`--branch=${branch}`);
+    }
+    args = args.concat([url, dst]);
     const cmd = new Deno.Command("git", { args });
     return await cmd.output();
   }
@@ -96,7 +107,7 @@ export class Git {
     if (branch !== currentBranch) {
       await this.checkout(branch);
     }
-    const args = ["-C", this.base, "pull", "--ff", "--ff-only", "--rebase=false"];
+    const args = ["-C", this.base, "pull", "--ff", "--ff-only"];
     const cmd = new Deno.Command("git", { args });
     return await cmd.output();
   }

@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2023/11/03 19:24:19.
+// Last Change : 2023/11/03 20:31:52.
 // =============================================================================
 
 import * as fn from "https://deno.land/x/denops_std@v5.0.1/function/mod.ts";
@@ -366,24 +366,33 @@ export class Plugin {
       if (beforeRev !== afterRev) {
         this.info.isUpdate = true;
         await this.build();
-        const output = await git.getLog(
+        const outputLog = await git.getLog(
           beforeRev,
           afterRev,
           this.pluginOption.logarg,
         );
-        if (output.success) {
-          return Result.success([
+        const outputDiff = await git.getDiff(
+          beforeRev,
+          afterRev,
+        );
+        if (outputLog.success) {
+          const log = [
             `--- ○: ${this.info.dst} --------------------`,
-            ...cmdOutToString(output.stdout),
-          ]);
+            ...cmdOutToString(outputLog.stdout),
+          ];
+          if (outputDiff.success) {
+            log.push(`---`);
+            log.push(...cmdOutToString(outputDiff.stdout));
+          }
+          return Result.success(log);
         }
         return Result.success([
           `--- ×: ${this.info.dst} --------------------`,
           `Failed to git log ${this.info.dst}`,
           `stdout:`,
-          ...cmdOutToString(output.stdout),
+          ...cmdOutToString(outputLog.stdout),
           `stderr:`,
-          ...cmdOutToString(output.stderr),
+          ...cmdOutToString(outputLog.stderr),
         ]);
       }
       return Result.success([]);

@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2023/11/03 19:23:49.
+// Last Change : 2023/11/03 20:35:48.
 // =============================================================================
 
 import * as buffer from "https://deno.land/x/denops_std@v5.0.1/buffer/mod.ts";
@@ -132,10 +132,13 @@ export class Dvpm {
     });
   }
 
-  private async bufWrite(bufname: string, data: string[]) {
+  private async bufWrite(bufname: string, data: string[], opts?: {filetype?: string}) {
     const buf = await buffer.open(this.denops, bufname);
     await fn.setbufvar(this.denops, buf.bufnr, "&buftype", "nofile");
     await fn.setbufvar(this.denops, buf.bufnr, "&swapfile", 0);
+    if (opts?.filetype) {
+      await fn.setbufvar(this.denops, buf.bufnr, "&filetype", opts.filetype);
+    }
     await buffer.replace(this.denops, buf.bufnr, data);
     await buffer.concrete(this.denops, buf.bufnr);
   }
@@ -212,7 +215,7 @@ export class Dvpm {
     }
 
     if (this.#updateLogs.length > 0) {
-      await this.bufWrite("dvpm://update", this.#updateLogs);
+      await this.bufWrite("dvpm://update", this.#updateLogs, {filetype: "diff"});
     }
     if (this.dvpmOption.notify) {
       await notify(this.denops, `Update done`);
