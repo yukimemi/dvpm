@@ -1,3 +1,9 @@
+// =============================================================================
+// File        : git.ts
+// Author      : yukimemi
+// Last Change : 2023/11/03 19:24:04.
+// =============================================================================
+
 import * as path from "https://deno.land/std@0.204.0/path/mod.ts";
 import { exists } from "https://deno.land/std@0.204.0/fs/exists.ts";
 import { TextLineStream } from "https://deno.land/std@0.204.0/streams/mod.ts";
@@ -90,7 +96,7 @@ export class Git {
     if (branch !== currentBranch) {
       await this.checkout(branch);
     }
-    const args = ["-C", this.base, "pull", "--ff-only", "--rebase=false"];
+    const args = ["-C", this.base, "pull", "--ff", "--ff-only", "--rebase=false"];
     const cmd = new Deno.Command("git", { args });
     return await cmd.output();
   }

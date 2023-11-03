@@ -1,3 +1,9 @@
+// =============================================================================
+// File        : plugin.ts
+// Author      : yukimemi
+// Last Change : 2023/11/03 19:24:19.
+// =============================================================================
+
 import * as fn from "https://deno.land/x/denops_std@v5.0.1/function/mod.ts";
 import * as op from "https://deno.land/x/denops_std@v5.0.1/option/mod.ts";
 import * as path from "https://deno.land/std@0.204.0/path/mod.ts";
