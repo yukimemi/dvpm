@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2023/11/03 20:31:52.
+// Last Change : 2023/11/05 13:06:52.
 // =============================================================================
 
 import * as fn from "https://deno.land/x/denops_std@v5.0.1/function/mod.ts";
@@ -61,6 +61,7 @@ export type PluginOption = {
 
 export class Plugin {
   static mutex = new Semaphore(1);
+  /// plugin information
   public info: PlugInfo;
 
   constructor(
@@ -77,6 +78,9 @@ export class Plugin {
     };
   }
 
+  /**
+   * Creates a new Plugin instance
+   */
   public static async create(
     denops: Denops,
     plug: Plug,
@@ -142,6 +146,9 @@ export class Plugin {
     return await this.isTrueFalse(this.info.cache?.enabled, false);
   }
 
+  /**
+   * Add a plugin to dvpm list
+   */
   public async add() {
     try {
       this.clog(`[add] ${this.info.url} start !`);
@@ -161,6 +168,9 @@ export class Plugin {
     }
   }
 
+  /**
+   * Cache a plugin and plugin config
+   */
   public async cache(): Promise<string> {
     try {
       this.clog(`[cache] ${this.info.url} start !`);
@@ -183,10 +193,16 @@ export class Plugin {
     }
   }
 
+  /**
+   * plugin end function
+   */
   public async end() {
     await this.sourceAfter();
   }
 
+  /**
+   * Add plugin to runtimepath
+   */
   public async register() {
     this.clog(`[register] ${this.info.url} start !`);
     let registered = false;
@@ -213,6 +229,9 @@ export class Plugin {
     return;
   }
 
+  /**
+   * plugin config before adding to runtimepath
+   */
   public async before() {
     if (this.info.before) {
       this.clog(`[before] ${this.info.url} start !`);
@@ -220,6 +239,9 @@ export class Plugin {
       this.clog(`[before] ${this.info.url} end !`);
     }
   }
+  /**
+   * plugin config after adding to runtimepath
+   */
   public async after() {
     if (this.info.after) {
       this.clog(`[after] ${this.info.url} start !`);
@@ -227,6 +249,9 @@ export class Plugin {
       this.clog(`[after] ${this.info.url} end !`);
     }
   }
+  /**
+   * plugin build config
+   */
   public async build() {
     if (this.info.build) {
       this.clog(`[build] ${this.info.url} start !`);
@@ -235,7 +260,10 @@ export class Plugin {
     }
   }
 
-  public async source() {
+  /**
+   * source plugin
+   */
+  private async source() {
     try {
       this.clog(`[source] ${this.info.url} start !`);
       await this.sourceVimPre();
@@ -246,7 +274,10 @@ export class Plugin {
       this.clog(`[source] ${this.info.url} end !`);
     }
   }
-  public async sourceAfter() {
+  /**
+   * source plugin config after adding to runtimepath
+   */
+  private async sourceAfter() {
     try {
       this.clog(`[sourceAfter] ${this.info.url} start !`);
       await this.sourceVimAfter();
@@ -308,6 +339,9 @@ export class Plugin {
     return tags.length === 0 || txtNewest > tagOldest;
   }
 
+  /**
+   * Generate helptags
+   */
   public async genHelptags() {
     const docDir = path.join(ensure(this.info.dst, is.String), "doc");
     if (!(await this.isHelptagsOld(docDir))) {
@@ -319,6 +353,9 @@ export class Plugin {
     );
   }
 
+  /**
+   * Install a plugin
+   */
   public async install(): Promise<Result<string[], string[]>> {
     const gitDir = path.join(ensure(this.info.dst, is.String), ".git");
     if (await exists(gitDir)) {
@@ -350,6 +387,9 @@ export class Plugin {
     ]);
   }
 
+  /**
+   * Update a plugin
+   */
   public async update(): Promise<Result<string[], string[]>> {
     if (!(await this.isClone())) {
       return Result.success([]);

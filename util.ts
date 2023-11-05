@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : util.ts
 // Author      : yukimemi
-// Last Change : 2023/11/03 19:24:25.
+// Last Change : 2023/11/05 13:07:44.
 // =============================================================================
 
 import type { Denops } from "https://deno.land/x/denops_std@v5.0.1/mod.ts";
@@ -11,6 +11,9 @@ import * as fn from "https://deno.land/x/denops_std@v5.0.1/function/mod.ts";
 import { dirname } from "https://deno.land/std@0.204.0/path/mod.ts";
 import { ensure, is } from "https://deno.land/x/unknownutil@v3.10.0/mod.ts";
 
+/**
+ * vim.notify function
+ */
 export async function notify(denops: Denops, msg: string) {
   if (await fn.has(denops, "nvim")) {
     await execute(
@@ -22,6 +25,9 @@ export async function notify(denops: Denops, msg: string) {
   }
 }
 
+/**
+ * Cache the script
+ */
 export async function cache(
   denops: Denops,
   arg: { script: string; path: string },

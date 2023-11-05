@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2023/11/03 20:35:48.
+// Last Change : 2023/11/05 12:59:58.
 // =============================================================================
 
 import * as buffer from "https://deno.land/x/denops_std@v5.0.1/buffer/mod.ts";
@@ -36,8 +36,12 @@ export class Dvpm {
   #updateLogs: string[] = [];
   #cacheScript: string[] = [];
 
+  /// Is install or update
   public isInstallOrUpdate = false;
 
+  /**
+   * Creates a new Dvpm instance
+   */
   constructor(
     public denops: Denops,
     public dvpmOption: DvpmOption,
@@ -51,6 +55,9 @@ export class Dvpm {
     }
   }
 
+  /**
+   * Creates a new Dvpm instance with the given options
+   */
   public static async begin(
     denops: Denops,
     dvpmOption: DvpmOption,
@@ -132,7 +139,7 @@ export class Dvpm {
     });
   }
 
-  private async bufWrite(bufname: string, data: string[], opts?: {filetype?: string}) {
+  private async bufWrite(bufname: string, data: string[], opts?: { filetype?: string }) {
     const buf = await buffer.open(this.denops, bufname);
     await fn.setbufvar(this.denops, buf.bufnr, "&buftype", "nofile");
     await fn.setbufvar(this.denops, buf.bufnr, "&swapfile", 0);
@@ -174,6 +181,9 @@ export class Dvpm {
     });
   }
 
+  /**
+   * Install plugins
+   */
   public async install(url?: string) {
     if (url) {
       const p = this.findPlug(this.#plugins, url);
@@ -193,6 +203,9 @@ export class Dvpm {
     }
   }
 
+  /**
+   * Update plugins
+   */
   public async update(url?: string) {
     if (this.dvpmOption.notify) {
       await notify(this.denops, `Update start`);
@@ -215,7 +228,7 @@ export class Dvpm {
     }
 
     if (this.#updateLogs.length > 0) {
-      await this.bufWrite("dvpm://update", this.#updateLogs, {filetype: "diff"});
+      await this.bufWrite("dvpm://update", this.#updateLogs, { filetype: "diff" });
     }
     if (this.dvpmOption.notify) {
       await notify(this.denops, `Update done`);
@@ -224,10 +237,16 @@ export class Dvpm {
     }
   }
 
+  /**
+   * List plugins
+   */
   public list(): Plugin[] {
     return this.uniqueUrlByIsLoad(this.#plugins);
   }
 
+  /**
+   * List plugins to buffer
+   */
   public async bufWriteList() {
     const maxLen = this.maxUrlLen(this.#plugins);
     const uniquePlug = this.uniqueUrlByIsLoad(this.#plugins);
@@ -273,6 +292,9 @@ export class Dvpm {
     // TODO: Not implemented
   }
 
+  /**
+   * Add a plugin to dvpm list
+   */
   public async add(plug: Plug) {
     try {
       if (plug.dependencies != undefined) {
@@ -315,6 +337,9 @@ export class Dvpm {
     }
   }
 
+  /**
+   * dvpm end function
+   */
   public async end() {
     await Promise.all(
       this.uniquePlug(this.#plugins.filter((p) => p.info.isLoad)).map(
@@ -378,6 +403,9 @@ export class Dvpm {
     }
   }
 
+  /**
+   * Cache the script
+   */
   public async cache(arg: { script: string; path: string }) {
     await cache(this.denops, { script: arg.script, path: arg.path });
   }

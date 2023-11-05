@@ -1,48 +1,70 @@
 // =============================================================================
 // File        : git.ts
 // Author      : yukimemi
-// Last Change : 2023/11/03 21:24:57.
+// Last Change : 2023/11/05 12:56:27.
 // =============================================================================
 
 import * as path from "https://deno.land/std@0.204.0/path/mod.ts";
 import { exists } from "https://deno.land/std@0.204.0/fs/exists.ts";
 import { TextLineStream } from "https://deno.land/std@0.204.0/streams/mod.ts";
 
+/**
+ * Git
+ */
 export class Git {
+  /// Returns the path to the .git directory
   public gitDir: string;
 
+  /// Creates a new Git instance
   constructor(public base: string) {
     this.gitDir = path.join(base, ".git");
   }
 
+  /// Executes a git command
   private async git(args: string[]): Promise<Deno.CommandOutput> {
     const cmd = new Deno.Command("git", { args: ["-C", this.base, ...args] });
     return await cmd.output();
   }
 
+  /// Converts a CommandOutput to a string
   private cmdOutToString(output: Deno.CommandOutput): string {
     return new TextDecoder().decode(output.stdout).trim();
   }
 
+  /**
+   * Get the HEAD
+   */
   public async getHead(): Promise<string> {
     const headFile = path.join(this.gitDir, "HEAD");
     return (await Deno.readTextFile(headFile)).trim();
   }
 
+  /**
+   * Get the revision from git
+   */
   public async getRevisionGit(): Promise<string> {
     return this.cmdOutToString(await this.git(["rev-parse", "HEAD"]));
   }
 
+  /**
+   * Checkout a revision
+   */
   public async checkout(rev: string): Promise<void> {
     await this.git(["checkout", rev]);
   }
 
+  /**
+   * Get the current branch from git
+   */
   public async getBranchGit(): Promise<string> {
     return this.cmdOutToString(
       await this.git(["rev-parse", "--abbrev-ref", "HEAD"]),
     );
   }
 
+  /**
+   * Get the revision
+   */
   public async getRevision(): Promise<string> {
     const head = await this.getHead();
     const ref = head.substring(5);
@@ -64,6 +86,9 @@ export class Git {
     return await this.getRevisionGit();
   }
 
+  /**
+   * Get the current branch
+   */
   public async getBranch(): Promise<string> {
     const head = await this.getHead();
     if (head.match(/^ref: refs\/heads\//)) {
@@ -72,6 +97,9 @@ export class Git {
     return await this.getBranchGit();
   }
 
+  /**
+   * Get the git log
+   */
   public async getLog(
     from: string,
     to: string,
@@ -80,6 +108,9 @@ export class Git {
     return await this.git(["log", ...argOption, `${from}..${to}`]);
   }
 
+  /**
+   * Get the git diff
+   */
   public async getDiff(
     from: string,
     to: string,
@@ -87,6 +118,9 @@ export class Git {
     return await this.git(["diff", `${from}..${to}`, "--", "doc", "README", "README.md"]);
   }
 
+  /**
+   * Clone a git repository
+   */
   public static async clone(
     url: string,
     dst: string,
@@ -101,6 +135,9 @@ export class Git {
     return await cmd.output();
   }
 
+  /**
+   * Pull a git repository
+   */
   public async pull(branch?: string): Promise<Deno.CommandOutput> {
     const currentBranch = await this.getBranch();
     branch ??= currentBranch;
