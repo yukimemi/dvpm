@@ -1,7 +1,9 @@
-# dvpm - Denops Vim/Neovim Plugin Manager [dvpm](https://shield.deno.dev/x/dvpm)
+# dvpm - Denops Vim/Neovim Plugin Manager
 
 `dvpm` is a plugin manager for Vim and Neovim, powered by
 [denops.vim](https://github.com/vim-denops/denops.vim).
+
+[dvpm](https://shield.deno.dev/x/dvpm)
 
 - Vim / Neovim starts up very fast !
 
@@ -67,7 +69,7 @@ import { ensure, is } from "https://deno.land/x/unknownutil@v3.2.0/mod.ts";
 import { execute } from "https://deno.land/x/denops_std@v5.0.0/helper/mod.ts";
 import { globals } from "https://deno.land/x/denops_std@v5.0.0/variable/mod.ts";
 
-import { Dvpm } from "https://deno.land/x/dvpm@3.5.1/mod.ts";
+import { Dvpm } from "https://deno.land/x/dvpm@3.5.2/mod.ts";
 
 export async function main(denops: Denops): Promise<void> {
   const base_path = (await fn.has(denops, "nvim")) ? "~/.cache/nvim/dvpm" : "~/.cache/vim/dvpm";
