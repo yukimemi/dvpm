@@ -60,12 +60,12 @@ execute 'set runtimepath^=' . substitute(fnamemodify(s:denops, ':p') , '[/\\]$',
 - ~/vimfiles/denops/config/main.ts (Windows)
 
 ```typescript
-import * as fn from "https://deno.land/x/denops_std@v5.0.0/function/mod.ts";
-import * as mapping from "https://deno.land/x/denops_std@v5.0.0/mapping/mod.ts";
-import { Denops } from "https://deno.land/x/denops_std@v5.0.0/mod.ts";
-import { ensure, is } from "https://deno.land/x/unknownutil@v3.2.0/mod.ts";
-import { execute } from "https://deno.land/x/denops_std@v5.0.0/helper/mod.ts";
-import { globals } from "https://deno.land/x/denops_std@v5.0.0/variable/mod.ts";
+import * as fn from "https://deno.land/x/denops_std@v5.1.0/function/mod.ts";
+import * as mapping from "https://deno.land/x/denops_std@v5.1.0/mapping/mod.ts";
+import { Denops } from "https://deno.land/x/denops_std@v5.1.0/mod.ts";
+import { ensure, is } from "https://deno.land/x/unknownutil@v3.11.0/mod.ts";
+import { execute } from "https://deno.land/x/denops_std@v5.1.0/helper/mod.ts";
+import { globals } from "https://deno.land/x/denops_std@v5.1.0/variable/mod.ts";
 
 import { Dvpm } from "https://deno.land/x/dvpm@3.5.3/mod.ts";
 
