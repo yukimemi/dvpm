@@ -233,7 +233,7 @@ export type Plug = {
   // File path of processing to be performed before adding runtimepath. (Option)
   beforeFile?: string;
   // File path of processing to be performed after adding runtimepath. (Option)
-  afterFile?: string; 
+  afterFile?: string;
   // build option. Execute after install or update. (Option)
   build?: (
     { denops, info }: { denops: Denops; info: PlugInfo },
@@ -397,7 +397,7 @@ export async function main(denops: Denops): Promise<void> {
         EOB
       `,
       // If you want to read it in a separate file, specify as follows. (.lua and .vim can be specified)
-      // afterFile: "~/.config/nvim/rc/after/notify.lua", 
+      // afterFile: "~/.config/nvim/rc/after/notify.lua",
     },
   });
 
