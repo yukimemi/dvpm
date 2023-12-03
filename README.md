@@ -156,7 +156,7 @@ export async function main(denops: Denops): Promise<void> {
     url: "rcarriga/nvim-notify",
     beforeFile: "~/.config/nvim/rc/before/nvim-notify.lua",
     afterFile: "~/.config/nvim/rc/after/nvim-notify.lua",
-  })
+  });
 
   // Finally, call Dvpm.end.
   await dvpm.end();
