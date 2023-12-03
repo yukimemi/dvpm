@@ -67,7 +67,7 @@ import { ensure, is } from "https://deno.land/x/unknownutil@v3.11.0/mod.ts";
 import { execute } from "https://deno.land/x/denops_std@v5.1.0/helper/mod.ts";
 import { globals } from "https://deno.land/x/denops_std@v5.1.0/variable/mod.ts";
 
-import { Dvpm } from "https://deno.land/x/dvpm@3.5.3/mod.ts";
+import { Dvpm } from "https://deno.land/x/dvpm@3.6.0/mod.ts";
 
 export async function main(denops: Denops): Promise<void> {
   const base_path = (await fn.has(denops, "nvim")) ? "~/.cache/nvim/dvpm" : "~/.cache/vim/dvpm";
@@ -151,6 +151,12 @@ export async function main(denops: Denops): Promise<void> {
       { url: "lambdalisue/guise.vim" },
     ],
   });
+  // Load from file. ( `.lua` or `.vim` )
+  await dvpm.add({
+    url: "rcarriga/nvim-notify",
+    beforeFile: "~/.config/nvim/rc/before/nvim-notify.lua",
+    afterFile: "~/.config/nvim/rc/after/nvim-notify.lua",
+  })
 
   // Finally, call Dvpm.end.
   await dvpm.end();
@@ -224,6 +230,10 @@ export type Plug = {
   after?: (
     { denops, info }: { denops: Denops; info: PlugInfo },
   ) => Promise<void>;
+  // File path of processing to be performed before adding runtimepath. (Option)
+  beforeFile?: string;
+  // File path of processing to be performed after adding runtimepath. (Option)
+  afterFile?: string; 
   // build option. Execute after install or update. (Option)
   build?: (
     { denops, info }: { denops: Denops; info: PlugInfo },
@@ -233,6 +243,8 @@ export type Plug = {
     enabled?: TrueFalse;
     before?: string;
     after?: string;
+    beforeFile?: string;
+    afterFile?: string;
   };
   // Whether to git clone and update. Default is true. (Option)
   // If this option is set to false, then `enabled` is also set to false.
@@ -384,6 +396,8 @@ export async function main(denops: Denops): Promise<void> {
           vim.notify = require("notify")
         EOB
       `,
+      // If you want to read it in a separate file, specify as follows. (.lua and .vim can be specified)
+      // afterFile: "~/.config/nvim/rc/after/notify.lua", 
     },
   });
 

@@ -1,14 +1,14 @@
 // =============================================================================
 // File        : util.ts
 // Author      : yukimemi
-// Last Change : 2023/11/05 13:07:44.
+// Last Change : 2023/12/03 16:31:59.
 // =============================================================================
 
 import type { Denops } from "https://deno.land/x/denops_std@v5.1.0/mod.ts";
-import { echo, execute } from "https://deno.land/x/denops_std@v5.1.0/helper/mod.ts";
+import { echo, echoerr, execute } from "https://deno.land/x/denops_std@v5.1.0/helper/mod.ts";
 import * as fs from "https://deno.land/std@0.208.0/fs/mod.ts";
 import * as fn from "https://deno.land/x/denops_std@v5.1.0/function/mod.ts";
-import { dirname } from "https://deno.land/std@0.208.0/path/mod.ts";
+import { dirname, extname } from "https://deno.land/std@0.208.0/path/mod.ts";
 import { ensure, is } from "https://deno.land/x/unknownutil@v3.11.0/mod.ts";
 
 /**
@@ -45,6 +45,33 @@ export async function cache(
   }
 }
 
+/**
+ * Determine whether it is typescript, lua or vim and return the string to read
+ */
+export async function getExecuteStr(denops: Denops, path: string) {
+  const p = ensure(await fn.expand(denops, path), is.String);
+  const extension = extname(p);
+  if (extension === ".lua") {
+    return `luafile ${p}`;
+  } else if (extension === ".vim") {
+    return `source ${p}`;
+  }
+
+  await echoerr(denops, `unknown extension: ${extension}`);
+  return "";
+}
+
+/**
+ * execute `lua` or `vim` file
+ */
+export async function executeFile(denops: Denops, path: string) {
+  const executeStr = await getExecuteStr(denops, path);
+  await execute(denops, executeStr);
+}
+
+/**
+ * Convert command output to string
+ */
 export function cmdOutToString(cmdout: Uint8Array): string[] {
   return new TextDecoder().decode(cmdout).split("\n").map((l) => l.trim());
 }

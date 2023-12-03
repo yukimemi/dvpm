@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2023/11/05 13:06:52.
+// Last Change : 2023/12/03 16:46:39.
 // =============================================================================
 
 import * as fn from "https://deno.land/x/denops_std@v5.1.0/function/mod.ts";
@@ -14,7 +14,7 @@ import { exists, expandGlob } from "https://deno.land/std@0.208.0/fs/mod.ts";
 import { ensure, is } from "https://deno.land/x/unknownutil@v3.11.0/mod.ts";
 import { Result } from "https://esm.sh/result-type-ts@2.1.3/";
 import { Git } from "./git.ts";
-import { cmdOutToString } from "./util.ts";
+import { cmdOutToString, executeFile, getExecuteStr } from "./util.ts";
 
 export type TrueFalse =
   | boolean
@@ -30,6 +30,8 @@ export type Plug = {
   before?: (
     { denops, info }: { denops: Denops; info: PlugInfo },
   ) => Promise<void>;
+  beforeFile?: string;
+  afterFile?: string;
   after?: (
     { denops, info }: { denops: Denops; info: PlugInfo },
   ) => Promise<void>;
@@ -40,6 +42,8 @@ export type Plug = {
     enabled?: TrueFalse;
     before?: string;
     after?: string;
+    beforeFile?: string;
+    afterFile?: string;
   };
   clone?: TrueFalse;
   dependencies?: Plug[];
@@ -180,11 +184,16 @@ export class Plugin {
         return "";
       }
       this.info.isCache = true;
-      return `
-          ${this.info.cache?.before || ""}
-          set runtimepath+=${this.info.dst}
-          ${this.info.cache?.after || ""}
-        `;
+      const cacheStr = [this.info.cache?.before || ""];
+      if (this.info.cache?.beforeFile) {
+        cacheStr.push(await getExecuteStr(this.denops, this.info.cache.beforeFile));
+      }
+      cacheStr.push(`set runtimepath+=${this.info.dst}`);
+      if (this.info.cache?.afterFile) {
+        cacheStr.push(await getExecuteStr(this.denops, this.info.cache.afterFile));
+      }
+      cacheStr.push(this.info.cache?.after || "");
+      return cacheStr.join("\n");
     } catch (e) {
       console.error(e);
       return "";
@@ -238,6 +247,9 @@ export class Plugin {
       await this.info.before({ denops: this.denops, info: this.info });
       this.clog(`[before] ${this.info.url} end !`);
     }
+    if (this.info.beforeFile) {
+      await executeFile(this.denops, this.info.beforeFile);
+    }
   }
   /**
    * plugin config after adding to runtimepath
@@ -247,6 +259,9 @@ export class Plugin {
       this.clog(`[after] ${this.info.url} start !`);
       await this.info.after({ denops: this.denops, info: this.info });
       this.clog(`[after] ${this.info.url} end !`);
+    }
+    if (this.info.afterFile) {
+      await executeFile(this.denops, this.info.afterFile);
     }
   }
   /**
