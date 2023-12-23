@@ -14,8 +14,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Generate app token
+        uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.PRIVATE_KEY }}
+
       - name: Setup repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          ref: ${{ github.head_ref }}
+          # Make sure the value of GITHUB_TOKEN will not be persisted in repo's config
+          persist-credentials: false
 
       - name: Setup Deno
         uses: denoland/setup-deno@v1
@@ -37,8 +49,9 @@ jobs:
         run: deno task ci
 
       - name: Create pull request
-        uses: peter-evans/create-pull-request@v3
+        uses: peter-evans/create-pull-request@v5
         with:
+          token: ${{ steps.app-token.outputs.token }}
           commit-message: "chore(deps): Update deno dependencies"
           title: Update Deno dependencies
           body: |-
