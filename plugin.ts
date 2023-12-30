@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2023/12/03 16:46:39.
+// Last Change : 2023/12/30 20:43:42.
 // =============================================================================
 
 import * as fn from "https://deno.land/x/denops_std@v5.2.0/function/mod.ts";
@@ -112,7 +112,10 @@ export class Plugin {
     } else {
       p.info.clone = true;
     }
-    if (p.plug.cache?.before || p.plug.cache?.after) {
+    if (
+      p.plug.cache?.before || p.plug.cache?.after || p.plug.cache?.beforeFile ||
+      p.plug.cache?.afterFile
+    ) {
       p.info.cache = {
         enabled: true,
         ...p.info.cache,
