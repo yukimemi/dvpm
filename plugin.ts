@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2023/12/30 20:43:42.
+// Last Change : 2024/01/02 23:39:40.
 // =============================================================================
 
 import * as fn from "https://deno.land/x/denops_std@v5.2.0/function/mod.ts";
@@ -337,9 +337,17 @@ export class Plugin {
     const target = `${this.info.dst}/denops/*/main.ts`;
     for await (const file of expandGlob(target)) {
       const name = path.basename(path.dirname(file.path));
-      await this.denops.call("denops#plugin#register", name, {
-        mode: "skip",
-      });
+      try {
+        await this.denops.call("denops#plugin#load", name, file.path);
+      } catch (e) {
+        if (e.match(/Vim:E117:/)) {
+          await this.denops.call("denops#plugin#register", name, file.path, {
+            mode: "skip",
+          });
+        } else {
+          throw e;
+        }
+      }
     }
   }
 
