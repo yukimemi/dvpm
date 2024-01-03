@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : git.ts
 // Author      : yukimemi
-// Last Change : 2023/11/05 12:56:27.
+// Last Change : 2024/01/03 21:22:00.
 // =============================================================================
 
 import * as path from "https://deno.land/std@0.210.0/path/mod.ts";
@@ -63,6 +63,22 @@ export class Git {
   }
 
   /**
+   * Get the default branch from git
+   */
+  public async getDefaultBranchGit(): Promise<string> {
+    const branch = path.basename(this.cmdOutToString(
+      await this.git(["symbolic-ref", "--short", "refs/remotes/origin/HEAD"]),
+    ));
+    if (branch.match(/fatal: /)) {
+      await this.git(["remote", "set-head", "origin", "--auto"]);
+      return path.basename(this.cmdOutToString(
+        await this.git(["symbolic-ref", "--short", "refs/remotes/origin/HEAD"]),
+      ));
+    }
+    return branch;
+  }
+
+  /**
    * Get the revision
    */
   public async getRevision(): Promise<string> {
@@ -74,9 +90,10 @@ export class Git {
       return ref.split("\n")[0].trim();
     }
     const packedRefs = await Deno.open(path.join(this.gitDir, "packed-refs"));
-    const lineStream = packedRefs.readable.pipeThrough(new TextDecoderStream()).pipeThrough(
-      new TextLineStream(),
-    );
+    const lineStream = packedRefs.readable.pipeThrough(new TextDecoderStream())
+      .pipeThrough(
+        new TextLineStream(),
+      );
 
     for await (const line of lineStream) {
       if (line.match(`/ ${ref}/`)) {
@@ -115,7 +132,14 @@ export class Git {
     from: string,
     to: string,
   ): Promise<Deno.CommandOutput> {
-    return await this.git(["diff", `${from}..${to}`, "--", "doc", "README", "README.md"]);
+    return await this.git([
+      "diff",
+      `${from}..${to}`,
+      "--",
+      "doc",
+      "README",
+      "README.md",
+    ]);
   }
 
   /**
@@ -140,7 +164,7 @@ export class Git {
    */
   public async pull(branch?: string): Promise<Deno.CommandOutput> {
     const currentBranch = await this.getBranch();
-    branch ??= currentBranch;
+    branch ??= await this.getDefaultBranchGit();
     if (branch !== currentBranch) {
       await this.checkout(branch);
     }
