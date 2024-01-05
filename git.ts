@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : git.ts
 // Author      : yukimemi
-// Last Change : 2024/01/03 21:22:00.
+// Last Change : 2024/01/06 01:09:58.
 // =============================================================================
 
 import * as path from "https://deno.land/std@0.211.0/path/mod.ts";
@@ -168,7 +168,7 @@ export class Git {
     if (branch !== currentBranch) {
       await this.checkout(branch);
     }
-    const args = ["-C", this.base, "pull", "--ff", "--ff-only"];
+    const args = ["-C", this.base, "pull", "--ff"];
     const cmd = new Deno.Command("git", { args });
     return await cmd.output();
   }
