@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2024/01/02 23:39:40.
+// Last Change : 2024/01/06 10:40:03.
 // =============================================================================
 
 import * as fn from "https://deno.land/x/denops_std@v5.2.0/function/mod.ts";
@@ -164,7 +164,7 @@ export class Plugin {
       }
       await this.before();
       await this.register();
-      if (this.info.isLoad && this.info.isUpdate) {
+      if (this.info.isUpdate) {
         await this.build();
       }
       await this.after();
@@ -461,6 +461,7 @@ export class Plugin {
           ...cmdOutToString(outputLog.stderr),
         ]);
       }
+      await this.build();
       return Result.success([]);
     }
     return Result.failure([

@@ -60,14 +60,14 @@ execute 'set runtimepath^=' . substitute(fnamemodify(s:denops, ':p') , '[/\\]$',
 - ~/vimfiles/denops/config/main.ts (Windows)
 
 ```typescript
-import * as fn from "https://deno.land/x/denops_std@v5.1.0/function/mod.ts";
-import * as mapping from "https://deno.land/x/denops_std@v5.1.0/mapping/mod.ts";
-import { Denops } from "https://deno.land/x/denops_std@v5.1.0/mod.ts";
+import * as fn from "https://deno.land/x/denops_std@v5.2.0/function/mod.ts";
+import * as mapping from "https://deno.land/x/denops_std@v5.2.0/mapping/mod.ts";
+import { Denops } from "https://deno.land/x/denops_std@v5.2.0/mod.ts";
 import { ensure, is } from "https://deno.land/x/unknownutil@v3.11.0/mod.ts";
-import { execute } from "https://deno.land/x/denops_std@v5.1.0/helper/mod.ts";
-import { globals } from "https://deno.land/x/denops_std@v5.1.0/variable/mod.ts";
+import { execute } from "https://deno.land/x/denops_std@v5.2.0/helper/mod.ts";
+import { globals } from "https://deno.land/x/denops_std@v5.2.0/variable/mod.ts";
 
-import { Dvpm } from "https://deno.land/x/dvpm@3.7.2/mod.ts";
+import { Dvpm } from "https://deno.land/x/dvpm@3.8.0/mod.ts";
 
 export async function main(denops: Denops): Promise<void> {
   const base_path = (await fn.has(denops, "nvim")) ? "~/.cache/nvim/dvpm" : "~/.cache/vim/dvpm";
@@ -87,6 +87,11 @@ export async function main(denops: Denops): Promise<void> {
     url: "neoclide/coc.nvim",
     branch: "master",
     build: async ({ info }) => {
+      if (!info.isUpdate || !info.isLoad) {
+        // build option is called after git pull, even if there are no changes
+        // so you need to check for changes
+        return;
+      }
       const args = ["install", "--frozen-lockfile"];
       const cmd = new Deno.Command("yarn", { args, cwd: info.dst });
       const output = await cmd.output();
@@ -235,6 +240,8 @@ export type Plug = {
   // File path of processing to be performed after adding runtimepath. (Option)
   afterFile?: string;
   // build option. Execute after install or update. (Option)
+  // Executed even if there are no changes in the update
+  // Therefore, conditionally branch on `info.isLoad` and `info.isUpdate` as necessary
   build?: (
     { denops, info }: { denops: Denops; info: PlugInfo },
   ) => Promise<void>;
