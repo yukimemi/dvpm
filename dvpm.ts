@@ -7,8 +7,8 @@
 import * as buffer from "https://deno.land/x/denops_std@v5.2.0/buffer/mod.ts";
 import * as fn from "https://deno.land/x/denops_std@v5.2.0/function/mod.ts";
 import { Denops } from "https://deno.land/x/denops_std@v5.2.0/mod.ts";
-import { Semaphore } from "https://deno.land/x/async@v2.0.2/semaphore.ts";
-import { assert, is } from "https://deno.land/x/unknownutil@v3.11.0/mod.ts";
+import { Semaphore } from "https://deno.land/x/async@v2.1.0/semaphore.ts";
+import { assert, is } from "https://deno.land/x/unknownutil@v3.13.0/mod.ts";
 import { cache, notify } from "./util.ts";
 import { echo, execute } from "https://deno.land/x/denops_std@v5.2.0/helper/mod.ts";
 import { sprintf } from "https://deno.land/std@0.211.0/fmt/printf.ts";
