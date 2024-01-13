@@ -6,9 +6,9 @@
 
 import type { Denops } from "https://deno.land/x/denops_std@v5.2.0/mod.ts";
 import { echo, echoerr, execute } from "https://deno.land/x/denops_std@v5.2.0/helper/mod.ts";
-import * as fs from "https://deno.land/std@0.211.0/fs/mod.ts";
+import * as fs from "https://deno.land/std@0.212.0/fs/mod.ts";
 import * as fn from "https://deno.land/x/denops_std@v5.2.0/function/mod.ts";
-import { dirname, extname } from "https://deno.land/std@0.211.0/path/mod.ts";
+import { dirname, extname } from "https://deno.land/std@0.212.0/path/mod.ts";
 import { ensure, is } from "https://deno.land/x/unknownutil@v3.13.0/mod.ts";
 
 /**
