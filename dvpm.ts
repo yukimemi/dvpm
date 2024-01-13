@@ -11,7 +11,7 @@ import { Semaphore } from "https://deno.land/x/async@v2.1.0/semaphore.ts";
 import { assert, is } from "https://deno.land/x/unknownutil@v3.13.0/mod.ts";
 import { cache, notify } from "./util.ts";
 import { echo, execute } from "https://deno.land/x/denops_std@v5.2.0/helper/mod.ts";
-import { sprintf } from "https://deno.land/std@0.211.0/fmt/printf.ts";
+import { sprintf } from "https://deno.land/std@0.212.0/fmt/printf.ts";
 import { type Plug, Plugin, PluginOption } from "./plugin.ts";
 
 const concurrency = 8;
