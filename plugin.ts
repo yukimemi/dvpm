@@ -4,13 +4,13 @@
 // Last Change : 2024/01/06 10:40:03.
 // =============================================================================
 
-import * as fn from "https://deno.land/x/denops_std@v6.1.0/function/mod.ts";
-import * as op from "https://deno.land/x/denops_std@v6.1.0/option/mod.ts";
-import * as path from "https://deno.land/std@0.217.0/path/mod.ts";
-import { Denops } from "https://deno.land/x/denops_std@v6.1.0/mod.ts";
+import * as fn from "https://deno.land/x/denops_std@v6.2.0/function/mod.ts";
+import * as op from "https://deno.land/x/denops_std@v6.2.0/option/mod.ts";
+import * as path from "https://deno.land/std@0.218.2/path/mod.ts";
+import { Denops } from "https://deno.land/x/denops_std@v6.2.0/mod.ts";
 import { Semaphore } from "https://deno.land/x/async@v2.1.0/semaphore.ts";
-import { echo, execute } from "https://deno.land/x/denops_std@v6.1.0/helper/mod.ts";
-import { exists, expandGlob } from "https://deno.land/std@0.217.0/fs/mod.ts";
+import { echo, execute } from "https://deno.land/x/denops_std@v6.2.0/helper/mod.ts";
+import { exists, expandGlob } from "https://deno.land/std@0.218.2/fs/mod.ts";
 import { ensure, is } from "https://deno.land/x/unknownutil@v3.16.3/mod.ts";
 import { Result } from "https://esm.sh/result-type-ts@2.1.3/";
 import { Git } from "./git.ts";
