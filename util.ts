@@ -9,7 +9,7 @@ import { echo, echoerr, execute } from "https://deno.land/x/denops_std@v6.3.0/he
 import * as fs from "https://deno.land/std@0.218.2/fs/mod.ts";
 import * as fn from "https://deno.land/x/denops_std@v6.3.0/function/mod.ts";
 import { dirname, extname } from "https://deno.land/std@0.218.2/path/mod.ts";
-import { ensure, is } from "https://deno.land/x/unknownutil@v3.16.3/mod.ts";
+import { ensure, is } from "https://deno.land/x/unknownutil@v3.17.0/mod.ts";
 
 /**
  * vim.notify function
