@@ -48,6 +48,11 @@ jobs:
       - name: Check Deno
         run: deno task ci
 
+      - name: Github Tag with semantic versioning
+        uses: hennejg/github-tag-action@v4.3.1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Create pull request
         uses: peter-evans/create-pull-request@v5
         with:
