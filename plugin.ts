@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2024/01/06 10:40:03.
+// Last Change : 2024/03/20 12:44:11.
 // =============================================================================
 
 import * as fn from "https://deno.land/x/denops_std@v6.4.0/function/mod.ts";
@@ -271,7 +271,7 @@ export class Plugin {
    * plugin build config
    */
   public async build() {
-    if (this.info.build) {
+    if (this.info.build && await this.isEnabled()) {
       this.clog(`[build] ${this.info.url} start !`);
       await this.info.build({ denops: this.denops, info: this.info });
       this.clog(`[build] ${this.info.url} end !`);
