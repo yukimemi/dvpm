@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2024/03/20 12:44:11.
+// Last Change : 2024/03/23 19:48:16.
 // =============================================================================
 
 import * as fn from "https://deno.land/x/denops_std@v6.4.0/function/mod.ts";
@@ -30,6 +30,10 @@ export type Plug = {
   before?: (
     { denops, info }: { denops: Denops; info: PlugInfo },
   ) => Promise<void>;
+  beforeSource?: (
+    { denops, info }: { denops: Denops; info: PlugInfo },
+  ) => Promise<void>;
+  beforeSourceFile?: string;
   beforeFile?: string;
   afterFile?: string;
   after?: (
@@ -230,6 +234,7 @@ export class Plugin {
       }
     });
     if (registered) {
+      await this.beforeSource();
       await this.source();
       await this.registerDenops();
       if (this.pluginOption.profile) {
@@ -252,6 +257,19 @@ export class Plugin {
     }
     if (this.info.beforeFile) {
       await executeFile(this.denops, this.info.beforeFile);
+    }
+  }
+  /**
+   * plugin config before source plugin/*.vim and plugin/*.lua files
+   */
+  public async beforeSource() {
+    if (this.info.beforeSource) {
+      this.clog(`[beforeSource] ${this.info.url} start !`);
+      await this.info.beforeSource({ denops: this.denops, info: this.info });
+      this.clog(`[beforeSource] ${this.info.url} end !`);
+    }
+    if (this.info.beforeSourceFile) {
+      await executeFile(this.denops, this.info.beforeSourceFile);
     }
   }
   /**

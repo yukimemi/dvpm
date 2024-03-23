@@ -231,12 +231,18 @@ export type Plug = {
   before?: (
     { denops, info }: { denops: Denops; info: PlugInfo },
   ) => Promise<void>;
+  // Processing to be performed before source plugin/*.vim and plugin/*.lua. (Option)
+  beforeSource?: (
+    { denops, info }: { denops: Denops; info: PlugInfo },
+  ) => Promise<void>;
   // Processing to be performed after adding runtimepath. (Option)
   after?: (
     { denops, info }: { denops: Denops; info: PlugInfo },
   ) => Promise<void>;
   // File path of processing to be performed before adding runtimepath. (Option)
   beforeFile?: string;
+  // File path of processing to be performed before source plugin/*.vim and plugin/*.lua. (Option)
+  beforeSourceFile?: string;
   // File path of processing to be performed after adding runtimepath. (Option)
   afterFile?: string;
   // build option. Execute after install or update. (Option)
