@@ -6,11 +6,11 @@
 
 import * as fn from "https://deno.land/x/denops_std@v6.4.0/function/mod.ts";
 import * as op from "https://deno.land/x/denops_std@v6.4.0/option/mod.ts";
-import * as path from "https://deno.land/std@0.220.1/path/mod.ts";
+import * as path from "https://deno.land/std@0.221.0/path/mod.ts";
 import { Denops } from "https://deno.land/x/denops_std@v6.4.0/mod.ts";
 import { Semaphore } from "https://deno.land/x/async@v2.1.0/semaphore.ts";
 import { echo, execute } from "https://deno.land/x/denops_std@v6.4.0/helper/mod.ts";
-import { exists, expandGlob } from "https://deno.land/std@0.220.1/fs/mod.ts";
+import { exists, expandGlob } from "https://deno.land/std@0.221.0/fs/mod.ts";
 import { ensure, is } from "https://deno.land/x/unknownutil@v3.17.0/mod.ts";
 import { Result } from "https://esm.sh/result-type-ts@2.1.3/";
 import { Git } from "./git.ts";
