@@ -36,8 +36,8 @@ vim.opt.runtimepath:prepend(denops)
 
 ### Vim
 
-- ~/.vimrc (Mac / Linux)
-- ~/_vimrc (Windows)
+- `~/.vimrc` (Mac / Linux)
+- `~/_vimrc` (Windows)
 
 ```vim
 let s:denops = expand("~/.cache/vim/dvpm/github.com/vim-denops/denops.vim")
@@ -70,14 +70,16 @@ import { globals } from "https://deno.land/x/denops_std@v5.2.0/variable/mod.ts";
 import { Dvpm } from "https://deno.land/x/dvpm@$MODULE_VERSION/mod.ts";
 
 export async function main(denops: Denops): Promise<void> {
-  const base_path = (await fn.has(denops, "nvim")) ? "~/.cache/nvim/dvpm" : "~/.cache/vim/dvpm";
+  const base_path = (await fn.has(denops, "nvim"))
+    ? "~/.cache/nvim/dvpm"
+    : "~/.cache/vim/dvpm";
   const base = ensure(await fn.expand(denops, base_path), is.String);
 
   // First, call Dvpm.begin with denops object and base path.
   const dvpm = await Dvpm.begin(denops, { base });
 
   // URL only (GitHub).
-  await dvpm.add({ url: "yukimemi/dps-autocursor" });
+  await dvpm.add({ url: "yukimemi/autocursor.vim" });
   // URL only (not GitHub).
   await dvpm.add({ url: "https://notgithub.com/some/other/plugin" });
   // With branch.
@@ -98,14 +100,16 @@ export async function main(denops: Denops): Promise<void> {
       console.log(new TextDecoder().decode(output.stdout));
     },
   });
+  // shalow clone.
+  await dvpm.add({ url: "yukimemi/chronicle.vim", depth: 1 });
   // before setting.
   await dvpm.add({
-    url: "yukimemi/dps-autobackup",
+    url: "yukimemi/silentsaver.vim",
     before: async ({ denops }) => {
       await globals.set(
         denops,
-        "autobackup_dir",
-        ensure(await fn.expand(denops, "~/.cache/nvim/autobackup"), is.String),
+        "silentsaver_dir",
+        ensure(await fn.expand(denops, "~/.cache/nvim/silentsaver"), is.String),
       );
     },
   });
@@ -118,8 +122,8 @@ export async function main(denops: Denops): Promise<void> {
   });
   // dst setting. (for develop)
   await dvpm.add({
-    url: "yukimemi/dps-randomcolorscheme",
-    dst: "~/src/github.com/yukimemi/dps-randomcolorscheme",
+    url: "yukimemi/spectrism.vim",
+    dst: "~/src/github.com/yukimemi/spectrism.vim",
     before: async ({ denops }) => {
       await mapping.map(denops, "<space>ro", "<cmd>ChangeColorscheme<cr>", {
         mode: "n",
@@ -140,7 +144,7 @@ export async function main(denops: Denops): Promise<void> {
   });
   // Disable setting.
   await dvpm.add({
-    url: "yukimemi/dps-hitori",
+    url: "yukimemi/hitori.vim",
     enabled: false,
   });
   // Disable with function.
@@ -225,20 +229,34 @@ export type Plug = {
   dst?: string;
   // Git branch name. (Option)
   branch?: string;
+  // clone depth. (Option)
+  depth?: number;
   // enable or disable. Default is true.
   enabled?: TrueFalse;
   // Processing to be performed before adding runtimepath. (Option)
-  before?: (
-    { denops, info }: { denops: Denops; info: PlugInfo },
-  ) => Promise<void>;
+  before?: ({
+    denops,
+    info,
+  }: {
+    denops: Denops;
+    info: PlugInfo;
+  }) => Promise<void>;
   // Processing to be performed before source plugin/*.vim and plugin/*.lua. (Option)
-  beforeSource?: (
-    { denops, info }: { denops: Denops; info: PlugInfo },
-  ) => Promise<void>;
+  beforeSource?: ({
+    denops,
+    info,
+  }: {
+    denops: Denops;
+    info: PlugInfo;
+  }) => Promise<void>;
   // Processing to be performed after adding runtimepath. (Option)
-  after?: (
-    { denops, info }: { denops: Denops; info: PlugInfo },
-  ) => Promise<void>;
+  after?: ({
+    denops,
+    info,
+  }: {
+    denops: Denops;
+    info: PlugInfo;
+  }) => Promise<void>;
   // File path of processing to be performed before adding runtimepath. (Option)
   beforeFile?: string;
   // File path of processing to be performed before source plugin/*.vim and plugin/*.lua. (Option)
@@ -248,9 +266,13 @@ export type Plug = {
   // build option. Execute after install or update. (Option)
   // Executed even if there are no changes in the update
   // Therefore, conditionally branch on `info.isLoad` and `info.isUpdate` as necessary
-  build?: (
-    { denops, info }: { denops: Denops; info: PlugInfo },
-  ) => Promise<void>;
+  build?: ({
+    denops,
+    info,
+  }: {
+    denops: Denops;
+    info: PlugInfo;
+  }) => Promise<void>;
   // Cache settings. See `Cache setting`.
   cache?: {
     enabled?: TrueFalse;
@@ -270,9 +292,13 @@ export type Plug = {
 ```typescript
 export type TrueFalse =
   | boolean
-  | ((
-    { denops, info }: { denops: Denops; info: PlugInfo },
-  ) => Promise<boolean>);
+  | (({
+      denops,
+      info,
+    }: {
+      denops: Denops;
+      info: PlugInfo;
+    }) => Promise<boolean>);
 ```
 
 ```typescript
@@ -358,7 +384,9 @@ configuration is shown below.
 
 ```typescript
 export async function main(denops: Denops): Promise<void> {
-  const base_path = (await fn.has(denops, "nvim")) ? "~/.cache/nvim/dvpm" : "~/.cache/vim/dvpm";
+  const base_path = (await fn.has(denops, "nvim"))
+    ? "~/.cache/nvim/dvpm"
+    : "~/.cache/vim/dvpm";
   const base = ensure(await fn.expand(denops, base_path), is.String);
   const cache_path = (await fn.has(denops, "nvim"))
     ? "~/.config/nvim/plugin/dvpm_plugin_cache.vim"

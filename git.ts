@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : git.ts
 // Author      : yukimemi
-// Last Change : 2024/01/06 01:09:58.
+// Last Change : 2024/04/13 23:19:00.
 // =============================================================================
 
 import * as path from "https://deno.land/std@0.222.1/path/mod.ts";
@@ -149,10 +149,14 @@ export class Git {
     url: string,
     dst: string,
     branch?: string,
+    depth = 0,
   ): Promise<Deno.CommandOutput> {
     let args = ["clone", "--recursive", "--filter=blob:none"];
     if (branch) {
       args.push(`--branch=${branch}`);
+    }
+    if (depth > 0) {
+      args.push(`--depth=${depth}`);
     }
     args = args.concat([url, dst]);
     const cmd = new Deno.Command("git", { args });

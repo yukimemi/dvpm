@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2024/03/23 19:48:16.
+// Last Change : 2024/04/13 23:30:22.
 // =============================================================================
 
 import * as fn from "https://deno.land/x/denops_std@v6.4.0/function/mod.ts";
@@ -51,6 +51,7 @@ export type Plug = {
   };
   clone?: TrueFalse;
   dependencies?: Plug[];
+  depth?: number;
 };
 
 export type PlugInfo = Plug & {
@@ -103,6 +104,9 @@ export class Plugin {
     const url = new URL(p.info.url);
     p.info.dst = path.join(pluginOption.base, url.hostname, url.pathname);
 
+    if (p.info.depth == undefined) {
+      p.info.depth = 0;
+    }
     if (p.plug.dst) {
       p.clog(`[create] ${p.info.dst} set dst to ${p.plug.dst}`);
       p.info.dst = ensure(await fn.expand(denops, p.plug.dst), is.String);
@@ -414,13 +418,19 @@ export class Plugin {
       this.info.url,
       ensure(this.info.dst, is.String),
       this.info.branch,
+      this.info.depth,
     );
     if (output.success) {
       await this.genHelptags();
       this.info.isUpdate = true;
-      return this.info.branch
-        ? Result.success([`Git clone ${this.info.url} --branch=${this.info.branch}`])
-        : Result.success([`Git clone ${this.info.url}`]);
+      let returnMsg = `Git clone ${this.info.url}`;
+      if (this.info.branch) {
+        returnMsg += ` --branch=${this.info.branch}`;
+      }
+      if (this.info.depth) {
+        returnMsg += ` --depth=${this.info.depth}`;
+      }
+      return Result.success([returnMsg]);
     }
     return Result.failure([
       `Failed to clone ${this.info.url}`,
