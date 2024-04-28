@@ -4,9 +4,9 @@
 // Last Change : 2024/04/13 23:19:00.
 // =============================================================================
 
-import * as path from "https://deno.land/std@0.222.1/path/mod.ts";
-import { exists } from "https://deno.land/std@0.222.1/fs/exists.ts";
-import { TextLineStream } from "https://deno.land/std@0.222.1/streams/mod.ts";
+import * as path from "https://deno.land/std@0.224.0/path/mod.ts";
+import { exists } from "https://deno.land/std@0.224.0/fs/exists.ts";
+import { TextLineStream } from "https://deno.land/std@0.224.0/streams/mod.ts";
 
 /**
  * Git
