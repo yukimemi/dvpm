@@ -1,12 +1,12 @@
 // =============================================================================
 // File        : git.ts
 // Author      : yukimemi
-// Last Change : 2024/04/13 23:19:00.
+// Last Change : 2024/05/03 22:41:42.
 // =============================================================================
 
-import * as path from "https://deno.land/std@0.224.0/path/mod.ts";
-import { exists } from "https://deno.land/std@0.224.0/fs/exists.ts";
-import { TextLineStream } from "https://deno.land/std@0.224.0/streams/mod.ts";
+import * as path from "jsr:@std/path@^0.224.0";
+import { exists } from "jsr:@std/fs@^0.224.0";
+import { TextLineStream } from "jsr:@std/streams@^0.224.0";
 
 /**
  * Git

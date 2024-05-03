@@ -1,16 +1,16 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2024/04/13 23:53:59.
+// Last Change : 2024/05/03 22:54:17.
 // =============================================================================
 
 import * as fn from "https://deno.land/x/denops_std@v6.4.0/function/mod.ts";
 import * as op from "https://deno.land/x/denops_std@v6.4.0/option/mod.ts";
-import * as path from "https://deno.land/std@0.224.0/path/mod.ts";
+import * as path from "jsr:@std/path@^0.224.0";
 import { Denops } from "https://deno.land/x/denops_std@v6.4.0/mod.ts";
 import { Semaphore } from "https://deno.land/x/async@v2.1.0/semaphore.ts";
 import { echo, execute } from "https://deno.land/x/denops_std@v6.4.0/helper/mod.ts";
-import { exists, expandGlob } from "https://deno.land/std@0.224.0/fs/mod.ts";
+import { exists, expandGlob } from "jsr:@std/fs@^0.224.0";
 import { ensure, is } from "https://deno.land/x/unknownutil@v3.18.0/mod.ts";
 import { Result } from "https://esm.sh/result-type-ts@2.1.3/";
 import { Git } from "./git.ts";

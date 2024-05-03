@@ -1,14 +1,14 @@
 // =============================================================================
 // File        : util.ts
 // Author      : yukimemi
-// Last Change : 2023/12/03 16:31:59.
+// Last Change : 2024/05/03 22:54:49.
 // =============================================================================
 
 import type { Denops } from "https://deno.land/x/denops_std@v6.4.0/mod.ts";
 import { echo, echoerr, execute } from "https://deno.land/x/denops_std@v6.4.0/helper/mod.ts";
-import * as fs from "https://deno.land/std@0.224.0/fs/mod.ts";
+import * as fs from "jsr:@std/fs@^0.224.0";
 import * as fn from "https://deno.land/x/denops_std@v6.4.0/function/mod.ts";
-import { dirname, extname } from "https://deno.land/std@0.224.0/path/mod.ts";
+import { dirname, extname } from "jsr:@std/path@^0.224.0";
 import { ensure, is } from "https://deno.land/x/unknownutil@v3.18.0/mod.ts";
 
 /**

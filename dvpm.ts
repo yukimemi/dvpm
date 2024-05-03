@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2023/11/05 12:59:58.
+// Last Change : 2024/05/03 22:38:10.
 // =============================================================================
 
 import * as buffer from "https://deno.land/x/denops_std@v6.4.0/buffer/mod.ts";
@@ -11,7 +11,7 @@ import { Semaphore } from "https://deno.land/x/async@v2.1.0/semaphore.ts";
 import { assert, is } from "https://deno.land/x/unknownutil@v3.18.0/mod.ts";
 import { cache, notify } from "./util.ts";
 import { echo, execute } from "https://deno.land/x/denops_std@v6.4.0/helper/mod.ts";
-import { sprintf } from "https://deno.land/std@0.224.0/fmt/printf.ts";
+import { sprintf } from "jsr:@std/fmt@^0.224.0/printf";
 import { type Plug, Plugin, PluginOption } from "./plugin.ts";
 
 const concurrency = 8;

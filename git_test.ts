@@ -1,10 +1,10 @@
 // =============================================================================
 // File        : git_test.ts
 // Author      : yukimemi
-// Last Change : 2023/11/03 19:24:09.
+// Last Change : 2024/05/03 22:51:34.
 // =============================================================================
 
-import { assertEquals } from "https://deno.land/std@0.224.0/testing/asserts.ts";
+import { assertEquals } from "jsr:@std/assert@^0.224.0";
 
 import { Git } from "./git.ts";
 
