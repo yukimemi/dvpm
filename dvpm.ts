@@ -4,13 +4,13 @@
 // Last Change : 2024/05/03 22:38:10.
 // =============================================================================
 
-import * as buffer from "https://deno.land/x/denops_std@v6.4.2/buffer/mod.ts";
-import * as fn from "https://deno.land/x/denops_std@v6.4.2/function/mod.ts";
-import { Denops } from "https://deno.land/x/denops_std@v6.4.2/mod.ts";
+import * as buffer from "https://deno.land/x/denops_std@v6.4.3/buffer/mod.ts";
+import * as fn from "https://deno.land/x/denops_std@v6.4.3/function/mod.ts";
+import { Denops } from "https://deno.land/x/denops_std@v6.4.3/mod.ts";
 import { Semaphore } from "https://deno.land/x/async@v2.1.0/semaphore.ts";
-import { assert, is } from "https://deno.land/x/unknownutil@v3.18.0/mod.ts";
+import { assert, is } from "https://deno.land/x/unknownutil@v3.18.1/mod.ts";
 import { cache, notify } from "./util.ts";
-import { echo, execute } from "https://deno.land/x/denops_std@v6.4.2/helper/mod.ts";
+import { echo, execute } from "https://deno.land/x/denops_std@v6.4.3/helper/mod.ts";
 import { sprintf } from "jsr:@std/fmt@^0.224.0/printf";
 import { type Plug, Plugin, PluginOption } from "./plugin.ts";
 
