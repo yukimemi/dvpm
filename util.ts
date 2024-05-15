@@ -4,10 +4,10 @@
 // Last Change : 2024/05/03 22:54:49.
 // =============================================================================
 
-import type { Denops } from "https://deno.land/x/denops_std@v6.4.3/mod.ts";
-import { echo, echoerr, execute } from "https://deno.land/x/denops_std@v6.4.3/helper/mod.ts";
+import type { Denops } from "https://deno.land/x/denops_std@v6.5.0/mod.ts";
+import { echo, echoerr, execute } from "https://deno.land/x/denops_std@v6.5.0/helper/mod.ts";
 import * as fs from "jsr:@std/fs@^0.224.0";
-import * as fn from "https://deno.land/x/denops_std@v6.4.3/function/mod.ts";
+import * as fn from "https://deno.land/x/denops_std@v6.5.0/function/mod.ts";
 import { dirname, extname } from "jsr:@std/path@^0.224.0";
 import { ensure, is } from "https://deno.land/x/unknownutil@v3.18.1/mod.ts";
 
