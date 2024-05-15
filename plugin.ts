@@ -4,12 +4,12 @@
 // Last Change : 2024/05/03 22:54:17.
 // =============================================================================
 
-import * as fn from "https://deno.land/x/denops_std@v6.4.3/function/mod.ts";
-import * as op from "https://deno.land/x/denops_std@v6.4.3/option/mod.ts";
+import * as fn from "https://deno.land/x/denops_std@v6.5.0/function/mod.ts";
+import * as op from "https://deno.land/x/denops_std@v6.5.0/option/mod.ts";
 import * as path from "jsr:@std/path@^0.224.0";
-import { Denops } from "https://deno.land/x/denops_std@v6.4.3/mod.ts";
+import { Denops } from "https://deno.land/x/denops_std@v6.5.0/mod.ts";
 import { Semaphore } from "https://deno.land/x/async@v2.1.0/semaphore.ts";
-import { echo, execute } from "https://deno.land/x/denops_std@v6.4.3/helper/mod.ts";
+import { echo, execute } from "https://deno.land/x/denops_std@v6.5.0/helper/mod.ts";
 import { exists, expandGlob } from "jsr:@std/fs@^0.224.0";
 import { ensure, is } from "https://deno.land/x/unknownutil@v3.18.1/mod.ts";
 import { Result } from "https://esm.sh/result-type-ts@2.1.3/";
