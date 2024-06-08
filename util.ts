@@ -1,15 +1,15 @@
 // =============================================================================
 // File        : util.ts
 // Author      : yukimemi
-// Last Change : 2024/06/08 21:53:32.
+// Last Change : 2024/05/03 22:54:49.
 // =============================================================================
 
 import type { Denops } from "https://deno.land/x/denops_std@v6.5.0/mod.ts";
 import { echo, echoerr, execute } from "https://deno.land/x/denops_std@v6.5.0/helper/mod.ts";
-import * as fs from "jsr:@std/fs@0.224.0";
+import * as fs from "jsr:@std/fs@^0.224.0";
 import * as fn from "https://deno.land/x/denops_std@v6.5.0/function/mod.ts";
-import { dirname, extname } from "jsr:@std/path@0.224.0";
-import * as typia from "https://esm.sh/typia@6.0.6";
+import { dirname, extname } from "jsr:@std/path@^0.224.0";
+import { ensure, is } from "https://deno.land/x/unknownutil@v3.18.1/mod.ts";
 
 /**
  * vim.notify function
@@ -32,7 +32,7 @@ export async function cache(
   denops: Denops,
   arg: { script: string; path: string },
 ) {
-  const p = typia.assert<string>(await fn.expand(denops, arg.path));
+  const p = ensure(await fn.expand(denops, arg.path), is.String);
   const s = arg.script.trim();
   await fs.ensureDir(dirname(p));
   if (await fs.exists(p)) {
@@ -49,7 +49,7 @@ export async function cache(
  * Determine whether it is typescript, lua or vim and return the string to read
  */
 export async function getExecuteStr(denops: Denops, path: string) {
-  const p = typia.assert<string>(await fn.expand(denops, path));
+  const p = ensure(await fn.expand(denops, path), is.String);
   const extension = extname(p);
   if (extension === ".lua") {
     return `luafile ${p}`;

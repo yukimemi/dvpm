@@ -1,17 +1,17 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2024/06/08 21:54:59.
+// Last Change : 2024/05/15 23:09:54.
 // =============================================================================
 
 import * as buffer from "https://deno.land/x/denops_std@v6.5.0/buffer/mod.ts";
 import * as fn from "https://deno.land/x/denops_std@v6.5.0/function/mod.ts";
 import { Denops } from "https://deno.land/x/denops_std@v6.5.0/mod.ts";
 import { Semaphore } from "https://deno.land/x/async@v2.1.0/semaphore.ts";
-import * as typia from "https://esm.sh/typia@6.0.6";
+import { assert, is } from "https://deno.land/x/unknownutil@v3.18.1/mod.ts";
 import { cache, notify } from "./util.ts";
 import { echo, execute } from "https://deno.land/x/denops_std@v6.5.0/helper/mod.ts";
-import { sprintf } from "jsr:@std/fmt@0.224.0/printf";
+import { sprintf } from "jsr:@std/fmt@^0.224.0/printf";
 import { type Plug, Plugin, PluginOption } from "./plugin.ts";
 
 const concurrency = 8;
@@ -69,7 +69,8 @@ export class Dvpm {
 
       async update(url: unknown): Promise<void> {
         if (url) {
-          await dvpm.update(typia.assert<string>(url));
+          assert(url, is.String);
+          await dvpm.update(url);
         } else {
           await dvpm.update();
         }
