@@ -1,20 +1,20 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2024/05/03 22:54:17.
+// Last Change : 2024/06/08 21:51:57.
 // =============================================================================
 
 import * as fn from "https://deno.land/x/denops_std@v6.5.0/function/mod.ts";
 import * as op from "https://deno.land/x/denops_std@v6.5.0/option/mod.ts";
-import * as path from "jsr:@std/path@^0.224.0";
+import * as path from "jsr:@std/path@0.224.0";
 import { Denops } from "https://deno.land/x/denops_std@v6.5.0/mod.ts";
 import { Semaphore } from "https://deno.land/x/async@v2.1.0/semaphore.ts";
 import { echo, execute } from "https://deno.land/x/denops_std@v6.5.0/helper/mod.ts";
-import { exists, expandGlob } from "jsr:@std/fs@^0.224.0";
-import { ensure, is } from "https://deno.land/x/unknownutil@v3.18.1/mod.ts";
+import { exists, expandGlob } from "jsr:@std/fs@0.224.0";
 import { Result } from "https://esm.sh/result-type-ts@2.1.3/";
 import { Git } from "./git.ts";
 import { cmdOutToString, executeFile, getExecuteStr } from "./util.ts";
+import * as typia from "https://esm.sh/typia@6.0.6";
 
 export type TrueFalse =
   | boolean
@@ -109,7 +109,7 @@ export class Plugin {
     }
     if (p.plug.dst) {
       p.clog(`[create] ${p.info.dst} set dst to ${p.plug.dst}`);
-      p.info.dst = ensure(await fn.expand(denops, p.plug.dst), is.String);
+      p.info.dst = typia.assert<string>(await fn.expand(denops, p.plug.dst));
     }
     if (p.plug.enabled == undefined) {
       p.info.enabled = true;
@@ -143,7 +143,7 @@ export class Plugin {
     if (tf == undefined) {
       return def;
     }
-    if (is.Boolean(tf)) {
+    if (typia.is<boolean>(tf)) {
       return tf;
     }
     return await tf({ denops: this.denops, info: this.info });
@@ -232,7 +232,7 @@ export class Plugin {
         starttime = performance.now();
       }
       const rtp = (await op.runtimepath.get(this.denops)).split(",");
-      if (!rtp.includes(ensure(this.info.dst, is.String))) {
+      if (!rtp.includes(typia.assert<string>(this.info.dst))) {
         registered = true;
         await op.runtimepath.set(this.denops, `${rtp},${this.info.dst}`);
       }
@@ -391,7 +391,7 @@ export class Plugin {
    * Generate helptags
    */
   public async genHelptags() {
-    const docDir = path.join(ensure(this.info.dst, is.String), "doc");
+    const docDir = path.join(typia.assert<string>(this.info.dst), "doc");
     if (!(await this.isHelptagsOld(docDir))) {
       return;
     }
@@ -405,7 +405,7 @@ export class Plugin {
    * Install a plugin
    */
   public async install(): Promise<Result<string[], string[]>> {
-    const gitDir = path.join(ensure(this.info.dst, is.String), ".git");
+    const gitDir = path.join(typia.assert<string>(this.info.dst), ".git");
     if (await exists(gitDir)) {
       return Result.success([]);
     }
@@ -416,7 +416,7 @@ export class Plugin {
 
     const output = await Git.clone(
       this.info.url,
-      ensure(this.info.dst, is.String),
+      typia.assert<string>(this.info.dst),
       this.info.branch,
       this.info.depth,
     );
@@ -448,7 +448,7 @@ export class Plugin {
     if (!(await this.isClone())) {
       return Result.success([]);
     }
-    const git = new Git(ensure(this.info.dst, is.String));
+    const git = new Git(typia.assert<string>(this.info.dst));
     const beforeRev = await git.getRevision();
     this.info.branch
       ? await echo(this.denops, `Update ${this.info.url}, branch: ${this.info.branch}`)

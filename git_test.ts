@@ -1,10 +1,10 @@
 // =============================================================================
 // File        : git_test.ts
 // Author      : yukimemi
-// Last Change : 2024/05/03 22:51:34.
+// Last Change : 2024/06/08 21:37:51.
 // =============================================================================
 
-import { assertEquals } from "jsr:@std/assert@^0.224.0";
+import { assertEquals } from "jsr:@std/assert@0.224.0";
 
 import { Git } from "./git.ts";
 

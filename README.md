@@ -62,8 +62,8 @@ execute 'set runtimepath^=' . substitute(fnamemodify(s:denops, ':p') , '[/\\]$',
 ```typescript
 import * as fn from "https://deno.land/x/denops_std@v5.2.0/function/mod.ts";
 import * as mapping from "https://deno.land/x/denops_std@v5.2.0/mapping/mod.ts";
+import * as typia from "https://esm.sh/typia@6.0.6";
 import { Denops } from "https://deno.land/x/denops_std@v5.2.0/mod.ts";
-import { ensure, is } from "https://deno.land/x/unknownutil@v3.11.0/mod.ts";
 import { execute } from "https://deno.land/x/denops_std@v5.2.0/helper/mod.ts";
 import { globals } from "https://deno.land/x/denops_std@v5.2.0/variable/mod.ts";
 
@@ -71,7 +71,7 @@ import { Dvpm } from "https://deno.land/x/dvpm@$MODULE_VERSION/mod.ts";
 
 export async function main(denops: Denops): Promise<void> {
   const base_path = (await fn.has(denops, "nvim")) ? "~/.cache/nvim/dvpm" : "~/.cache/vim/dvpm";
-  const base = ensure(await fn.expand(denops, base_path), is.String);
+  const base = typia.assert<string>(await fn.expand(denops, base_path));
 
   // First, call Dvpm.begin with denops object and base path.
   const dvpm = await Dvpm.begin(denops, { base });
@@ -107,7 +107,7 @@ export async function main(denops: Denops): Promise<void> {
       await globals.set(
         denops,
         "silentsaver_dir",
-        ensure(await fn.expand(denops, "~/.cache/nvim/silentsaver"), is.String),
+        typia.assert<string>(await fn.expand(denops, "~/.cache/nvim/silentsaver")),
       );
     },
   });
@@ -383,14 +383,14 @@ configuration is shown below.
 ```typescript
 export async function main(denops: Denops): Promise<void> {
   const base_path = (await fn.has(denops, "nvim")) ? "~/.cache/nvim/dvpm" : "~/.cache/vim/dvpm";
-  const base = ensure(await fn.expand(denops, base_path), is.String);
+  const base = typia.assert<string>(await fn.expand(denops, base_path));
   const cache_path = (await fn.has(denops, "nvim"))
     ? "~/.config/nvim/plugin/dvpm_plugin_cache.vim"
     : "~/.config/vim/plugin/dvpm_plugin_cache.vim";
   // This cache path must be pre-appended to the runtimepath.
   // Add it in vimrc or init.lua by yourself, or specify the path originally added to
   // runtimepath of Vim / Neovim.
-  const cache = ensure(await fn.expand(denops, cache_path), is.String);
+  const cache = typia.assert<string>(await fn.expand(denops, cache_path));
 
   // Specify `cache` to Dvpm.begin.
   const dvpm = await Dvpm.begin(denops, { base, cache });
