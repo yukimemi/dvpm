@@ -4,9 +4,9 @@
 // Last Change : 2024/05/03 22:41:42.
 // =============================================================================
 
-import * as path from "jsr:@std/path@^0.224.0";
-import { exists } from "jsr:@std/fs@^0.224.0";
-import { TextLineStream } from "jsr:@std/streams@^0.224.0";
+import * as path from "jsr:@std/path@0.225.2";
+import { exists } from "jsr:@std/fs@0.229.2";
+import { TextLineStream } from "jsr:@std/streams@0.224.4";
 
 /**
  * Git
