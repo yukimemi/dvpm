@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2024/06/30 12:59:42.
+// Last Change : 2024/06/30 19:45:23.
 // =============================================================================
 
 import * as buffer from "https://deno.land/x/denops_std@v6.5.0/buffer/mod.ts";
@@ -227,7 +227,7 @@ export class Dvpm {
       );
     }
 
-    this.denops.call("denops#cache#update");
+    this.denops.call("denops#cache#update", { reload: true });
 
     if (this.#updateLogs.length > 0) {
       await this.bufWrite("dvpm://update", this.#updateLogs, { filetype: "diff" });
@@ -308,7 +308,9 @@ export class Dvpm {
             dep.clone = plug.clone;
           }
           if (dep.cache == undefined) {
-            dep.cache = plug.cache;
+            dep.cache = {
+              enabled: plug.cache?.enabled,
+            };
           }
           await this.add(dep);
         }
