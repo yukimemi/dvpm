@@ -1,8 +1,10 @@
+// =============================================================================
+// File        : deno.jsonc
+// Author      : yukimemi
+// Last Change : 2024/06/30 12:59:29.
+// =============================================================================
+
 {
-  "lint-staged": {
-    "*": "deno lint && deno fmt",
-    "deno.jsonc": "deno task setup-hooks"
-  },
   "tasks": {
     // general permissions
     "run": "deno run --allow-env --allow-read --allow-net",
@@ -23,7 +25,8 @@
     "pre-commit": "deno run --allow-read --allow-env --allow-run --allow-write https://pax.deno.dev/kawarimidoll/deno-dev-template/scripts/lint-staged.ts",
     "pre-push": "deno task ci",
     // molt
-    "update": "deno run --allow-env --allow-read --allow-write --allow-run --allow-net jsr:@molt/cli -w ./*.ts",
+    "update": "deno run --allow-env --allow-read --allow-write --allow-run --allow-net jsr:@molt/cli ./*.ts",
+    "update:write": "deno task -q update --write",
     "update:commit": "deno task -q update --commit --pre-commit=fmt,lint"
   },
   "fmt": {
