@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2024/06/30 20:01:07.
+// Last Change : 2024/06/30 20:15:42.
 // =============================================================================
 
 import * as buffer from "https://deno.land/x/denops_std@v6.5.0/buffer/mod.ts";
@@ -299,22 +299,6 @@ export class Dvpm {
    */
   public async add(plug: Plug) {
     try {
-      if (plug.dependencies != undefined) {
-        for (const dep of plug.dependencies) {
-          if (dep.enabled == undefined) {
-            dep.enabled = plug.enabled;
-          }
-          if (dep.clone == undefined) {
-            dep.clone = plug.clone;
-          }
-          if (dep.cache == undefined) {
-            dep.cache = {
-              enabled: plug.cache?.enabled,
-            };
-          }
-          await this.add(dep);
-        }
-      }
       const pluginOption: PluginOption = {
         base: this.dvpmOption.base,
         debug: this.dvpmOption.debug,
@@ -326,6 +310,22 @@ export class Dvpm {
         plug,
         pluginOption,
       );
+      if (plug.dependencies != undefined) {
+        for (const dep of plug.dependencies) {
+          if (dep.enabled == undefined) {
+            dep.enabled = p.info.enabled;
+          }
+          if (dep.clone == undefined) {
+            dep.clone = p.info.clone;
+          }
+          if (dep.cache == undefined) {
+            dep.cache = {
+              enabled: p.info.cache?.enabled,
+            };
+          }
+          await this.add(dep);
+        }
+      }
       await this._install(p);
 
       await this.#semaphore.lock(async () => {
