@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2024/06/30 13:00:19.
+// Last Change : 2024/06/30 22:41:41.
 // =============================================================================
 
 import * as fn from "https://deno.land/x/denops_std@v6.5.0/function/mod.ts";
@@ -200,6 +200,12 @@ export class Plugin {
         cacheStr.push(await getExecuteStr(this.denops, this.info.cache.beforeFile));
       }
       cacheStr.push(`set runtimepath+=${this.info.dst}`);
+      for await (const file of expandGlob(`${this.info.dst}/plugin/**/*.vim`)) {
+        cacheStr.push(`source ${file.path}`);
+      }
+      for await (const file of expandGlob(`${this.info.dst}/plugin/**/*.lua`)) {
+        cacheStr.push(`luafile ${file.path}`);
+      }
       if (this.info.cache?.afterFile) {
         cacheStr.push(await getExecuteStr(this.denops, this.info.cache.afterFile));
       }
