@@ -1,7 +1,7 @@
 # =============================================================================
 # File        : molt.yml
 # Author      : yukimemi
-# Last Change : 2024/06/30 12:57:34.
+# Last Change : 2024/07/13 22:57:09.
 # =============================================================================
 
 name: molt
@@ -32,7 +32,6 @@ jobs:
         with:
           token: ${{ steps.app-token.outputs.token }}
           ref: ${{ github.head_ref }}
-          # Make sure the value of GITHUB_TOKEN will not be persisted in repo's config
           persist-credentials: false
 
       - name: Setup Deno

@@ -1,7 +1,7 @@
 # =============================================================================
 # File        : automerge.yml
 # Author      : yukimemi
-# Last Change : 2024/07/13 22:53:33.
+# Last Change : 2024/07/13 22:57:06.
 # =============================================================================
 
 name: automerge
@@ -17,7 +17,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Setup repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          ref: ${{ github.head_ref }}
+          persist-credentials: false
 
       - name: Setup Deno
         uses: denoland/setup-deno@v1
