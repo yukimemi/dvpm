@@ -1,7 +1,7 @@
 # =============================================================================
 # File        : automerge.yml
 # Author      : yukimemi
-# Last Change : 2024/06/30 12:57:47.
+# Last Change : 2024/07/13 22:53:33.
 # =============================================================================
 
 name: automerge
@@ -31,10 +31,10 @@ jobs:
         id: automerge
         uses: pascalgn/automerge-action@v0.15.6
         env:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Bump version and push tag
         id: tag_version
         uses: mathieudutour/github-tag-action@v6.2
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: "${{ secrets.GITHUB_TOKEN }}"
