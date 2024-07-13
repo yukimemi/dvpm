@@ -1,7 +1,7 @@
 # =============================================================================
 # File        : automerge.yml
 # Author      : yukimemi
-# Last Change : 2024/07/13 22:57:06.
+# Last Change : 2024/07/13 23:01:41.
 # =============================================================================
 
 name: automerge
@@ -12,10 +12,18 @@ on:
   check_suite:
     types: [completed]
   status: {}
+
 jobs:
   automerge:
     runs-on: ubuntu-latest
     steps:
+      - name: Generate app token
+        uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.PRIVATE_KEY }}
+
       - name: Setup repo
         uses: actions/checkout@v4
         with:
@@ -34,11 +42,11 @@ jobs:
       - name: automerge
         id: automerge
         uses: pascalgn/automerge-action@v0.15.6
-        env:
-          github_token: "${{ secrets.GITHUB_TOKEN }}"
+        with:
+          github_token: ${{ steps.app-token.outputs.token }}
 
       - name: Bump version and push tag
         id: tag_version
         uses: mathieudutour/github-tag-action@v6.2
         with:
-          github_token: "${{ secrets.GITHUB_TOKEN }}"
+          github_token: ${{ steps.app-token.outputs.token }}
