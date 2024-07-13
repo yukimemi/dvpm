@@ -1,7 +1,7 @@
 # =============================================================================
 # File        : automerge.yml
 # Author      : yukimemi
-# Last Change : 2024/07/13 23:05:44.
+# Last Change : 2024/07/13 23:13:59.
 # =============================================================================
 
 name: automerge
@@ -49,4 +49,5 @@ jobs:
         id: tag_version
         uses: mathieudutour/github-tag-action@v6.2
         with:
+          tag_prefix: ""
           github_token: ${{ steps.app-token.outputs.token }}
