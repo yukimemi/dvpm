@@ -4,7 +4,7 @@
 // Last Change : 2024/06/30 12:59:51.
 // =============================================================================
 
-import * as path from "jsr:@std/path@1.0.0";
+import * as path from "jsr:@std/path@1.0.1";
 import { exists } from "jsr:@std/fs@0.229.3";
 import { TextLineStream } from "jsr:@std/streams@0.224.5";
 
