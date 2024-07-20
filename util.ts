@@ -8,7 +8,7 @@ import type { Denops } from "https://deno.land/x/denops_std@v6.5.1/mod.ts";
 import { echo, echoerr, execute } from "https://deno.land/x/denops_std@v6.5.1/helper/mod.ts";
 import * as fs from "jsr:@std/fs@0.229.3";
 import * as fn from "https://deno.land/x/denops_std@v6.5.1/function/mod.ts";
-import { dirname, extname } from "jsr:@std/path@1.0.0";
+import { dirname, extname } from "jsr:@std/path@1.0.1";
 import { ensure, is } from "https://deno.land/x/unknownutil@v3.18.1/mod.ts";
 
 /**
