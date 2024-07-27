@@ -1,18 +1,18 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2024/07/27 21:29:09.
+// Last Change : 2024/07/27 22:58:30.
 // =============================================================================
 
 import * as buffer from "jsr:@denops/std@7.0.0/buffer";
 import * as fn from "jsr:@denops/std@7.0.0/function";
-import { Denops } from "jsr:@denops/std@7.0.0";
+import type { Denops } from "jsr:@denops/std@7.0.0";
 import { Semaphore } from "jsr:@lambdalisue/async@2.1.1";
 import { assert, is } from "jsr:@core/unknownutil@3.18.1";
 import { cache, notify } from "./util.ts";
 import { echo, execute } from "jsr:@denops/std@7.0.0/helper";
 import { sprintf } from "jsr:@std/fmt@0.225.6/printf";
-import { type Plug, Plugin, PluginOption } from "./plugin.ts";
+import { type Plug, Plugin, type PluginOption } from "./plugin.ts";
 
 const concurrency = 8;
 const listSpace = 3;

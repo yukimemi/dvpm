@@ -1,6 +1,6 @@
 {
   "name": "@yukimemi/dvpm",
-  "version": "4.0.1",
+  "version": "4.0.2",
   "exports": "./mod.ts",
   "tasks": {
     "run": "deno run --allow-env --allow-read --allow-net",
