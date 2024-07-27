@@ -1,4 +1,4 @@
-# dvpm - Denops Vim/Neovim Plugin Manager ![dvpm](https://shield.deno.dev/x/dvpm)
+# dvpm - Denops Vim/Neovim Plugin Manager !
 
 `dvpm` is a plugin manager for Vim and Neovim, powered by
 [denops.vim](https://github.com/vim-denops/denops.vim).
@@ -60,14 +60,14 @@ execute 'set runtimepath^=' . substitute(fnamemodify(s:denops, ':p') , '[/\\]$',
 - ~/vimfiles/denops/config/main.ts (Windows)
 
 ```typescript
-import * as fn from "https://deno.land/x/denops_std@v5.2.0/function/mod.ts";
-import * as mapping from "https://deno.land/x/denops_std@v5.2.0/mapping/mod.ts";
-import { Denops } from "https://deno.land/x/denops_std@v5.2.0/mod.ts";
-import { ensure, is } from "https://deno.land/x/unknownutil@v3.11.0/mod.ts";
-import { execute } from "https://deno.land/x/denops_std@v5.2.0/helper/mod.ts";
-import { globals } from "https://deno.land/x/denops_std@v5.2.0/variable/mod.ts";
+import type { Denops } from "jsr:@denops/std@7.0.0";
+import * as fn from "jsr:@denops/std@7.0.0/function";
+import * as mapping from "jsr:@denops/std@7.0.0/mapping";
+import * as vars from "jsr:@denops/std@7.0.0/variable";
+import { ensure, is } from "jsr:@core/unknownutil@3.18.1";
+import { execute } from "jsr:@denops/std@7.0.0/helper";
 
-import { Dvpm } from "https://deno.land/x/dvpm@$MODULE_VERSION/mod.ts";
+import { Dvpm } from "jsr:@yukimemi/dvpm@4.0.0";
 
 export async function main(denops: Denops): Promise<void> {
   const base_path = (await fn.has(denops, "nvim")) ? "~/.cache/nvim/dvpm" : "~/.cache/vim/dvpm";
@@ -104,7 +104,7 @@ export async function main(denops: Denops): Promise<void> {
   await dvpm.add({
     url: "yukimemi/silentsaver.vim",
     before: async ({ denops }) => {
-      await globals.set(
+      await vars.g.set(
         denops,
         "silentsaver_dir",
         ensure(await fn.expand(denops, "~/.cache/nvim/silentsaver"), is.String),
@@ -357,7 +357,7 @@ public list(): Plugin[]
 ```
 
 If you want a list of plugin information, you can get it with the dvpm.list() function. The return
-value is `Plugin[]`. See the [doc](https://deno.land/x/dvpm/mod.ts?s=Plugin) for type information.
+value is `Plugin[]`. See the [doc](https://jsr.io/@yukimemi/dvpm/doc/~/Plugin) for type information.
 
 ## Command
 
