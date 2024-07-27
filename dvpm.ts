@@ -1,16 +1,16 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2024/06/30 22:24:51.
+// Last Change : 2024/07/27 21:29:09.
 // =============================================================================
 
-import * as buffer from "https://deno.land/x/denops_std@v6.5.1/buffer/mod.ts";
-import * as fn from "https://deno.land/x/denops_std@v6.5.1/function/mod.ts";
-import { Denops } from "https://deno.land/x/denops_std@v6.5.1/mod.ts";
-import { Semaphore } from "https://deno.land/x/async@v2.1.0/semaphore.ts";
-import { assert, is } from "https://deno.land/x/unknownutil@v3.18.1/mod.ts";
+import * as buffer from "jsr:@denops/std@7.0.0/buffer";
+import * as fn from "jsr:@denops/std@7.0.0/function";
+import { Denops } from "jsr:@denops/std@7.0.0";
+import { Semaphore } from "jsr:@lambdalisue/async@2.1.1";
+import { assert, is } from "jsr:@core/unknownutil@3.18.1";
 import { cache, notify } from "./util.ts";
-import { echo, execute } from "https://deno.land/x/denops_std@v6.5.1/helper/mod.ts";
+import { echo, execute } from "jsr:@denops/std@7.0.0/helper";
 import { sprintf } from "jsr:@std/fmt@0.225.6/printf";
 import { type Plug, Plugin, PluginOption } from "./plugin.ts";
 

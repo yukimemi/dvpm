@@ -1,18 +1,18 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2024/06/30 22:41:41.
+// Last Change : 2024/07/27 21:51:23.
 // =============================================================================
 
-import * as fn from "https://deno.land/x/denops_std@v6.5.1/function/mod.ts";
-import * as op from "https://deno.land/x/denops_std@v6.5.1/option/mod.ts";
+import * as fn from "jsr:@denops/std@7.0.0/function";
+import * as op from "jsr:@denops/std@7.0.0/option";
 import * as path from "jsr:@std/path@1.0.2";
-import { Denops } from "https://deno.land/x/denops_std@v6.5.1/mod.ts";
-import { Semaphore } from "https://deno.land/x/async@v2.1.0/semaphore.ts";
-import { echo, execute } from "https://deno.land/x/denops_std@v6.5.1/helper/mod.ts";
+import { Denops } from "jsr:@denops/std@7.0.0";
+import { Semaphore } from "jsr:@lambdalisue/async@2.1.1";
+import { echo, execute } from "jsr:@denops/std@7.0.0/helper";
 import { exists, expandGlob } from "jsr:@std/fs@1.0.0";
-import { ensure, is } from "https://deno.land/x/unknownutil@v3.18.1/mod.ts";
-import { Result } from "https://esm.sh/result-type-ts@2.1.3/";
+import { ensure, is } from "jsr:@core/unknownutil@3.18.1";
+import { Result } from "npm:result-type-ts@2.1.3";
 import { Git } from "./git.ts";
 import { cmdOutToString, executeFile, getExecuteStr } from "./util.ts";
 
@@ -69,7 +69,7 @@ export type PluginOption = {
 };
 
 export class Plugin {
-  static mutex = new Semaphore(1);
+  static mutex: Semaphore = new Semaphore(1);
   /// plugin information
   public info: PlugInfo;
 

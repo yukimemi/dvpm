@@ -1,15 +1,15 @@
 // =============================================================================
 // File        : util.ts
 // Author      : yukimemi
-// Last Change : 2024/06/30 22:23:34.
+// Last Change : 2024/07/27 21:50:28.
 // =============================================================================
 
-import type { Denops } from "https://deno.land/x/denops_std@v6.5.1/mod.ts";
-import { echo, echoerr, execute } from "https://deno.land/x/denops_std@v6.5.1/helper/mod.ts";
+import type { Denops } from "jsr:@denops/std@7.0.0";
+import { echo, echoerr, execute } from "jsr:@denops/std@7.0.0/helper";
 import * as fs from "jsr:@std/fs@1.0.0";
-import * as fn from "https://deno.land/x/denops_std@v6.5.1/function/mod.ts";
+import * as fn from "jsr:@denops/std@7.0.0/function";
 import { dirname, extname } from "jsr:@std/path@1.0.2";
-import { ensure, is } from "https://deno.land/x/unknownutil@v3.18.1/mod.ts";
+import { ensure, is } from "jsr:@core/unknownutil@3.18.1";
 
 /**
  * vim.notify function
@@ -48,7 +48,7 @@ export async function cache(
 /**
  * Determine whether it is typescript, lua or vim and return the string to read
  */
-export async function getExecuteStr(denops: Denops, path: string) {
+export async function getExecuteStr(denops: Denops, path: string): Promise<string> {
   const p = ensure(await fn.expand(denops, path), is.String);
   const extension = extname(p);
   if (extension === ".lua") {
@@ -64,7 +64,7 @@ export async function getExecuteStr(denops: Denops, path: string) {
 /**
  * execute `lua` or `vim` file
  */
-export async function executeFile(denops: Denops, path: string) {
+export async function executeFile(denops: Denops, path: string): Promise<void> {
   const executeStr = await getExecuteStr(denops, path);
   await execute(denops, executeStr);
 }
