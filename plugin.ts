@@ -4,15 +4,15 @@
 // Last Change : 2024/07/27 22:57:53.
 // =============================================================================
 
-import * as fn from "jsr:@denops/std@7.0.0/function";
-import * as op from "jsr:@denops/std@7.0.0/option";
+import * as fn from "jsr:@denops/std@7.0.1/function";
+import * as op from "jsr:@denops/std@7.0.1/option";
 import * as path from "jsr:@std/path@1.0.2";
-import type { Denops } from "jsr:@denops/std@7.0.0";
+import type { Denops } from "jsr:@denops/std@7.0.1";
 import { Git } from "./git.ts";
 import { Result } from "npm:result-type-ts@2.1.3";
 import { Semaphore } from "jsr:@lambdalisue/async@2.1.1";
 import { cmdOutToString, executeFile, getExecuteStr } from "./util.ts";
-import { echo, execute } from "jsr:@denops/std@7.0.0/helper";
+import { echo, execute } from "jsr:@denops/std@7.0.1/helper";
 import { ensure, is } from "jsr:@core/unknownutil@3.18.1";
 import { exists, expandGlob } from "jsr:@std/fs@1.0.0";
 
