@@ -1,7 +1,7 @@
 # =============================================================================
 # File        : automerge.yml
 # Author      : yukimemi
-# Last Change : 2024/07/13 23:13:59.
+# Last Change : 2024/08/03 23:10:07.
 # =============================================================================
 
 name: automerge
@@ -17,37 +17,10 @@ jobs:
   automerge:
     runs-on: ubuntu-latest
     steps:
-      - name: Generate app token
-        uses: actions/create-github-app-token@v1
-        id: app-token
-        with:
-          app-id: ${{ vars.APP_ID }}
-          private-key: ${{ secrets.PRIVATE_KEY }}
-
-      - name: Setup repo
-        uses: actions/checkout@v4
-        with:
-          token: ${{ steps.app-token.outputs.token }}
-          ref: ${{ github.head_ref }}
-          persist-credentials: false
-
-      - name: Setup Deno
-        uses: denoland/setup-deno@v1
-        with:
-          deno-version: v1.x
-
-      - name: Check Deno
-        run: deno task ci
-
-      - name: automerge
-        id: automerge
-        uses: pascalgn/automerge-action@v0.15.6
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v1
+      - run: deno task ci
+      - uses: "pascalgn/automerge-action@v0.15.6"
         env:
-          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
-      - name: Bump version and push tag
-        id: tag_version
-        uses: mathieudutour/github-tag-action@v6.2
-        with:
-          tag_prefix: ""
-          github_token: ${{ steps.app-token.outputs.token }}
