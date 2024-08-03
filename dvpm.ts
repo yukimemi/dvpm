@@ -4,13 +4,13 @@
 // Last Change : 2024/07/27 22:58:30.
 // =============================================================================
 
-import * as buffer from "jsr:@denops/std@7.0.2/buffer";
-import * as fn from "jsr:@denops/std@7.0.2/function";
-import type { Denops } from "jsr:@denops/std@7.0.2";
+import * as buffer from "jsr:@denops/std@7.0.3/buffer";
+import * as fn from "jsr:@denops/std@7.0.3/function";
+import type { Denops } from "jsr:@denops/std@7.0.3";
 import { Semaphore } from "jsr:@lambdalisue/async@2.1.1";
 import { assert, is } from "jsr:@core/unknownutil@4.0.0";
 import { cache, notify } from "./util.ts";
-import { echo, execute } from "jsr:@denops/std@7.0.2/helper";
+import { echo, execute } from "jsr:@denops/std@7.0.3/helper";
 import { sprintf } from "jsr:@std/fmt@1.0.0/printf";
 import { type Plug, Plugin, type PluginOption } from "./plugin.ts";
 
