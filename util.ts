@@ -4,12 +4,12 @@
 // Last Change : 2024/07/27 21:50:28.
 // =============================================================================
 
-import type { Denops } from "jsr:@denops/std@7.0.1";
-import { echo, echoerr, execute } from "jsr:@denops/std@7.0.1/helper";
-import * as fs from "jsr:@std/fs@1.0.0";
-import * as fn from "jsr:@denops/std@7.0.1/function";
+import type { Denops } from "jsr:@denops/std@7.0.2";
+import { echo, echoerr, execute } from "jsr:@denops/std@7.0.2/helper";
+import * as fs from "jsr:@std/fs@1.0.1";
+import * as fn from "jsr:@denops/std@7.0.2/function";
 import { dirname, extname } from "jsr:@std/path@1.0.2";
-import { ensure, is } from "jsr:@core/unknownutil@3.18.1";
+import { ensure, is } from "jsr:@core/unknownutil@4.0.0";
 
 /**
  * vim.notify function
