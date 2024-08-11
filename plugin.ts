@@ -13,7 +13,7 @@ import { Result } from "npm:result-type-ts@2.1.3";
 import { Semaphore } from "jsr:@lambdalisue/async@2.1.1";
 import { cmdOutToString, executeFile, getExecuteStr } from "./util.ts";
 import { echo, execute } from "jsr:@denops/std@7.0.3/helper";
-import { ensure, is } from "jsr:@core/unknownutil@4.0.0";
+import { ensure, is } from "jsr:@core/unknownutil@4.1.0";
 import { exists, expandGlob } from "jsr:@std/fs@1.0.1";
 
 export type TrueFalse =
