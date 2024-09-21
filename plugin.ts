@@ -14,7 +14,7 @@ import { Semaphore } from "jsr:@lambdalisue/async@2.1.1";
 import { cmdOutToString, executeFile, getExecuteStr } from "./util.ts";
 import { echo, execute } from "jsr:@denops/std@7.1.1/helper";
 import { ensure, is } from "jsr:@core/unknownutil@4.3.0";
-import { exists, expandGlob } from "jsr:@std/fs@1.0.1";
+import { exists, expandGlob } from "jsr:@std/fs@1.0.3";
 
 export type TrueFalse =
   | boolean
