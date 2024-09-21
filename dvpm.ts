@@ -11,7 +11,7 @@ import { Semaphore } from "jsr:@lambdalisue/async@2.1.1";
 import { assert, is } from "jsr:@core/unknownutil@4.3.0";
 import { cache, notify } from "./util.ts";
 import { echo, execute } from "jsr:@denops/std@7.1.1/helper";
-import { sprintf } from "jsr:@std/fmt@1.0.0/printf";
+import { sprintf } from "jsr:@std/fmt@1.0.2/printf";
 import { type Plug, Plugin, type PluginOption } from "./plugin.ts";
 
 const concurrency = 8;
