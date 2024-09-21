@@ -9,7 +9,7 @@ import { echo, echoerr, execute } from "jsr:@denops/std@7.0.3/helper";
 import * as fs from "jsr:@std/fs@1.0.1";
 import * as fn from "jsr:@denops/std@7.0.3/function";
 import { dirname, extname } from "jsr:@std/path@1.0.2";
-import { ensure, is } from "jsr:@core/unknownutil@4.1.0";
+import { ensure, is } from "jsr:@core/unknownutil@4.3.0";
 
 /**
  * vim.notify function
