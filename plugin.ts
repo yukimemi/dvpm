@@ -6,7 +6,7 @@
 
 import * as fn from "jsr:@denops/std@7.1.1/function";
 import * as op from "jsr:@denops/std@7.1.1/option";
-import * as path from "jsr:@std/path@1.0.2";
+import * as path from "jsr:@std/path@1.0.6";
 import type { Denops } from "jsr:@denops/std@7.1.1";
 import { Git } from "./git.ts";
 import { Result } from "npm:result-type-ts@2.1.3";
