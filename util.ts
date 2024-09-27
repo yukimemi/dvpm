@@ -4,10 +4,10 @@
 // Last Change : 2024/07/27 21:50:28.
 // =============================================================================
 
-import type { Denops } from "jsr:@denops/std@7.1.1";
-import { echo, echoerr, execute } from "jsr:@denops/std@7.1.1/helper";
+import type { Denops } from "jsr:@denops/std@7.2.0";
+import { echo, echoerr, execute } from "jsr:@denops/std@7.2.0/helper";
 import * as fs from "jsr:@std/fs@1.0.4";
-import * as fn from "jsr:@denops/std@7.1.1/function";
+import * as fn from "jsr:@denops/std@7.2.0/function";
 import { dirname, extname } from "jsr:@std/path@1.0.6";
 import { ensure, is } from "jsr:@core/unknownutil@4.3.0";
 
