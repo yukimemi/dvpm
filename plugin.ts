@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2024/07/27 22:57:53.
+// Last Change : 2024/09/28 08:47:30.
 // =============================================================================
 
 import * as fn from "jsr:@denops/std@7.2.0/function";
@@ -341,12 +341,12 @@ export class Plugin {
     }
   }
   private async sourceVimPre() {
-    const target = `${this.info.dst}/plugin/**/*.vim`;
-    await this.sourceVim(target);
+    await this.sourceVim(`${this.info.dst}/plugin/**/*.vim`);
+    await this.sourceVim(`${this.info.dst}/ftdetect/**/*.vim`);
   }
   private async sourceVimAfter() {
-    const target = `${this.info.dst}/after/plugin/**/*.vim`;
-    await this.sourceVim(target);
+    await this.sourceVim(`${this.info.dst}/after/plugin/**/*.vim`);
+    await this.sourceVim(`${this.info.dst}/after/ftdetect/**/*.vim`);
   }
   private async sourceLua(target: string) {
     for await (const file of expandGlob(target)) {
@@ -354,12 +354,12 @@ export class Plugin {
     }
   }
   private async sourceLuaPre() {
-    const target = `${this.info.dst}/plugin/**/*.lua`;
-    await this.sourceLua(target);
+    await this.sourceLua(`${this.info.dst}/plugin/**/*.lua`);
+    await this.sourceLua(`${this.info.dst}/ftdetect/**/*.lua`);
   }
   private async sourceLuaAfter() {
-    const target = `${this.info.dst}/after/plugin/**/*.lua`;
-    await this.sourceLua(target);
+    await this.sourceLua(`${this.info.dst}/after/plugin/**/*.lua`);
+    await this.sourceLua(`${this.info.dst}/after/ftdetect/**/*.lua`);
   }
   private async registerDenops() {
     const target = `${this.info.dst}/denops/*/main.ts`;
