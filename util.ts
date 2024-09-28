@@ -1,15 +1,15 @@
 // =============================================================================
 // File        : util.ts
 // Author      : yukimemi
-// Last Change : 2024/07/27 21:50:28.
+// Last Change : 2024/09/29 01:04:32.
 // =============================================================================
 
-import type { Denops } from "jsr:@denops/std@7.2.0";
-import { echo, echoerr, execute } from "jsr:@denops/std@7.2.0/helper";
-import * as fs from "jsr:@std/fs@1.0.4";
 import * as fn from "jsr:@denops/std@7.2.0/function";
+import * as fs from "jsr:@std/fs@1.0.4";
+import type { Denops } from "jsr:@denops/std@7.2.0";
 import { dirname, extname } from "jsr:@std/path@1.0.6";
-import { ensure, is } from "jsr:@core/unknownutil@4.3.0";
+import { echo, echoerr, execute } from "jsr:@denops/std@7.2.0/helper";
+import { z } from "npm:zod@3.23.8";
 
 /**
  * vim.notify function
@@ -32,7 +32,7 @@ export async function cache(
   denops: Denops,
   arg: { script: string; path: string },
 ) {
-  const p = ensure(await fn.expand(denops, arg.path), is.String);
+  const p = z.string().parse(await fn.expand(denops, arg.path));
   const s = arg.script.trim();
   await fs.ensureDir(dirname(p));
   if (await fs.exists(p)) {
@@ -49,7 +49,7 @@ export async function cache(
  * Determine whether it is typescript, lua or vim and return the string to read
  */
 export async function getExecuteStr(denops: Denops, path: string): Promise<string> {
-  const p = ensure(await fn.expand(denops, path), is.String);
+  const p = z.string().parse(await fn.expand(denops, path));
   const extension = extname(p);
   if (extension === ".lua") {
     return `luafile ${p}`;
@@ -74,4 +74,14 @@ export async function executeFile(denops: Denops, path: string): Promise<void> {
  */
 export function cmdOutToString(cmdout: Uint8Array): string[] {
   return new TextDecoder().decode(cmdout).split("\n").map((l) => l.trim());
+}
+
+/**
+ * Convert url
+ */
+export function convertUrl(url: string): string {
+  if (url.startsWith("https://") || url.startsWith("git")) {
+    return url;
+  }
+  return `https://github.com/${url}`;
 }

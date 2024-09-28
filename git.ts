@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : git.ts
 // Author      : yukimemi
-// Last Change : 2024/06/30 12:59:51.
+// Last Change : 2024/09/29 00:24:42.
 // =============================================================================
 
 import * as path from "jsr:@std/path@1.0.6";
@@ -148,12 +148,12 @@ export class Git {
   public static async clone(
     url: string,
     dst: string,
-    branch?: string,
+    rev?: string,
     depth = 0,
   ): Promise<Deno.CommandOutput> {
     let args = ["clone", "--recursive", "--filter=blob:none"];
-    if (branch) {
-      args.push(`--branch=${branch}`);
+    if (rev) {
+      args.push(`--branch=${rev}`);
     }
     if (depth > 0) {
       args.push(`--depth=${depth}`);

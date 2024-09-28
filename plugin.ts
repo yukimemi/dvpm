@@ -1,90 +1,35 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2024/09/28 08:47:30.
+// Last Change : 2024/09/29 01:04:56.
 // =============================================================================
 
 import * as fn from "jsr:@denops/std@7.2.0/function";
 import * as op from "jsr:@denops/std@7.2.0/option";
 import * as path from "jsr:@std/path@1.0.6";
+import type { Bool, Plug, PlugInfo, PlugOption } from "./types.ts";
 import type { Denops } from "jsr:@denops/std@7.2.0";
 import { Git } from "./git.ts";
+import { PlugInfoSchema, PlugSchema } from "./types.ts";
 import { Result } from "npm:result-type-ts@2.1.3";
 import { Semaphore } from "jsr:@lambdalisue/async@2.1.1";
-import { cmdOutToString, executeFile, getExecuteStr } from "./util.ts";
+import { cmdOutToString, convertUrl, executeFile, getExecuteStr } from "./util.ts";
 import { echo, execute } from "jsr:@denops/std@7.2.0/helper";
-import { ensure, is } from "jsr:@core/unknownutil@4.3.0";
 import { exists, expandGlob } from "jsr:@std/fs@1.0.4";
-
-export type TrueFalse =
-  | boolean
-  | ((
-    { denops, info }: { denops: Denops; info: PlugInfo },
-  ) => Promise<boolean>);
-
-export type Plug = {
-  url: string;
-  dst?: string;
-  branch?: string;
-  enabled?: TrueFalse;
-  before?: (
-    { denops, info }: { denops: Denops; info: PlugInfo },
-  ) => Promise<void>;
-  beforeSource?: (
-    { denops, info }: { denops: Denops; info: PlugInfo },
-  ) => Promise<void>;
-  beforeSourceFile?: string;
-  beforeFile?: string;
-  afterFile?: string;
-  after?: (
-    { denops, info }: { denops: Denops; info: PlugInfo },
-  ) => Promise<void>;
-  build?: (
-    { denops, info }: { denops: Denops; info: PlugInfo },
-  ) => Promise<void>;
-  cache?: {
-    enabled?: TrueFalse;
-    before?: string;
-    after?: string;
-    beforeFile?: string;
-    afterFile?: string;
-  };
-  clone?: TrueFalse;
-  dependencies?: Plug[];
-  depth?: number;
-};
-
-export type PlugInfo = Plug & {
-  isLoad: boolean;
-  isUpdate: boolean;
-  isCache: boolean;
-  elaps: number;
-};
-
-export type PluginOption = {
-  base: string;
-  debug?: boolean;
-  profile?: boolean;
-  logarg?: string[];
-};
+import { z } from "npm:zod@3.23.8";
 
 export class Plugin {
   static mutex: Semaphore = new Semaphore(1);
-  /// plugin information
+
   public info: PlugInfo;
 
   constructor(
     public denops: Denops,
     public plug: Plug,
-    public pluginOption: PluginOption,
+    public option: PlugOption,
   ) {
-    this.info = {
-      ...plug,
-      isLoad: false,
-      isUpdate: false,
-      isCache: false,
-      elaps: 0,
-    };
+    this.plug = PlugSchema.parse(this.plug);
+    this.info = PlugInfoSchema.parse(this.plug);
   }
 
   /**
@@ -93,94 +38,48 @@ export class Plugin {
   public static async create(
     denops: Denops,
     plug: Plug,
-    pluginOption: PluginOption,
+    option: PlugOption,
   ): Promise<Plugin> {
-    const p = new Plugin(denops, plug, pluginOption);
-    if (p.plug.url.startsWith("http") || p.plug.url.startsWith("git")) {
-      p.info.url = p.plug.url;
-    } else {
-      p.info.url = `https://github.com/${p.plug.url}`;
-    }
-    const url = new URL(p.info.url);
-    p.info.dst = path.join(pluginOption.base, url.hostname, url.pathname);
+    const p = new Plugin(denops, plug, option);
 
-    if (p.info.depth == undefined) {
-      p.info.depth = 0;
-    }
+    p.info.url = convertUrl(p.plug.url);
+    p.clog(`[create] url ${p.info.url}`);
+
     if (p.plug.dst) {
-      p.clog(`[create] ${p.info.dst} set dst to ${p.plug.dst}`);
-      p.info.dst = ensure(await fn.expand(denops, p.plug.dst), is.String);
-    }
-    if (p.plug.enabled == undefined) {
-      p.info.enabled = true;
-    }
-    if (await p.isTrueFalse(p.plug.clone, true) === false) {
-      p.info.enabled = false;
-      p.info.clone = false;
+      p.clog(`[create] set dst to ${p.plug.dst}`);
+      p.info.dst = z.string().parse(await fn.expand(denops, p.plug.dst));
     } else {
-      p.info.clone = true;
+      const url = new URL(p.plug.url);
+      p.info.dst = path.join(option.base, url.hostname, url.pathname);
     }
+    p.info.clone = await p.is(p.plug.clone);
+    p.info.enabled = await p.is(p.plug.enabled) && p.info.clone;
+
     if (
-      p.plug.cache?.before || p.plug.cache?.after || p.plug.cache?.beforeFile ||
-      p.plug.cache?.afterFile
+      p.info.cache?.before || p.info.cache?.after || p.info.cache?.beforeFile ||
+      p.info.cache?.afterFile
     ) {
-      p.info.cache = {
-        enabled: true,
-        ...p.info.cache,
-      };
+      p.info.cache.enabled = true;
+    }
+
+    if (p.info.dependencies.length > 0) {
+      p.info.dependencies = p.info.dependencies.map((d) => convertUrl(d));
     }
     return p;
   }
 
   // deno-lint-ignore no-explicit-any
   private clog(data: any) {
-    if (this.pluginOption.debug) {
+    if (this.option.debug) {
       console.log(data);
     }
   }
 
-  private async isTrueFalse(tf: TrueFalse | undefined, def: boolean) {
-    if (tf == undefined) {
-      return def;
+  private async is(b: Bool) {
+    if (typeof b === "boolean") {
+      return b;
     }
-    if (is.Boolean(tf)) {
-      return tf;
-    }
-    return await tf({ denops: this.denops, info: this.info });
-  }
-
-  private async isEnabled() {
-    return await this.isTrueFalse(this.info.enabled, true);
-  }
-
-  private async isClone() {
-    return await this.isTrueFalse(this.info.clone, true);
-  }
-
-  private async isCache() {
-    return await this.isTrueFalse(this.info.cache?.enabled, false);
-  }
-
-  /**
-   * Add a plugin to dvpm list
-   */
-  public async add() {
-    try {
-      this.clog(`[add] ${this.info.url} start !`);
-      if (!(await this.isEnabled())) {
-        return;
-      }
-      await this.before();
-      await this.register();
-      if (this.info.isUpdate) {
-        await this.build();
-      }
-      await this.after();
-    } catch (e) {
-      console.error(e);
-    } finally {
-      this.clog(`[add] ${this.info.url} end !`);
-    }
+    return await b({ denops: this.denops, info: this.info });
   }
 
   /**
@@ -190,16 +89,16 @@ export class Plugin {
     try {
       this.clog(`[cache] ${this.info.url} start !`);
       if (
-        !(await this.isEnabled()) || !(await this.isCache())
+        !this.info.enabled || !this.info.cache.enabled
       ) {
         return "";
       }
       this.info.isCache = true;
-      const cacheStr = [this.info.cache?.before || ""];
+      const cacheStr = [`set runtimepath+=${this.info.dst}`];
+      cacheStr.push(this.info.cache?.before || "");
       if (this.info.cache?.beforeFile) {
         cacheStr.push(await getExecuteStr(this.denops, this.info.cache.beforeFile));
       }
-      cacheStr.push(`set runtimepath+=${this.info.dst}`);
       for await (const file of expandGlob(`${this.info.dst}/plugin/**/*.vim`)) {
         cacheStr.push(`source ${file.path}`);
       }
@@ -220,40 +119,24 @@ export class Plugin {
   }
 
   /**
-   * plugin end function
-   */
-  public async end() {
-    await this.sourceAfter();
-  }
-
-  /**
    * Add plugin to runtimepath
    */
-  public async register() {
-    this.clog(`[register] ${this.info.url} start !`);
-    let registered = false;
-    let starttime = 0;
+  public async addRuntimepath(): Promise<boolean> {
+    this.clog(`[addRuntimepath] ${this.info.url} start !`);
+    let added = false;
+    if (!this.info.enabled) {
+      return added;
+    }
     await Plugin.mutex.lock(async () => {
-      if (this.pluginOption.profile) {
-        starttime = performance.now();
-      }
       const rtp = (await op.runtimepath.get(this.denops)).split(",");
-      if (!rtp.includes(ensure(this.info.dst, is.String))) {
-        registered = true;
+      if (!rtp.includes(this.info.dst)) {
+        added = true;
         await op.runtimepath.set(this.denops, `${rtp},${this.info.dst}`);
       }
     });
-    if (registered) {
-      await this.beforeSource();
-      await this.source();
-      await this.registerDenops();
-      if (this.pluginOption.profile) {
-        this.info.elaps = performance.now() - starttime;
-      }
-    }
     this.info.isLoad = true;
-    this.clog(`[register] ${this.info.url} end !`);
-    return;
+    this.clog(`[addRuntimepath] ${this.info.url} end !`);
+    return added;
   }
 
   /**
@@ -267,19 +150,6 @@ export class Plugin {
     }
     if (this.info.beforeFile) {
       await executeFile(this.denops, this.info.beforeFile);
-    }
-  }
-  /**
-   * plugin config before source plugin/*.vim and plugin/*.lua files
-   */
-  public async beforeSource() {
-    if (this.info.beforeSource) {
-      this.clog(`[beforeSource] ${this.info.url} start !`);
-      await this.info.beforeSource({ denops: this.denops, info: this.info });
-      this.clog(`[beforeSource] ${this.info.url} end !`);
-    }
-    if (this.info.beforeSourceFile) {
-      await executeFile(this.denops, this.info.beforeSourceFile);
     }
   }
   /**
@@ -299,7 +169,7 @@ export class Plugin {
    * plugin build config
    */
   public async build() {
-    if (this.info.build && await this.isEnabled()) {
+    if (this.info.build && this.info.enabled) {
       this.clog(`[build] ${this.info.url} start !`);
       await this.info.build({ denops: this.denops, info: this.info });
       this.clog(`[build] ${this.info.url} end !`);
@@ -309,7 +179,7 @@ export class Plugin {
   /**
    * source plugin
    */
-  private async source() {
+  public async source() {
     try {
       this.clog(`[source] ${this.info.url} start !`);
       await this.sourceVimPre();
@@ -323,7 +193,7 @@ export class Plugin {
   /**
    * source plugin config after adding to runtimepath
    */
-  private async sourceAfter() {
+  public async sourceAfter() {
     try {
       this.clog(`[sourceAfter] ${this.info.url} start !`);
       await this.sourceVimAfter();
@@ -332,6 +202,20 @@ export class Plugin {
       console.error(e);
     } finally {
       this.clog(`[sourceAfter] ${this.info.url} end !`);
+    }
+  }
+  /**
+   * Load denops plugin
+   */
+  public async denopsPluginLoad() {
+    const target = `${this.info.dst}/denops/*/main.ts`;
+    for await (const file of expandGlob(target)) {
+      const name = path.basename(path.dirname(file.path));
+      try {
+        await this.denops.call("denops#plugin#load", name, file.path);
+      } catch (e) {
+        console.error(e);
+      }
     }
   }
 
@@ -361,23 +245,6 @@ export class Plugin {
     await this.sourceLua(`${this.info.dst}/after/plugin/**/*.lua`);
     await this.sourceLua(`${this.info.dst}/after/ftdetect/**/*.lua`);
   }
-  private async registerDenops() {
-    const target = `${this.info.dst}/denops/*/main.ts`;
-    for await (const file of expandGlob(target)) {
-      const name = path.basename(path.dirname(file.path));
-      try {
-        await this.denops.call("denops#plugin#load", name, file.path);
-      } catch (e) {
-        if (e.match(/Vim:E117:/)) {
-          await this.denops.call("denops#plugin#register", name, file.path, {
-            mode: "skip",
-          });
-        } else {
-          throw e;
-        }
-      }
-    }
-  }
 
   private async isHelptagsOld(docDir: string) {
     const txts: string[] = [];
@@ -397,7 +264,7 @@ export class Plugin {
    * Generate helptags
    */
   public async genHelptags() {
-    const docDir = path.join(ensure(this.info.dst, is.String), "doc");
+    const docDir = path.join(this.info.dst, "doc");
     if (!(await this.isHelptagsOld(docDir))) {
       return;
     }
@@ -411,27 +278,27 @@ export class Plugin {
    * Install a plugin
    */
   public async install(): Promise<Result<string[], string[]>> {
-    const gitDir = path.join(ensure(this.info.dst, is.String), ".git");
+    const gitDir = path.join(this.info.dst, ".git");
     if (await exists(gitDir)) {
       return Result.success([]);
     }
 
-    if (!(await this.isClone())) {
+    if (!this.info.clone) {
       return Result.success([]);
     }
 
     const output = await Git.clone(
       this.info.url,
-      ensure(this.info.dst, is.String),
-      this.info.branch,
+      this.info.dst,
+      this.info.rev,
       this.info.depth,
     );
     if (output.success) {
       await this.genHelptags();
       this.info.isUpdate = true;
       let returnMsg = `Git clone ${this.info.url}`;
-      if (this.info.branch) {
-        returnMsg += ` --branch=${this.info.branch}`;
+      if (this.info.rev) {
+        returnMsg += ` --branch=${this.info.rev}`;
       }
       if (this.info.depth != undefined && this.info.depth > 0) {
         returnMsg += ` --depth=${this.info.depth}`;
@@ -451,15 +318,15 @@ export class Plugin {
    * Update a plugin
    */
   public async update(): Promise<Result<string[], string[]>> {
-    if (!(await this.isClone())) {
+    if (!this.info.clone) {
       return Result.success([]);
     }
-    const git = new Git(ensure(this.info.dst, is.String));
+    const git = new Git(this.info.dst);
     const beforeRev = await git.getRevision();
-    this.info.branch
-      ? await echo(this.denops, `Update ${this.info.url}, branch: ${this.info.branch}`)
+    this.info.rev
+      ? await echo(this.denops, `Update ${this.info.url}, branch: ${this.info.rev}`)
       : await echo(this.denops, `Update ${this.info.url}`);
-    const output = await git.pull(this.info.branch);
+    const output = await git.pull(this.info.rev);
     const afterRev = await git.getRevision();
     await this.genHelptags();
     if (output.success) {
@@ -469,7 +336,7 @@ export class Plugin {
         const outputLog = await git.getLog(
           beforeRev,
           afterRev,
-          this.pluginOption.logarg,
+          this.option.logarg,
         );
         const outputDiff = await git.getDiff(
           beforeRev,
