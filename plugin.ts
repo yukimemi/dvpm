@@ -108,7 +108,7 @@ export class Plugin {
       cacheStr.push(this.info.cache?.after || "");
       return cacheStr.join("\n");
     } catch (e) {
-      console.error(e);
+      logger().error(e);
       return "";
     } finally {
       logger().debug(`[cache] ${this.info.url} end !`);
@@ -182,7 +182,7 @@ export class Plugin {
       await this.sourceVimPre();
       await this.sourceLuaPre();
     } catch (e) {
-      console.error(e);
+      logger().error(e);
     } finally {
       logger().debug(`[source] ${this.info.url} end !`);
     }
@@ -196,7 +196,7 @@ export class Plugin {
       await this.sourceVimAfter();
       await this.sourceLuaAfter();
     } catch (e) {
-      console.error(e);
+      logger().error(e);
     } finally {
       logger().debug(`[sourceAfter] ${this.info.url} end !`);
     }
@@ -211,7 +211,7 @@ export class Plugin {
       try {
         await this.denops.call("denops#plugin#load", name, file.path);
       } catch (e) {
-        console.error(e);
+        logger().error(e);
       }
     }
   }

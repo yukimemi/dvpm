@@ -94,7 +94,7 @@ export class Dvpm {
     const u = convertUrl(url);
     const p = this.plugins.find((p) => p.info.url === u);
     if (p == undefined) {
-      console.error(`${url} plugin is not found !`);
+      logger().error(`${url} plugin is not found !`);
     }
     return p;
   }
@@ -293,7 +293,7 @@ export class Dvpm {
       ];
       this.plugins.push(p);
     } catch (e) {
-      console.error(e);
+      logger().error(e);
     }
   }
 
