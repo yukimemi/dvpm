@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2024/09/29 11:53:07.
+// Last Change : 2024/09/29 13:11:14.
 // =============================================================================
 
 import * as fn from "jsr:@denops/std@7.2.0/function";
@@ -108,7 +108,7 @@ export class Plugin {
       cacheStr.push(this.info.cache?.after || "");
       return cacheStr.join("\n");
     } catch (e) {
-      logger().error(e);
+      logger().error(`[cache] ${this.info.url} ${e.message}, ${e.stack}`);
       return "";
     } finally {
       logger().debug(`[cache] ${this.info.url} end !`);
@@ -135,7 +135,7 @@ export class Plugin {
       this.info.isLoad = true;
       return added;
     } catch (e) {
-      logger().error(`[addRuntimepath]`, e);
+      logger().error(`[addRuntimepath] ${this.info.url} ${e.message}, ${e.stack}`);
       return false;
     } finally {
       logger().debug(`[addRuntimepath] ${this.info.url} end !`);
@@ -155,7 +155,7 @@ export class Plugin {
         await executeFile(this.denops, this.info.beforeFile);
       }
     } catch (e) {
-      logger().error(`[before]`, e);
+      logger().error(`[before] ${this.info.url} ${e.message}, ${e.stack}`);
     } finally {
       logger().debug(`[before] ${this.info.url} end !`);
     }
@@ -173,7 +173,7 @@ export class Plugin {
         await executeFile(this.denops, this.info.afterFile);
       }
     } catch (e) {
-      logger().error(`[after]`, e);
+      logger().error(`[after] ${this.info.url} ${e.message}, ${e.stack}`);
     } finally {
       logger().debug(`[after] ${this.info.url} end !`);
     }
@@ -188,7 +188,7 @@ export class Plugin {
         await this.info.build({ denops: this.denops, info: this.info });
       }
     } catch (e) {
-      logger().error(`[build]`, e);
+      logger().error(`[build] ${this.info.url} ${e.message}, ${e.stack}`);
     } finally {
       logger().debug(`[build] ${this.info.url} end !`);
     }
@@ -203,7 +203,7 @@ export class Plugin {
       await this.sourceVimPre();
       await this.sourceLuaPre();
     } catch (e) {
-      logger().error(`[source]`, e);
+      logger().error(`[source] ${this.info.url} ${e.message}, ${e.stack}`);
     } finally {
       logger().debug(`[source] ${this.info.url} end !`);
     }
@@ -217,7 +217,7 @@ export class Plugin {
       await this.sourceVimAfter();
       await this.sourceLuaAfter();
     } catch (e) {
-      logger().error(`[sourceAfter]`, e);
+      logger().error(`[sourceAfter] ${this.info.url} ${e.message}, ${e.stack}`);
     } finally {
       logger().debug(`[sourceAfter] ${this.info.url} end !`);
     }
@@ -234,11 +234,11 @@ export class Plugin {
         try {
           await this.denops.call("denops#plugin#load", name, file.path);
         } catch (e) {
-          logger().error(e);
+          logger().error(`[denopsPluginLoad] ${this.info.url} ${e.message}, ${e.stack}`);
         }
       }
     } catch (e) {
-      logger().error(`[denopsPluginLoad]`, e);
+      logger().error(`[denopsPluginLoad] ${this.info.url} ${e.message}, ${e.stack}`);
     } finally {
       logger().debug(`[denopsPluginLoad] ${this.info.url} end !`);
     }

@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2024/09/29 11:48:34.
+// Last Change : 2024/09/29 13:08:54.
 // =============================================================================
 
 import * as buffer from "jsr:@denops/std@7.2.0/buffer";
@@ -293,7 +293,7 @@ export class Dvpm {
       ];
       this.plugins.push(p);
     } catch (e) {
-      logger().error(e);
+      logger().error(`[add] ${plug.url} ${e.message}, ${e.stack}`);
     }
   }
 
