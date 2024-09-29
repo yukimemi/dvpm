@@ -60,14 +60,14 @@ execute 'set runtimepath^=' . substitute(fnamemodify(s:denops, ':p') , '[/\\]$',
 - ~/vimfiles/denops/config/main.ts (Windows)
 
 ```typescript
-import type { Denops } from "jsr:@denops/std@7.0.0";
-import * as fn from "jsr:@denops/std@7.0.0/function";
-import * as mapping from "jsr:@denops/std@7.0.0/mapping";
-import * as vars from "jsr:@denops/std@7.0.0/variable";
-import { ensure, is } from "jsr:@core/unknownutil@3.18.1";
-import { execute } from "jsr:@denops/std@7.0.0/helper";
+import type { Denops } from "jsr:@denops/std";
+import * as fn from "jsr:@denops/std/function";
+import * as mapping from "jsr:@denops/std/mapping";
+import * as vars from "jsr:@denops/std/variable";
+import { ensure, is } from "jsr:@core/unknownutil";
+import { execute } from "jsr:@denops/std/helper";
 
-import { Dvpm } from "jsr:@yukimemi/dvpm@5.0.0";
+import { Dvpm } from "jsr:@yukimemi/dvpm";
 
 export async function main(denops: Denops): Promise<void> {
   const base_path = (await fn.has(denops, "nvim")) ? "~/.cache/nvim/dvpm" : "~/.cache/vim/dvpm";
