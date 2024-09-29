@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2024/09/29 11:51:25.
+// Last Change : 2024/09/29 11:53:07.
 // =============================================================================
 
 import * as fn from "jsr:@denops/std@7.2.0/function";
@@ -84,7 +84,7 @@ export class Plugin {
    */
   public async cache(): Promise<string> {
     try {
-      logger().trace(`[cache] ${this.info.url} start !`);
+      logger().debug(`[cache] ${this.info.url} start !`);
       if (
         !this.info.enabled || !this.info.cache.enabled
       ) {
@@ -111,7 +111,7 @@ export class Plugin {
       console.error(e);
       return "";
     } finally {
-      logger().trace(`[cache] ${this.info.url} end !`);
+      logger().debug(`[cache] ${this.info.url} end !`);
     }
   }
 
@@ -119,7 +119,7 @@ export class Plugin {
    * Add plugin to runtimepath
    */
   public async addRuntimepath(): Promise<boolean> {
-    logger().trace(`[addRuntimepath] ${this.info.url} start !`);
+    logger().debug(`[addRuntimepath] ${this.info.url} start !`);
     let added = false;
     if (!this.info.enabled) {
       return added;
@@ -132,7 +132,7 @@ export class Plugin {
       }
     });
     this.info.isLoad = true;
-    logger().trace(`[addRuntimepath] ${this.info.url} end !`);
+    logger().debug(`[addRuntimepath] ${this.info.url} end !`);
     return added;
   }
 
@@ -141,9 +141,9 @@ export class Plugin {
    */
   public async before() {
     if (this.info.before) {
-      logger().trace(`[before] ${this.info.url} start !`);
+      logger().debug(`[before] ${this.info.url} start !`);
       await this.info.before({ denops: this.denops, info: this.info });
-      logger().trace(`[before] ${this.info.url} end !`);
+      logger().debug(`[before] ${this.info.url} end !`);
     }
     if (this.info.beforeFile) {
       await executeFile(this.denops, this.info.beforeFile);
@@ -154,9 +154,9 @@ export class Plugin {
    */
   public async after() {
     if (this.info.after) {
-      logger().trace(`[after] ${this.info.url} start !`);
+      logger().debug(`[after] ${this.info.url} start !`);
       await this.info.after({ denops: this.denops, info: this.info });
-      logger().trace(`[after] ${this.info.url} end !`);
+      logger().debug(`[after] ${this.info.url} end !`);
     }
     if (this.info.afterFile) {
       await executeFile(this.denops, this.info.afterFile);
@@ -167,9 +167,9 @@ export class Plugin {
    */
   public async build() {
     if (this.info.build && this.info.enabled) {
-      logger().trace(`[build] ${this.info.url} start !`);
+      logger().debug(`[build] ${this.info.url} start !`);
       await this.info.build({ denops: this.denops, info: this.info });
-      logger().trace(`[build] ${this.info.url} end !`);
+      logger().debug(`[build] ${this.info.url} end !`);
     }
   }
 
@@ -178,13 +178,13 @@ export class Plugin {
    */
   public async source() {
     try {
-      logger().trace(`[source] ${this.info.url} start !`);
+      logger().debug(`[source] ${this.info.url} start !`);
       await this.sourceVimPre();
       await this.sourceLuaPre();
     } catch (e) {
       console.error(e);
     } finally {
-      logger().trace(`[source] ${this.info.url} end !`);
+      logger().debug(`[source] ${this.info.url} end !`);
     }
   }
   /**
@@ -192,13 +192,13 @@ export class Plugin {
    */
   public async sourceAfter() {
     try {
-      logger().trace(`[sourceAfter] ${this.info.url} start !`);
+      logger().debug(`[sourceAfter] ${this.info.url} start !`);
       await this.sourceVimAfter();
       await this.sourceLuaAfter();
     } catch (e) {
       console.error(e);
     } finally {
-      logger().trace(`[sourceAfter] ${this.info.url} end !`);
+      logger().debug(`[sourceAfter] ${this.info.url} end !`);
     }
   }
   /**

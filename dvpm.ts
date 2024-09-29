@@ -20,7 +20,6 @@ import { Plugin } from "./plugin.ts";
 const listSpace = 3;
 
 export class Dvpm {
-
   #semaphore: Semaphore;
   #cacheScript: string[] = [];
   #installLogs: string[] = [];

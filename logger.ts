@@ -9,4 +9,3 @@ import { getLogger } from "jsr:@std/log@0.224.8";
 export function logger() {
   return getLogger("dvpm");
 }
-
