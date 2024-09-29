@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2024/09/29 13:58:49.
+// Last Change : 2024/09/29 15:51:40.
 // =============================================================================
 
 import * as fn from "jsr:@denops/std@7.2.0/function";
@@ -10,7 +10,7 @@ import * as path from "jsr:@std/path@1.0.6";
 import type { Bool, Plug, PlugInfo, PlugOption } from "./types.ts";
 import type { Denops } from "jsr:@denops/std@7.2.0";
 import { Git } from "./git.ts";
-import { PlugSchema } from "./types.ts";
+import { PlugInfoSchema, PlugSchema } from "./types.ts";
 import { logger } from "./logger.ts";
 import { Result } from "npm:result-type-ts@2.1.3";
 import { Semaphore } from "jsr:@lambdalisue/async@2.1.1";
@@ -30,10 +30,7 @@ export class Plugin {
     public option: PlugOption,
   ) {
     this.plug = PlugSchema.parse(this.plug);
-    this.info = {
-      ...this.plug,
-      dst: "",
-    };
+    this.info = PlugInfoSchema.parse(this.plug);
   }
 
   /**
@@ -56,8 +53,7 @@ export class Plugin {
       const url = new URL(p.plug.url);
       p.info.dst = path.join(option.base, url.hostname, url.pathname);
     }
-    p.info.clone = await p.is(p.plug.clone);
-    p.info.enabled = await p.is(p.plug.enabled) && p.info.clone;
+    p.info.enabled = await p.is(p.info.enabled) && p.info.clone;
 
     if (
       p.info.cache?.before || p.info.cache?.after || p.info.cache?.beforeFile ||
