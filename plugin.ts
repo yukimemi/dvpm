@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2024/09/29 15:54:32.
+// Last Change : 2024/09/29 17:11:37.
 // =============================================================================
 
 import * as fn from "jsr:@denops/std@7.2.0/function";
@@ -56,8 +56,10 @@ export class Plugin {
       const url = new URL(p.plug.url);
       p.info.dst = path.join(option.base, url.hostname, url.pathname);
     }
+    p.info.clone = await p.is(p.info.clone);
     p.info.enabled = await p.is(p.info.enabled) && p.info.clone;
 
+    p.info.cache.enabled = await p.is(p.info.cache.enabled);
     if (
       p.info.cache?.before || p.info.cache?.after || p.info.cache?.beforeFile ||
       p.info.cache?.afterFile
