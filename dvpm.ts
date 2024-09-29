@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2024/09/29 01:00:27.
+// Last Change : 2024/09/29 10:15:02.
 // =============================================================================
 
 import * as buffer from "jsr:@denops/std@7.2.0/buffer";
@@ -326,36 +326,26 @@ export class Dvpm {
     const enablePlugins = this.plugins.filter((p) => p.info.enabled);
     await Promise.all(
       enablePlugins.map(
-        async (p) => {
-          try {
-            return await Dvpm.mutex.lock(async () => {
-              if (!(await exists(p.info.dst, { isDirectory: true }))) {
-                await this._install(p);
-              }
-              await p.addRuntimepath();
-              await p.denopsPluginLoad();
-              await p.before();
-              await p.source();
-              await p.after();
-            });
-          } catch (e) {
-            console.error(e);
-          }
-        },
+        (p) =>
+          Dvpm.mutex.lock(async () => {
+            if (!(await exists(p.info.dst, { isDirectory: true }))) {
+              await this._install(p);
+            }
+            await p.addRuntimepath();
+            await p.denopsPluginLoad();
+            await p.before();
+            await p.source();
+            await p.after();
+          }),
       ),
     );
     await Promise.all(
       enablePlugins.map(
-        async (p) => {
-          try {
-            return await Dvpm.mutex.lock(async () => {
-              await p.sourceAfter();
-              this.#cacheScript.push(await p.cache());
-            });
-          } catch (e) {
-            console.error(e);
-          }
-        },
+        (p) =>
+          Dvpm.mutex.lock(async () => {
+            await p.sourceAfter();
+            this.#cacheScript.push(await p.cache());
+          }),
       ),
     );
     if (this.#installLogs.length > 0) {
