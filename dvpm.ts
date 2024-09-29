@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2024/09/29 17:48:09.
+// Last Change : 2024/09/29 19:40:55.
 // =============================================================================
 
 import * as buffer from "jsr:@denops/std@7.2.0/buffer";
@@ -54,6 +54,7 @@ export class Dvpm {
     denops: Denops,
     option: DvpmOption,
   ): Promise<Dvpm> {
+    logger().debug(`[begin] Dvpm begin start !`);
     const dvpm = new Dvpm(denops, option);
 
     denops.dispatcher = {
@@ -87,6 +88,7 @@ export class Dvpm {
       `,
     );
 
+    logger().debug(`[begin] Dvpm begin end !`);
     return dvpm;
   }
 
@@ -102,11 +104,6 @@ export class Dvpm {
   private maxUrlLen(plugins: Plugin[]): number {
     return plugins.reduce((prev, cur) => prev.plug.url.length < cur.plug.url.length ? cur : prev)
       .plug.url.length;
-  }
-
-  private uniquePlug(plugins: Plugin[]): Plugin[] {
-    return Array.from(new Set(plugins.map((p) => p.info.url))).map((url) => this.findPlugin(url))
-      .filter((p): p is Plugin => p !== undefined);
   }
 
   private uniqueUrlByIsLoad(): Plugin[] {
@@ -327,91 +324,98 @@ export class Dvpm {
    * dvpm end function
    */
   public async end() {
-    this.plugins = this.#urls.map((url) => this.findPlugin(url)).filter((p): p is Plugin =>
-      p !== undefined
-    );
-    await this.install();
-    const enablePlugins = this.plugins.filter((p) => p.info.enabled);
-    logger().debug(`Enable plugins: ${enablePlugins.map((p) => p.plug.url)}`);
-    for (const p of enablePlugins) {
-      await p.addRuntimepath();
-      await p.denopsPluginLoad();
-      await p.before();
-      await p.source();
-      await p.after();
-    }
-    for (const p of enablePlugins) {
-      await p.sourceAfter();
-    }
-    if (await fn.exists(this.denops, "denops_server_addr")) {
-      await execute(
-        this.denops,
-        `
+    try {
+      logger().debug(`[end] Dvpm end start !`);
+      this.plugins = this.#urls.map((url) => this.findPlugin(url)).filter((p): p is Plugin =>
+        p !== undefined
+      );
+      await this.install();
+      const enablePlugins = this.plugins.filter((p) => p.info.enabled);
+      logger().debug(`Enable plugins: ${enablePlugins.map((p) => p.plug.url)}`);
+      for (const p of enablePlugins) {
+        await p.addRuntimepath();
+        await p.denopsPluginLoad();
+        await p.before();
+        await p.source();
+        await p.after();
+      }
+      for (const p of enablePlugins) {
+        await p.sourceAfter();
+      }
+      if (await fn.exists(this.denops, "denops_server_addr")) {
+        await execute(
+          this.denops,
+          `
           augroup denops_plugin_internal_startup
             autocmd!
           augroup END
         `,
-      );
-    }
-    logger().debug(`doautocmd VimEnter`);
-    await this.denops.cmd(`doautocmd VimEnter`);
-
-    for (const d of Array.from(new Set(this.#dependencies))) {
-      const p = this.findPlugin(d);
-      if (p == undefined) {
-        logger().warn(`dependency ${d} plugin is not found !`);
+        );
       }
-    }
-    if (this.#installLogs.length > 0) {
-      await this.bufWrite("dvpm://install", this.#installLogs);
-    }
-    if (this.option.profile) {
-      const maxLen = this.maxUrlLen(this.plugins);
-      const sortedPlugins = this.plugins.filter((p) => p.info.isLoad)
-        .sort((a, b) => b.info.elaps - a.info.elaps).map((p) =>
+      logger().debug(`doautocmd VimEnter`);
+      await this.denops.cmd(`doautocmd VimEnter`);
+
+      for (const d of Array.from(new Set(this.#dependencies))) {
+        const p = this.findPlugin(d);
+        if (p == undefined) {
+          logger().warn(`dependency ${d} plugin is not found !`);
+        }
+      }
+      if (this.#installLogs.length > 0) {
+        await this.bufWrite("dvpm://install", this.#installLogs);
+      }
+      if (this.option.profile) {
+        const maxLen = this.maxUrlLen(this.plugins);
+        const sortedPlugins = this.plugins.filter((p) => p.info.isLoad)
+          .sort((a, b) => b.info.elaps - a.info.elaps).map((p) =>
+            sprintf(
+              `%-${maxLen + listSpace}s : %s`,
+              p.plug.url,
+              `${Math.round(p.info.elaps * 1000) / 1000}`,
+            )
+          );
+        this.totalElaps = performance.now() - this.totalElaps;
+        await this.bufWrite("dvpm://profile", [
+          sprintf(`%-${maxLen + listSpace}s : %s`, `url`, `elaps`),
+          `${"-".repeat(maxLen + listSpace)} : ------`,
+          ...sortedPlugins,
+          `${"-".repeat(maxLen + listSpace)} : ------`,
           sprintf(
             `%-${maxLen + listSpace}s : %s`,
-            p.plug.url,
-            `${Math.round(p.info.elaps * 1000) / 1000}`,
-          )
-        );
-      this.totalElaps = performance.now() - this.totalElaps;
-      await this.bufWrite("dvpm://profile", [
-        sprintf(`%-${maxLen + listSpace}s : %s`, `url`, `elaps`),
-        `${"-".repeat(maxLen + listSpace)} : ------`,
-        ...sortedPlugins,
-        `${"-".repeat(maxLen + listSpace)} : ------`,
-        sprintf(
-          `%-${maxLen + listSpace}s : %s`,
-          `Total`,
-          `${Math.round(this.totalElaps * 1000) / 1000}`,
-        ),
-      ]);
-    }
-    if (this.option.cache) {
-      for (const p of this.updateCache(enablePlugins)) {
-        this.#cacheScript.push(await p.cache());
+            `Total`,
+            `${Math.round(this.totalElaps * 1000) / 1000}`,
+          ),
+        ]);
       }
-      logger().debug(`Cache: ${this.option.cache}`);
-      this.#cacheScript.unshift(`" This file is generated by dvpm.`);
-      const seen = new Set<string>();
-      await cache(this.denops, {
-        script: this.#cacheScript.map((s) => s.split(/\r?\n/).map((l) => l.trim())).flat().filter(
-          (line) => {
-            if (line.match(/^set runtimepath\+=|^source |^luafile /)) {
-              if (seen.has(line)) {
-                return false;
+      if (this.option.cache) {
+        for (const p of this.updateCache(enablePlugins)) {
+          this.#cacheScript.push(await p.cache());
+        }
+        logger().debug(`Cache: ${this.option.cache}`);
+        this.#cacheScript.unshift(`" This file is generated by dvpm.`);
+        const seen = new Set<string>();
+        await cache(this.denops, {
+          script: this.#cacheScript.map((s) => s.split(/\r?\n/).map((l) => l.trim())).flat().filter(
+            (line) => {
+              if (line.match(/^set runtimepath\+=|^source |^luafile /)) {
+                if (seen.has(line)) {
+                  return false;
+                } else {
+                  seen.add(line);
+                  return true;
+                }
               } else {
-                seen.add(line);
                 return true;
               }
-            } else {
-              return true;
-            }
-          },
-        ).join("\n"),
-        path: this.option.cache,
-      });
+            },
+          ).join("\n"),
+          path: this.option.cache,
+        });
+      }
+    } catch (e) {
+      logger().error(`[end] ${e.message}, ${e.stack}`);
+    } finally {
+      logger().debug(`[end] Dvpm end end !`);
     }
   }
 
