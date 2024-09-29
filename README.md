@@ -67,7 +67,7 @@ import * as vars from "jsr:@denops/std@7.0.0/variable";
 import { ensure, is } from "jsr:@core/unknownutil@3.18.1";
 import { execute } from "jsr:@denops/std@7.0.0/helper";
 
-import { Dvpm } from "jsr:@yukimemi/dvpm@4.0.0";
+import { Dvpm } from "jsr:@yukimemi/dvpm@5.0.0";
 
 export async function main(denops: Denops): Promise<void> {
   const base_path = (await fn.has(denops, "nvim")) ? "~/.cache/nvim/dvpm" : "~/.cache/vim/dvpm";
@@ -150,12 +150,14 @@ export async function main(denops: Denops): Promise<void> {
     url: "editorconfig/editorconfig-vim",
     enabled: async ({ denops }) => !(await fn.has(denops, "nvim")),
   });
-  // With dependencies.
+  // With dependencies. dependencies plugin must be added.
+  await dvpm.add({ url: "lambdalisue/askpass.vim" });
+  await dvpm.add({ url: "lambdalisue/guise.vim" });
   await dvpm.add({
     url: "lambdalisue/gin.vim",
     dependencies: [
-      { url: "lambdalisue/askpass.vim" },
-      { url: "lambdalisue/guise.vim" },
+      "lambdalisue/askpass.vim",
+      "lambdalisue/guise.vim",
     ],
   });
   // Load from file. ( `.lua` or `.vim` )
@@ -211,7 +213,7 @@ export type DvpmOption = {
 public async end(): Promise<void>
 ```
 
-source `after/*.(vim|lua)` files.
+Add plugin to runtimepath and source plugin/*.vim and plugin/*.lua.
 
 ### Dvpm.add
 
@@ -225,13 +227,13 @@ export type Plug = {
   url: string;
   // The path to git clone. (Option)
   dst?: string;
-  // Git branch name. (Option)
-  branch?: string;
+  // Git branch or revision name. (Option)
+  rev?: string;
   // clone depth. (Option)
   depth?: number;
   // enable or disable. Default is true.
-  enabled?: TrueFalse;
-  // Processing to be performed before adding runtimepath. (Option)
+  enabled?: Bool;
+  // Processing to be performed before source plugin/*.vim and plugin/*.lua. (Option)
   before?: ({
     denops,
     info,
@@ -239,15 +241,7 @@ export type Plug = {
     denops: Denops;
     info: PlugInfo;
   }) => Promise<void>;
-  // Processing to be performed before source plugin/*.vim and plugin/*.lua. (Option)
-  beforeSource?: ({
-    denops,
-    info,
-  }: {
-    denops: Denops;
-    info: PlugInfo;
-  }) => Promise<void>;
-  // Processing to be performed after adding runtimepath. (Option)
+  // Processing to be performed after source plugin/*.vim and plugin/*.lua. (Option)
   after?: ({
     denops,
     info,
@@ -255,11 +249,9 @@ export type Plug = {
     denops: Denops;
     info: PlugInfo;
   }) => Promise<void>;
-  // File path of processing to be performed before adding runtimepath. (Option)
-  beforeFile?: string;
   // File path of processing to be performed before source plugin/*.vim and plugin/*.lua. (Option)
-  beforeSourceFile?: string;
-  // File path of processing to be performed after adding runtimepath. (Option)
+  beforeFile?: string;
+  // File path of processing to be performed after source plugin/*.vim and plugin/*.lua. (Option)
   afterFile?: string;
   // build option. Execute after install or update. (Option)
   // Executed even if there are no changes in the update
@@ -273,7 +265,7 @@ export type Plug = {
   }) => Promise<void>;
   // Cache settings. See `Cache setting`.
   cache?: {
-    enabled?: TrueFalse;
+    enabled?: Bool;
     before?: string;
     after?: string;
     beforeFile?: string;
@@ -281,14 +273,14 @@ export type Plug = {
   };
   // Whether to git clone and update. Default is true. (Option)
   // If this option is set to false, then `enabled` is also set to false.
-  clone?: TrueFalse;
+  clone?: Bool;
   // dependencies. (Option)
-  dependencies?: Plug[];
+  dependencies?: string[];
 };
 ```
 
 ```typescript
-export type TrueFalse =
+export type Bool =
   | boolean
   | (({
     denops,
@@ -299,18 +291,8 @@ export type TrueFalse =
   }) => Promise<boolean>);
 ```
 
-```typescript
-export type PlugInfo = Plug & {
-  // `true` if added to runtimepath.
-  isLoad: boolean;
-  // `true` if install or update.
-  isUpdate: boolean;
-  // `true` if cache is enabled.
-  isCache: boolean;
-  // plugin load time. Need to set DvpmOption.profile.
-  elaps: number;
-};
-```
+`PlugInfo` type is almost same as `Plug`.
+Contains the calculated results for each variable, such as `enabled`.
 
 ### Dvpm.cache
 
@@ -408,14 +390,15 @@ export async function main(denops: Denops): Promise<void> {
 
   await dvpm.add({
     url: "startup-nvim/startup.nvim",
-    enabled: async ({ denops }) => await fn.has(denops, "nvim"),
+    // deno-lint-ignore require-await
+    enabled: async ({ denops }) => denops.meta.host === "nvim",
     // Specify `before` or `after` if you need to configure the plugin.
     // `before` is executed before the plugin is added to the runtimepath.
     // `after` runs after the plugin is added to the runtimepath.
     cache: {
       before: `echomsg "Load startup !"`,
       after: `
-        lua require("startup").setup({theme = "startify"})
+        lua require("startup").setup({ theme = "startify" })
       `,
     },
   });
