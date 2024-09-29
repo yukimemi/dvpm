@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2024/09/29 13:46:43.
+// Last Change : 2024/09/29 14:17:45.
 // =============================================================================
 
 import * as buffer from "jsr:@denops/std@7.2.0/buffer";
@@ -24,6 +24,7 @@ export class Dvpm {
   #cacheScript: string[] = [];
   #installLogs: string[] = [];
   #updateLogs: string[] = [];
+  #dependencies: string[] = [];
   #urls: string[] = [];
 
   /// Is install or update
@@ -297,6 +298,7 @@ export class Dvpm {
         ...this.#urls.filter((url) => !p.info.dependencies.includes(url) && url !== p.info.url),
       ];
       this.plugins.push(p);
+      this.#dependencies.push(...p.info.dependencies);
     } catch (e) {
       logger().error(`[add] ${plug.url} ${e.message}, ${e.stack}`);
     }
@@ -322,6 +324,12 @@ export class Dvpm {
     for (const p of enablePlugins) {
       await p.sourceAfter();
       this.#cacheScript.push(await p.cache());
+    }
+    for (const d of Array.from(new Set(this.#dependencies))) {
+      const p = this.findPlugin(d);
+      if (p == undefined) {
+        logger().warn(`dependency ${d} plugin is not found !`);
+      }
     }
     if (this.#installLogs.length > 0) {
       await this.bufWrite("dvpm://install", this.#installLogs);
