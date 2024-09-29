@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2024/09/29 19:40:55.
+// Last Change : 2024/09/29 21:25:20.
 // =============================================================================
 
 import * as buffer from "jsr:@denops/std@7.2.0/buffer";
@@ -44,7 +44,7 @@ export class Dvpm {
   ) {
     this.totalElaps = performance.now();
     this.option = DvpmOptionSchema.parse(option);
-    this.#semaphore = new Semaphore(this.option.concurrency);
+    this.#semaphore = new Semaphore(z.number().parse(this.option.concurrency));
   }
 
   /**
@@ -303,9 +303,9 @@ export class Dvpm {
         plug,
         {
           base: this.option.base,
-          debug: this.option.debug,
-          profile: this.option.profile,
-          logarg: this.option.logarg,
+          debug: z.boolean().parse(this.option.debug),
+          profile: z.boolean().parse(this.option.profile),
+          logarg: z.string().array().parse(this.option.logarg),
         },
       );
       this.#urls = [
