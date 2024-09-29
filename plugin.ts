@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2024/09/29 15:51:40.
+// Last Change : 2024/09/29 15:54:32.
 // =============================================================================
 
 import * as fn from "jsr:@denops/std@7.2.0/function";
@@ -30,7 +30,10 @@ export class Plugin {
     public option: PlugOption,
   ) {
     this.plug = PlugSchema.parse(this.plug);
-    this.info = PlugInfoSchema.parse(this.plug);
+    this.info = PlugInfoSchema.parse({
+      dst: "",
+      ...this.plug,
+    });
   }
 
   /**
