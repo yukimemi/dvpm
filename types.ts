@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : types.ts
 // Author      : yukimemi
-// Last Change : 2024/09/29 14:04:44.
+// Last Change : 2024/09/29 15:45:37.
 // =============================================================================
 
 import type { Denops } from "jsr:@denops/std@7.2.0";
@@ -25,6 +25,32 @@ export const ConfigSchema: z.ZodType<Config> = z.function().args(z.object({
   denops: z.any().transform((v) => v as Denops),
   info: z.lazy(() => PlugInfoSchema),
 })).returns(z.promise(z.void()));
+
+export type Plug = {
+  url: string;
+  dst?: string;
+  rev?: string;
+  enabled: Bool;
+  before?: Config;
+  after?: Config;
+  beforeFile?: string;
+  afterFile?: string;
+  build?: Config;
+  clone: Bool;
+  depth: number;
+  dependencies: string[];
+  cache: {
+    enabled: Bool;
+    before?: string;
+    after?: string;
+    beforeFile?: string;
+    afterFile?: string;
+  };
+  isLoad: boolean;
+  isUpdate: boolean;
+  isCache: boolean;
+  elaps: number;
+};
 
 export const PlugSchema = z.object({
   url: z.string(),
@@ -51,7 +77,6 @@ export const PlugSchema = z.object({
   isCache: z.boolean().default(false),
   elaps: z.number().default(0),
 });
-export type Plug = z.infer<typeof PlugSchema>;
 
 export const PlugInfoSchema = PlugSchema.merge(z.object({
   dst: z.string(),
