@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2024/09/29 14:49:12.
+// Last Change : 2024/09/29 14:51:48.
 // =============================================================================
 
 import * as buffer from "jsr:@denops/std@7.2.0/buffer";
@@ -129,7 +129,7 @@ export class Dvpm {
 
     function enableCache(url: string) {
       const p = pluginMap.get(url);
-      if (!p?.info.cache.enabled) {
+      if (p && !p.info.cache.enabled) {
         p.info.cache.enabled = true;
         p.info.dependencies.forEach(enableCache);
       }
