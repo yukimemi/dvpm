@@ -40,7 +40,7 @@ export const PlugSchema = z.object({
   depth: z.number().default(0),
   dependencies: z.array(z.string()).default([]),
   cache: z.object({
-    enabled: BoolSchema.default(true),
+    enabled: BoolSchema.default(false),
     before: z.string().optional(),
     after: z.string().optional(),
     beforeFile: z.string().optional(),
@@ -55,11 +55,6 @@ export type Plug = z.infer<typeof PlugSchema>;
 
 export const PlugInfoSchema = PlugSchema.merge(z.object({
   dst: z.string(),
-  enabled: z.boolean(),
-  clone: z.boolean(),
-  cache: z.object({
-    enabled: z.boolean(),
-  }).merge(PlugSchema.shape.cache),
 }));
 export type PlugInfo = z.infer<typeof PlugInfoSchema>;
 
