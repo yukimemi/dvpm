@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2024/09/29 16:59:28.
+// Last Change : 2024/09/29 17:48:09.
 // =============================================================================
 
 import * as buffer from "jsr:@denops/std@7.2.0/buffer";
@@ -198,9 +198,7 @@ export class Dvpm {
       if (p == undefined) return;
       await this._install(p);
     } else {
-      for (const p of this.plugins) {
-        await this._install(p);
-      }
+      await Promise.all(this.plugins.map((p) => this._install(p)));
     }
 
     if (this.#installLogs.length > 0) {
@@ -222,9 +220,7 @@ export class Dvpm {
       if (p == undefined) return;
       await this._update(p);
     } else {
-      for (const p of this.uniquePlug(this.plugins)) {
-        await this._update(p);
-      }
+      await Promise.all(this.plugins.map((p) => this._update(p)));
     }
 
     this.denops.call("denops#cache#update");
@@ -334,10 +330,9 @@ export class Dvpm {
     this.plugins = this.#urls.map((url) => this.findPlugin(url)).filter((p): p is Plugin =>
       p !== undefined
     );
+    await this.install();
     const enablePlugins = this.plugins.filter((p) => p.info.enabled);
     logger().debug(`Enable plugins: ${enablePlugins.map((p) => p.plug.url)}`);
-    const clonePlugins = this.plugins.filter((p) => p.info.clone);
-    await Promise.all(clonePlugins.map((p) => this._install(p)));
     for (const p of enablePlugins) {
       await p.addRuntimepath();
       await p.denopsPluginLoad();

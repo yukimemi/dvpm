@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2024/09/29 17:11:37.
+// Last Change : 2024/09/29 17:34:54.
 // =============================================================================
 
 import * as fn from "jsr:@denops/std@7.2.0/function";
@@ -316,100 +316,118 @@ export class Plugin {
    * Install a plugin
    */
   public async install(): Promise<Result<string[], string[]>> {
-    const gitDir = path.join(this.info.dst, ".git");
-    if (await exists(gitDir)) {
-      return Result.success([]);
-    }
+    try {
+      logger().debug(`[install] ${this.info.url} start !`);
 
-    if (!this.info.clone) {
-      return Result.success([]);
-    }
+      if (!this.info.clone) {
+        return Result.success([]);
+      }
 
-    const output = await Git.clone(
-      this.info.url,
-      this.info.dst,
-      this.info.rev,
-      this.info.depth,
-    );
-    if (output.success) {
-      await this.genHelptags();
-      this.info.isUpdate = true;
-      let returnMsg = `Git clone ${this.info.url}`;
-      if (this.info.rev) {
-        returnMsg += ` --branch=${this.info.rev}`;
+      const gitDir = path.join(this.info.dst, ".git");
+      if (await exists(gitDir)) {
+        return Result.success([]);
       }
-      if (this.info.depth != undefined && this.info.depth > 0) {
-        returnMsg += ` --depth=${this.info.depth}`;
+
+      const output = await Git.clone(
+        this.info.url,
+        this.info.dst,
+        this.info.rev,
+        this.info.depth,
+      );
+      if (output.success) {
+        await this.genHelptags();
+        this.info.isUpdate = true;
+        let returnMsg = `Git clone ${this.info.url}`;
+        if (this.info.rev) {
+          returnMsg += ` --branch=${this.info.rev}`;
+        }
+        if (this.info.depth != undefined && this.info.depth > 0) {
+          returnMsg += ` --depth=${this.info.depth}`;
+        }
+        return Result.success([returnMsg]);
       }
-      return Result.success([returnMsg]);
+      return Result.failure([
+        `Failed to clone ${this.info.url}`,
+        `stdout:`,
+        ...cmdOutToString(output.stdout),
+        `stderr:`,
+        ...cmdOutToString(output.stderr),
+      ]);
+    } catch (e) {
+      logger().error(`[install] ${this.info.url} ${e.message}, ${e.stack}`);
+      return Result.failure([`Failed to install ${this.info.url}`]);
+    } finally {
+      logger().debug(`[install] ${this.info.url} end !`);
     }
-    return Result.failure([
-      `Failed to clone ${this.info.url}`,
-      `stdout:`,
-      ...cmdOutToString(output.stdout),
-      `stderr:`,
-      ...cmdOutToString(output.stderr),
-    ]);
   }
 
   /**
    * Update a plugin
    */
   public async update(): Promise<Result<string[], string[]>> {
-    if (!this.info.clone) {
-      return Result.success([]);
-    }
-    const git = new Git(this.info.dst);
-    const beforeRev = await git.getRevision();
-    this.info.rev
-      ? await echo(this.denops, `Update ${this.info.url}, branch: ${this.info.rev}`)
-      : await echo(this.denops, `Update ${this.info.url}`);
-    const output = await git.pull(this.info.rev);
-    const afterRev = await git.getRevision();
-    await this.genHelptags();
-    if (output.success) {
-      if (beforeRev !== afterRev) {
-        this.info.isUpdate = true;
-        await this.build();
-        const outputLog = await git.getLog(
-          beforeRev,
-          afterRev,
-          this.option.logarg,
-        );
-        const outputDiff = await git.getDiff(
-          beforeRev,
-          afterRev,
-        );
-        if (outputLog.success) {
-          const log = [
-            `--- ○: ${this.info.dst} --------------------`,
-            ...cmdOutToString(outputLog.stdout),
-          ];
-          if (outputDiff.success) {
-            log.push(`---`);
-            log.push(...cmdOutToString(outputDiff.stdout));
-          }
-          return Result.success(log);
-        }
-        return Result.success([
-          `--- ×: ${this.info.dst} --------------------`,
-          `Failed to git log ${this.info.dst}`,
-          `stdout:`,
-          ...cmdOutToString(outputLog.stdout),
-          `stderr:`,
-          ...cmdOutToString(outputLog.stderr),
-        ]);
+    try {
+      logger().debug(`[update] ${this.info.url} start !`);
+
+      if (!this.info.clone) {
+        return Result.success([]);
       }
-      await this.build();
-      return Result.success([]);
+      const git = new Git(this.info.dst);
+      const beforeRev = await git.getRevision();
+      this.info.rev
+        ? await echo(this.denops, `Update ${this.info.url}, branch: ${this.info.rev}`)
+        : await echo(this.denops, `Update ${this.info.url}`);
+      const output = await git.pull(this.info.rev);
+      const afterRev = await git.getRevision();
+      await this.genHelptags();
+      if (output.success) {
+        if (beforeRev !== afterRev) {
+          this.info.isUpdate = true;
+          await this.build();
+          const outputLog = await git.getLog(
+            beforeRev,
+            afterRev,
+            this.option.logarg,
+          );
+          const outputDiff = await git.getDiff(
+            beforeRev,
+            afterRev,
+          );
+          if (outputLog.success) {
+            const log = [
+              `--- ○: ${this.info.dst} --------------------`,
+              ...cmdOutToString(outputLog.stdout),
+            ];
+            if (outputDiff.success) {
+              log.push(`---`);
+              log.push(...cmdOutToString(outputDiff.stdout));
+            }
+            return Result.success(log);
+          }
+          return Result.success([
+            `--- ×: ${this.info.dst} --------------------`,
+            `Failed to git log ${this.info.dst}`,
+            `stdout:`,
+            ...cmdOutToString(outputLog.stdout),
+            `stderr:`,
+            ...cmdOutToString(outputLog.stderr),
+          ]);
+        }
+        await this.build();
+        return Result.success([]);
+      }
+      return Result.failure([
+        `--- ×: ${this.info.dst} --------------------`,
+        `Failed to git pull ${this.info.url}`,
+        `stdout:`,
+        ...cmdOutToString(output.stdout),
+        `stderr:`,
+        ...cmdOutToString(output.stderr),
+      ]);
+    } catch (e) {
+      logger().error(`[update] ${this.info.url} ${e.message}, ${e.stack}`);
+      return Result.failure([`Failed to update ${this.info.url}`]);
+    } finally {
+      logger().debug(`[update] ${this.info.url} end !`);
     }
-    return Result.failure([
-      `--- ×: ${this.info.dst} --------------------`,
-      `Failed to git pull ${this.info.url}`,
-      `stdout:`,
-      ...cmdOutToString(output.stdout),
-      `stderr:`,
-      ...cmdOutToString(output.stderr),
-    ]);
   }
 }
