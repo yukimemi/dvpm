@@ -45,7 +45,7 @@ export const PlugSchema = z.object({
     after: z.string().optional(),
     beforeFile: z.string().optional(),
     afterFile: z.string().optional(),
-  }),
+  }).default({ enabled: false }),
   isLoad: z.boolean().default(false),
   isUpdate: z.boolean().default(false),
   isCache: z.boolean().default(false),
