@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2024/09/29 14:51:48.
+// Last Change : 2024/09/29 16:59:28.
 // =============================================================================
 
 import * as buffer from "jsr:@denops/std@7.2.0/buffer";
@@ -13,7 +13,6 @@ import { logger } from "./logger.ts";
 import { echo, execute } from "jsr:@denops/std@7.2.0/helper";
 import { z } from "npm:zod@3.23.8";
 import { sprintf } from "jsr:@std/fmt@1.0.2/printf";
-import { exists } from "jsr:@std/fs@1.0.4";
 import { type DvpmOption, DvpmOptionSchema, type Plug } from "./types.ts";
 import { Plugin } from "./plugin.ts";
 
@@ -107,7 +106,7 @@ export class Dvpm {
 
   private uniquePlug(plugins: Plugin[]): Plugin[] {
     return Array.from(new Set(plugins.map((p) => p.info.url))).map((url) => this.findPlugin(url))
-      .filter((p) => p !== undefined);
+      .filter((p): p is Plugin => p !== undefined);
   }
 
   private uniqueUrlByIsLoad(): Plugin[] {
@@ -157,16 +156,20 @@ export class Dvpm {
 
   private async _install(p: Plugin) {
     await this.#semaphore.lock(async () => {
-      const result = await p.install();
-      if (result.isSuccess) {
-        this.isInstallOrUpdate = true;
-      }
-      const output = result.value ?? result.error ?? [];
-      if (output.length > 0) {
-        this.#installLogs.push(...output);
-        if (this.option.notify) {
-          await notify(this.denops, output.join("\r"));
+      try {
+        const result = await p.install();
+        if (result.isSuccess) {
+          this.isInstallOrUpdate = true;
         }
+        const output = result.value ?? result.error ?? [];
+        if (output.length > 0) {
+          this.#installLogs.push(...output);
+          if (this.option.notify) {
+            await notify(this.denops, output.join("\r"));
+          }
+        }
+      } catch (e) {
+        logger().error(`[_install] ${p.info.url} ${e.message}, ${e.stack}`);
       }
     });
   }
@@ -328,13 +331,14 @@ export class Dvpm {
    * dvpm end function
    */
   public async end() {
-    this.plugins = this.#urls.map((url) => this.findPlugin(url)).filter((p) => p !== undefined);
+    this.plugins = this.#urls.map((url) => this.findPlugin(url)).filter((p): p is Plugin =>
+      p !== undefined
+    );
     const enablePlugins = this.plugins.filter((p) => p.info.enabled);
     logger().debug(`Enable plugins: ${enablePlugins.map((p) => p.plug.url)}`);
+    const clonePlugins = this.plugins.filter((p) => p.info.clone);
+    await Promise.all(clonePlugins.map((p) => this._install(p)));
     for (const p of enablePlugins) {
-      if (!(await exists(p.info.dst, { isDirectory: true }))) {
-        await this._install(p);
-      }
       await p.addRuntimepath();
       await p.denopsPluginLoad();
       await p.before();
