@@ -43,7 +43,7 @@ export class Dvpm {
     public option: DvpmOption,
   ) {
     this.totalElaps = performance.now();
-    this.option = DvpmOptionSchema.parse(option);
+    this.option = DvpmOptionSchema.parse(this.option);
     this.#semaphore = new Semaphore(z.number().parse(this.option.concurrency));
   }
 
@@ -305,7 +305,7 @@ export class Dvpm {
           base: this.option.base,
           debug: z.boolean().parse(this.option.debug),
           profile: z.boolean().parse(this.option.profile),
-          logarg: z.string().array().parse(this.option.logarg),
+          logarg: z.array(z.string()).parse(this.option.logarg),
         },
       );
       this.#urls = [

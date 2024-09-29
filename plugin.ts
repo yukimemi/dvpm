@@ -10,7 +10,7 @@ import * as path from "jsr:@std/path@1.0.6";
 import type { Bool, Plug, PlugInfo, PlugOption } from "./types.ts";
 import type { Denops } from "jsr:@denops/std@7.2.0";
 import { Git } from "./git.ts";
-import { PlugInfoSchema, PlugSchema } from "./types.ts";
+import { PlugInfoSchema, PlugOptionSchema, PlugSchema } from "./types.ts";
 import { logger } from "./logger.ts";
 import { Result } from "npm:result-type-ts@2.1.3";
 import { Semaphore } from "jsr:@lambdalisue/async@2.1.1";
@@ -30,6 +30,7 @@ export class Plugin {
     public option: PlugOption,
   ) {
     this.plug = PlugSchema.parse(this.plug);
+    this.option = PlugOptionSchema.parse(this.option);
     this.info = PlugInfoSchema.parse({
       dst: "",
       ...this.plug,

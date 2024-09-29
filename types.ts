@@ -56,26 +56,26 @@ export const PlugSchema = z.object({
   url: z.string(),
   dst: z.string().optional(),
   rev: z.string().optional(),
-  enabled: BoolSchema.optional().default(true),
+  enabled: BoolSchema.default(true),
   before: ConfigSchema.optional(),
   after: ConfigSchema.optional(),
   beforeFile: z.string().optional(),
   afterFile: z.string().optional(),
   build: ConfigSchema.optional(),
-  clone: BoolSchema.optional().default(true),
-  depth: z.number().optional().default(0),
-  dependencies: z.array(z.string()).optional().default([]),
+  clone: BoolSchema.default(true),
+  depth: z.number().default(0),
+  dependencies: z.array(z.string()).default([]),
   cache: z.object({
-    enabled: BoolSchema.optional().default(false),
+    enabled: BoolSchema.default(false),
     before: z.string().optional(),
     after: z.string().optional(),
     beforeFile: z.string().optional(),
     afterFile: z.string().optional(),
-  }).optional().default({ enabled: false }),
-  isLoad: z.boolean().optional().default(false),
-  isUpdate: z.boolean().optional().default(false),
-  isCache: z.boolean().optional().default(false),
-  elaps: z.number().optional().default(0),
+  }).default({ enabled: false }),
+  isLoad: z.boolean().default(false),
+  isUpdate: z.boolean().default(false),
+  isCache: z.boolean().default(false),
+  elaps: z.number().default(0),
 });
 
 export const PlugInfoSchema = PlugSchema.merge(z.object({
@@ -85,9 +85,9 @@ export type PlugInfo = z.infer<typeof PlugInfoSchema>;
 
 export const PlugOptionSchema = z.object({
   base: z.string(),
-  debug: z.boolean().optional().default(false),
-  profile: z.boolean().optional().default(false),
-  logarg: z.array(z.string()).optional().default([]),
+  debug: z.boolean().default(false),
+  profile: z.boolean().default(false),
+  logarg: z.array(z.string()).default([]),
 });
 export type PlugOption = z.infer<typeof PlugOptionSchema>;
 
