@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2024/09/29 01:04:56.
+// Last Change : 2024/09/29 11:51:25.
 // =============================================================================
 
 import * as fn from "jsr:@denops/std@7.2.0/function";
@@ -11,6 +11,7 @@ import type { Bool, Plug, PlugInfo, PlugOption } from "./types.ts";
 import type { Denops } from "jsr:@denops/std@7.2.0";
 import { Git } from "./git.ts";
 import { PlugSchema } from "./types.ts";
+import { logger } from "./logger.ts";
 import { Result } from "npm:result-type-ts@2.1.3";
 import { Semaphore } from "jsr:@lambdalisue/async@2.1.1";
 import { cmdOutToString, convertUrl, executeFile, getExecuteStr } from "./util.ts";
@@ -46,10 +47,10 @@ export class Plugin {
     const p = new Plugin(denops, plug, option);
 
     p.info.url = convertUrl(p.plug.url);
-    p.clog(`[create] url ${p.info.url}`);
+    logger().debug(`[create] url ${p.info.url}`);
 
     if (p.plug.dst) {
-      p.clog(`[create] set dst to ${p.plug.dst}`);
+      logger().debug(`[create] set dst to ${p.plug.dst}`);
       p.info.dst = z.string().parse(await fn.expand(denops, p.plug.dst));
     } else {
       const url = new URL(p.plug.url);
@@ -71,13 +72,6 @@ export class Plugin {
     return p;
   }
 
-  // deno-lint-ignore no-explicit-any
-  private clog(data: any) {
-    if (this.option.debug) {
-      console.log(data);
-    }
-  }
-
   private async is(b: Bool) {
     if (typeof b === "boolean") {
       return b;
@@ -90,7 +84,7 @@ export class Plugin {
    */
   public async cache(): Promise<string> {
     try {
-      this.clog(`[cache] ${this.info.url} start !`);
+      logger().trace(`[cache] ${this.info.url} start !`);
       if (
         !this.info.enabled || !this.info.cache.enabled
       ) {
@@ -117,7 +111,7 @@ export class Plugin {
       console.error(e);
       return "";
     } finally {
-      this.clog(`[cache] ${this.info.url} end !`);
+      logger().trace(`[cache] ${this.info.url} end !`);
     }
   }
 
@@ -125,7 +119,7 @@ export class Plugin {
    * Add plugin to runtimepath
    */
   public async addRuntimepath(): Promise<boolean> {
-    this.clog(`[addRuntimepath] ${this.info.url} start !`);
+    logger().trace(`[addRuntimepath] ${this.info.url} start !`);
     let added = false;
     if (!this.info.enabled) {
       return added;
@@ -138,7 +132,7 @@ export class Plugin {
       }
     });
     this.info.isLoad = true;
-    this.clog(`[addRuntimepath] ${this.info.url} end !`);
+    logger().trace(`[addRuntimepath] ${this.info.url} end !`);
     return added;
   }
 
@@ -147,9 +141,9 @@ export class Plugin {
    */
   public async before() {
     if (this.info.before) {
-      this.clog(`[before] ${this.info.url} start !`);
+      logger().trace(`[before] ${this.info.url} start !`);
       await this.info.before({ denops: this.denops, info: this.info });
-      this.clog(`[before] ${this.info.url} end !`);
+      logger().trace(`[before] ${this.info.url} end !`);
     }
     if (this.info.beforeFile) {
       await executeFile(this.denops, this.info.beforeFile);
@@ -160,9 +154,9 @@ export class Plugin {
    */
   public async after() {
     if (this.info.after) {
-      this.clog(`[after] ${this.info.url} start !`);
+      logger().trace(`[after] ${this.info.url} start !`);
       await this.info.after({ denops: this.denops, info: this.info });
-      this.clog(`[after] ${this.info.url} end !`);
+      logger().trace(`[after] ${this.info.url} end !`);
     }
     if (this.info.afterFile) {
       await executeFile(this.denops, this.info.afterFile);
@@ -173,9 +167,9 @@ export class Plugin {
    */
   public async build() {
     if (this.info.build && this.info.enabled) {
-      this.clog(`[build] ${this.info.url} start !`);
+      logger().trace(`[build] ${this.info.url} start !`);
       await this.info.build({ denops: this.denops, info: this.info });
-      this.clog(`[build] ${this.info.url} end !`);
+      logger().trace(`[build] ${this.info.url} end !`);
     }
   }
 
@@ -184,13 +178,13 @@ export class Plugin {
    */
   public async source() {
     try {
-      this.clog(`[source] ${this.info.url} start !`);
+      logger().trace(`[source] ${this.info.url} start !`);
       await this.sourceVimPre();
       await this.sourceLuaPre();
     } catch (e) {
       console.error(e);
     } finally {
-      this.clog(`[source] ${this.info.url} end !`);
+      logger().trace(`[source] ${this.info.url} end !`);
     }
   }
   /**
@@ -198,13 +192,13 @@ export class Plugin {
    */
   public async sourceAfter() {
     try {
-      this.clog(`[sourceAfter] ${this.info.url} start !`);
+      logger().trace(`[sourceAfter] ${this.info.url} start !`);
       await this.sourceVimAfter();
       await this.sourceLuaAfter();
     } catch (e) {
       console.error(e);
     } finally {
-      this.clog(`[sourceAfter] ${this.info.url} end !`);
+      logger().trace(`[sourceAfter] ${this.info.url} end !`);
     }
   }
   /**

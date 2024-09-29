@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : util.ts
 // Author      : yukimemi
-// Last Change : 2024/09/29 01:04:32.
+// Last Change : 2024/09/29 11:03:54.
 // =============================================================================
 
 import * as fn from "jsr:@denops/std@7.2.0/function";
@@ -9,6 +9,7 @@ import * as fs from "jsr:@std/fs@1.0.4";
 import type { Denops } from "jsr:@denops/std@7.2.0";
 import { dirname, extname } from "jsr:@std/path@1.0.6";
 import { echo, echoerr, execute } from "jsr:@denops/std@7.2.0/helper";
+import { logger } from "./logger.ts";
 import { z } from "npm:zod@3.23.8";
 
 /**
@@ -16,6 +17,7 @@ import { z } from "npm:zod@3.23.8";
  */
 export async function notify(denops: Denops, msg: string) {
   if (await fn.has(denops, "nvim")) {
+    logger().debug(msg);
     await execute(
       denops,
       `lua vim.notify([[${msg}]], vim.log.levels.INFO)`,
@@ -38,9 +40,11 @@ export async function cache(
   if (await fs.exists(p)) {
     const content = (await Deno.readTextFile(p)).trim();
     if (s !== content) {
+      logger().debug(`Save to ${p}`);
       await Deno.writeTextFile(p, s);
     }
   } else {
+    logger().debug(`Save to ${p}`);
     await Deno.writeTextFile(p, s);
   }
 }
