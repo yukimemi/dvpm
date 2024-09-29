@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : types.ts
 // Author      : yukimemi
-// Last Change : 2024/09/29 00:49:39.
+// Last Change : 2024/09/29 14:04:44.
 // =============================================================================
 
 import type { Denops } from "jsr:@denops/std@7.2.0";
@@ -14,7 +14,7 @@ export type Bool =
 export const BoolSchema: z.ZodType<Bool> = z.union([
   z.boolean(),
   z.function().args(z.object({
-    denops: z.record(z.any()).transform((v) => v as Denops),
+    denops: z.any().transform((v) => v as Denops),
     info: z.lazy(() => PlugInfoSchema),
   })).returns(z.promise(z.boolean())),
 ]);
@@ -22,7 +22,7 @@ export const BoolSchema: z.ZodType<Bool> = z.union([
 export type Config = ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>;
 
 export const ConfigSchema: z.ZodType<Config> = z.function().args(z.object({
-  denops: z.record(z.any()).transform((v) => v as Denops),
+  denops: z.any().transform((v) => v as Denops),
   info: z.lazy(() => PlugInfoSchema),
 })).returns(z.promise(z.void()));
 
