@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2024/09/29 13:11:14.
+// Last Change : 2024/09/29 13:32:03.
 // =============================================================================
 
 import * as fn from "jsr:@denops/std@7.2.0/function";
@@ -51,7 +51,7 @@ export class Plugin {
 
     if (p.plug.dst) {
       logger().debug(`[create] set dst to ${p.plug.dst}`);
-      p.info.dst = z.string().parse(await fn.expand(denops, p.plug.dst));
+      p.info.dst = z.string().parse(await fn.expand(p.denops, p.plug.dst));
     } else {
       const url = new URL(p.plug.url);
       p.info.dst = path.join(option.base, url.hostname, url.pathname);

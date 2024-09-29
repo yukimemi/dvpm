@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2024/09/29 13:08:54.
+// Last Change : 2024/09/29 13:35:47.
 // =============================================================================
 
 import * as buffer from "jsr:@denops/std@7.2.0/buffer";
@@ -106,7 +106,7 @@ export class Dvpm {
 
   private uniquePlug(plugins: Plugin[]): Plugin[] {
     return Array.from(new Set(plugins.map((p) => p.info.url))).map((url) => this.findPlugin(url))
-      .filter((p): p is Plugin => p !== undefined);
+      .filter((p) => p !== undefined);
   }
 
   private uniqueUrlByIsLoad(): Plugin[] {
@@ -276,6 +276,11 @@ export class Dvpm {
   public async add(plug: Plug) {
     try {
       logger().debug(`Add plugin: ${plug.url}`);
+      if (this.findPlugin(plug.url) !== undefined) {
+        logger().warn(`[add] ${plug.url} already exists`);
+        return;
+      }
+
       const p = await Plugin.create(
         this.denops,
         plug,
@@ -301,9 +306,7 @@ export class Dvpm {
    * dvpm end function
    */
   public async end() {
-    this.plugins = this.#urls.map((url) => this.findPlugin(url)).filter((p): p is Plugin =>
-      p !== undefined
-    );
+    this.plugins = this.#urls.map((url) => this.findPlugin(url)).filter((p) => p !== undefined);
     const enablePlugins = this.plugins.filter((p) => p.info.enabled);
     logger().debug(`Enable plugins: ${enablePlugins.map((p) => p.plug.url)}`);
     for (const p of enablePlugins) {
