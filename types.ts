@@ -94,10 +94,17 @@ export type PlugOption = z.infer<typeof PlugOptionSchema>;
 export const DvpmOptionSchema = z.object({
   base: z.string(),
   cache: z.string().optional(),
-  debug: z.boolean().default(false).optional(),
-  concurrency: z.number().default(8).optional(),
-  profile: z.boolean().default(false).optional(),
-  notify: z.boolean().default(false).optional(),
-  logarg: z.array(z.string()).default([]).optional(),
+  debug: z.boolean().default(false),
+  concurrency: z.number().default(8),
+  profile: z.boolean().default(false),
+  notify: z.boolean().default(false),
+  logarg: z.array(z.string()).default([]),
 });
-export type DvpmOption = z.infer<typeof DvpmOptionSchema>;
+const DvpmOptionPartialSchema = DvpmOptionSchema.partial({
+  debug: true,
+  concurrency: true,
+  profile: true,
+  notify: true,
+  logarg: true,
+});
+export type DvpmOption = z.infer<typeof DvpmOptionPartialSchema>;
