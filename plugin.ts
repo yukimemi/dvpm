@@ -119,56 +119,77 @@ export class Plugin {
    * Add plugin to runtimepath
    */
   public async addRuntimepath(): Promise<boolean> {
-    logger().debug(`[addRuntimepath] ${this.info.url} start !`);
-    let added = false;
-    if (!this.info.enabled) {
-      return added;
-    }
-    await Plugin.mutex.lock(async () => {
-      const rtp = (await op.runtimepath.get(this.denops)).split(",");
-      if (!rtp.includes(this.info.dst)) {
-        added = true;
-        await op.runtimepath.set(this.denops, `${rtp},${this.info.dst}`);
+    try {
+      logger().debug(`[addRuntimepath] ${this.info.url} start !`);
+      let added = false;
+      if (!this.info.enabled) {
+        return added;
       }
-    });
-    this.info.isLoad = true;
-    logger().debug(`[addRuntimepath] ${this.info.url} end !`);
-    return added;
+      await Plugin.mutex.lock(async () => {
+        const rtp = (await op.runtimepath.get(this.denops)).split(",");
+        if (!rtp.includes(this.info.dst)) {
+          added = true;
+          await op.runtimepath.set(this.denops, `${rtp},${this.info.dst}`);
+        }
+      });
+      this.info.isLoad = true;
+      return added;
+    } catch (e) {
+      logger().error(`[addRuntimepath]`, e);
+      return false;
+    } finally {
+      logger().debug(`[addRuntimepath] ${this.info.url} end !`);
+    }
   }
 
   /**
    * plugin config before adding to runtimepath
    */
   public async before() {
-    if (this.info.before) {
+    try {
       logger().debug(`[before] ${this.info.url} start !`);
-      await this.info.before({ denops: this.denops, info: this.info });
+      if (this.info.before) {
+        await this.info.before({ denops: this.denops, info: this.info });
+      }
+      if (this.info.beforeFile) {
+        await executeFile(this.denops, this.info.beforeFile);
+      }
+    } catch (e) {
+      logger().error(`[before]`, e);
+    } finally {
       logger().debug(`[before] ${this.info.url} end !`);
-    }
-    if (this.info.beforeFile) {
-      await executeFile(this.denops, this.info.beforeFile);
     }
   }
   /**
    * plugin config after adding to runtimepath
    */
   public async after() {
-    if (this.info.after) {
+    try {
       logger().debug(`[after] ${this.info.url} start !`);
-      await this.info.after({ denops: this.denops, info: this.info });
+      if (this.info.after) {
+        await this.info.after({ denops: this.denops, info: this.info });
+      }
+      if (this.info.afterFile) {
+        await executeFile(this.denops, this.info.afterFile);
+      }
+    } catch (e) {
+      logger().error(`[after]`, e);
+    } finally {
       logger().debug(`[after] ${this.info.url} end !`);
-    }
-    if (this.info.afterFile) {
-      await executeFile(this.denops, this.info.afterFile);
     }
   }
   /**
    * plugin build config
    */
   public async build() {
-    if (this.info.build && this.info.enabled) {
+    try {
       logger().debug(`[build] ${this.info.url} start !`);
-      await this.info.build({ denops: this.denops, info: this.info });
+      if (this.info.build && this.info.enabled) {
+        await this.info.build({ denops: this.denops, info: this.info });
+      }
+    } catch (e) {
+      logger().error(`[build]`, e);
+    } finally {
       logger().debug(`[build] ${this.info.url} end !`);
     }
   }
@@ -182,7 +203,7 @@ export class Plugin {
       await this.sourceVimPre();
       await this.sourceLuaPre();
     } catch (e) {
-      logger().error(e);
+      logger().error(`[source]`, e);
     } finally {
       logger().debug(`[source] ${this.info.url} end !`);
     }
@@ -196,7 +217,7 @@ export class Plugin {
       await this.sourceVimAfter();
       await this.sourceLuaAfter();
     } catch (e) {
-      logger().error(e);
+      logger().error(`[sourceAfter]`, e);
     } finally {
       logger().debug(`[sourceAfter] ${this.info.url} end !`);
     }
@@ -205,14 +226,21 @@ export class Plugin {
    * Load denops plugin
    */
   public async denopsPluginLoad() {
-    const target = `${this.info.dst}/denops/*/main.ts`;
-    for await (const file of expandGlob(target)) {
-      const name = path.basename(path.dirname(file.path));
-      try {
-        await this.denops.call("denops#plugin#load", name, file.path);
-      } catch (e) {
-        logger().error(e);
+    try {
+      logger().debug(`[denopsPluginLoad] ${this.info.url} start !`);
+      const target = `${this.info.dst}/denops/*/main.ts`;
+      for await (const file of expandGlob(target)) {
+        const name = path.basename(path.dirname(file.path));
+        try {
+          await this.denops.call("denops#plugin#load", name, file.path);
+        } catch (e) {
+          logger().error(e);
+        }
       }
+    } catch (e) {
+      logger().error(`[denopsPluginLoad]`, e);
+    } finally {
+      logger().debug(`[denopsPluginLoad] ${this.info.url} end !`);
     }
   }
 
