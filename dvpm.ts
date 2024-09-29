@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2024/09/29 10:15:02.
+// Last Change : 2024/09/29 10:53:49.
 // =============================================================================
 
 import * as buffer from "jsr:@denops/std@7.2.0/buffer";
@@ -19,7 +19,6 @@ import { Plugin } from "./plugin.ts";
 const listSpace = 3;
 
 export class Dvpm {
-  static mutex: Semaphore = new Semaphore(1);
 
   #semaphore: Semaphore;
   #cacheScript: string[] = [];
@@ -326,26 +325,26 @@ export class Dvpm {
     const enablePlugins = this.plugins.filter((p) => p.info.enabled);
     await Promise.all(
       enablePlugins.map(
-        (p) =>
-          Dvpm.mutex.lock(async () => {
-            if (!(await exists(p.info.dst, { isDirectory: true }))) {
-              await this._install(p);
-            }
-            await p.addRuntimepath();
-            await p.denopsPluginLoad();
-            await p.before();
-            await p.source();
-            await p.after();
-          }),
+        async (p) => {
+          if (!(await exists(p.info.dst, { isDirectory: true }))) {
+            await this._install(p);
+          }
+          await p.addRuntimepath();
+          await p.denopsPluginLoad();
+          await p.before();
+          await p.source();
+          await p.after();
+          return p;
+        },
       ),
     );
     await Promise.all(
       enablePlugins.map(
-        (p) =>
-          Dvpm.mutex.lock(async () => {
-            await p.sourceAfter();
-            this.#cacheScript.push(await p.cache());
-          }),
+        async (p) => {
+          await p.sourceAfter();
+          this.#cacheScript.push(await p.cache());
+          return p;
+        },
       ),
     );
     if (this.#installLogs.length > 0) {
