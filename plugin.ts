@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2024/09/29 13:32:03.
+// Last Change : 2024/09/29 13:58:49.
 // =============================================================================
 
 import * as fn from "jsr:@denops/std@7.2.0/function";
@@ -149,9 +149,11 @@ export class Plugin {
     try {
       logger().debug(`[before] ${this.info.url} start !`);
       if (this.info.before) {
+        logger().debug(`[before] ${this.info.url} execute before !`);
         await this.info.before({ denops: this.denops, info: this.info });
       }
       if (this.info.beforeFile) {
+        logger().debug(`[before] ${this.info.url} execute beforeFile !`);
         await executeFile(this.denops, this.info.beforeFile);
       }
     } catch (e) {
@@ -167,9 +169,11 @@ export class Plugin {
     try {
       logger().debug(`[after] ${this.info.url} start !`);
       if (this.info.after) {
+        logger().debug(`[after] ${this.info.url} execute after !`);
         await this.info.after({ denops: this.denops, info: this.info });
       }
       if (this.info.afterFile) {
+        logger().debug(`[after] ${this.info.url} execute afterFile !`);
         await executeFile(this.denops, this.info.afterFile);
       }
     } catch (e) {
@@ -185,6 +189,7 @@ export class Plugin {
     try {
       logger().debug(`[build] ${this.info.url} start !`);
       if (this.info.build && this.info.enabled) {
+        logger().debug(`[build] ${this.info.url} execute build !`);
         await this.info.build({ denops: this.denops, info: this.info });
       }
     } catch (e) {
@@ -232,6 +237,9 @@ export class Plugin {
       for await (const file of expandGlob(target)) {
         const name = path.basename(path.dirname(file.path));
         try {
+          logger().debug(
+            `[denopsPluginLoad] ${this.info.url} load name: [${name}], path: [${file.path}] !`,
+          );
           await this.denops.call("denops#plugin#load", name, file.path);
         } catch (e) {
           logger().error(`[denopsPluginLoad] ${this.info.url} ${e.message}, ${e.stack}`);
@@ -246,6 +254,7 @@ export class Plugin {
 
   private async sourceVim(target: string) {
     for await (const file of expandGlob(target)) {
+      logger().debug(`[sourceVim] ${this.info.url} source ${file.path} !`);
       await execute(this.denops, `source ${file.path}`);
     }
   }
@@ -259,6 +268,7 @@ export class Plugin {
   }
   private async sourceLua(target: string) {
     for await (const file of expandGlob(target)) {
+      logger().debug(`[sourceLua] ${this.info.url} luafile ${file.path} !`);
       await execute(this.denops, `luafile ${file.path}`);
     }
   }
@@ -293,9 +303,11 @@ export class Plugin {
     if (!(await this.isHelptagsOld(docDir))) {
       return;
     }
+    const escapeDocDir = await fn.fnameescape(this.denops, docDir);
+    logger().debug(`[genHelptags] ${this.info.url} silent! helptags ${escapeDocDir} !`);
     await execute(
       this.denops,
-      `silent! helptags ${await fn.fnameescape(this.denops, docDir)}`,
+      `silent! helptags ${escapeDocDir}`,
     );
   }
 
