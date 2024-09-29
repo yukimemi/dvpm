@@ -98,11 +98,11 @@ export class Dvpm {
     }
   }
 
-  private findPlugin(url: string): Plugin {
+  private findPlugin(url: string): Plugin | undefined {
     const u = convertUrl(url);
     const p = this.plugins.find((p) => p.info.url === u);
     if (p == undefined) {
-      throw `${url} plugin is not found !`;
+      console.error(`${url} plugin is not found !`);
     }
     return p;
   }
@@ -113,7 +113,8 @@ export class Dvpm {
   }
 
   private uniquePlug(plugins: Plugin[]): Plugin[] {
-    return Array.from(new Set(plugins.map((p) => p.info.url))).map((url) => this.findPlugin(url));
+    return Array.from(new Set(plugins.map((p) => p.info.url))).map((url) => this.findPlugin(url))
+      .filter((p): p is Plugin => p !== undefined);
   }
 
   private uniqueUrlByIsLoad(): Plugin[] {
@@ -178,6 +179,7 @@ export class Dvpm {
   public async install(url?: string) {
     if (url) {
       const p = this.findPlugin(url);
+      if (p == undefined) return;
       await this._install(p);
     } else {
       await Promise.all(
@@ -207,6 +209,7 @@ export class Dvpm {
     }
     if (url) {
       const p = this.findPlugin(url);
+      if (p == undefined) return;
       await this._update(p);
     } else {
       await Promise.all(
@@ -317,7 +320,9 @@ export class Dvpm {
    * dvpm end function
    */
   public async end() {
-    this.plugins = this.#urls.map((url) => this.findPlugin(url));
+    this.plugins = this.#urls.map((url) => this.findPlugin(url)).filter((p): p is Plugin =>
+      p !== undefined
+    );
     const enablePlugins = this.plugins.filter((p) => p.info.enabled);
     await Promise.all(
       enablePlugins.map(
