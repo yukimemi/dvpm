@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : types.ts
 // Author      : yukimemi
-// Last Change : 2024/09/29 15:49:12.
+// Last Change : 2024/09/29 20:43:51.
 // =============================================================================
 
 import type { Denops } from "jsr:@denops/std@7.2.0";
@@ -56,26 +56,26 @@ export const PlugSchema = z.object({
   url: z.string(),
   dst: z.string().optional(),
   rev: z.string().optional(),
-  enabled: BoolSchema.default(true),
+  enabled: BoolSchema.optional().default(true),
   before: ConfigSchema.optional(),
   after: ConfigSchema.optional(),
   beforeFile: z.string().optional(),
   afterFile: z.string().optional(),
   build: ConfigSchema.optional(),
-  clone: BoolSchema.default(true),
-  depth: z.number().default(0),
-  dependencies: z.array(z.string()).default([]),
+  clone: BoolSchema.optional().default(true),
+  depth: z.number().optional().default(0),
+  dependencies: z.array(z.string()).optional().default([]),
   cache: z.object({
-    enabled: BoolSchema.default(false),
+    enabled: BoolSchema.optional().default(false),
     before: z.string().optional(),
     after: z.string().optional(),
     beforeFile: z.string().optional(),
     afterFile: z.string().optional(),
-  }).default({ enabled: false }),
-  isLoad: z.boolean().default(false),
-  isUpdate: z.boolean().default(false),
-  isCache: z.boolean().default(false),
-  elaps: z.number().default(0),
+  }).optional().default({ enabled: false }),
+  isLoad: z.boolean().optional().default(false),
+  isUpdate: z.boolean().optional().default(false),
+  isCache: z.boolean().optional().default(false),
+  elaps: z.number().optional().default(0),
 });
 
 export const PlugInfoSchema = PlugSchema.merge(z.object({
@@ -85,19 +85,19 @@ export type PlugInfo = z.infer<typeof PlugInfoSchema>;
 
 export const PlugOptionSchema = z.object({
   base: z.string(),
-  debug: z.boolean().default(false),
-  profile: z.boolean().default(false),
-  logarg: z.array(z.string()).default([]),
+  debug: z.boolean().optional().default(false),
+  profile: z.boolean().optional().default(false),
+  logarg: z.array(z.string()).optional().default([]),
 });
 export type PlugOption = z.infer<typeof PlugOptionSchema>;
 
 export const DvpmOptionSchema = z.object({
   base: z.string(),
   cache: z.string().optional(),
-  debug: z.boolean().default(false),
-  concurrency: z.number().default(8),
-  profile: z.boolean().default(false),
-  notify: z.boolean().default(false),
-  logarg: z.array(z.string()).default([]),
+  debug: z.boolean().optional().default(false),
+  concurrency: z.number().optional().default(8),
+  profile: z.boolean().optional().default(false),
+  notify: z.boolean().optional().default(false),
+  logarg: z.array(z.string()).optional().default([]),
 });
 export type DvpmOption = z.infer<typeof DvpmOptionSchema>;
