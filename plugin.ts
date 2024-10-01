@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2024/09/29 17:34:54.
+// Last Change : 2024/10/01 23:05:26.
 // =============================================================================
 
 import * as fn from "jsr:@denops/std@7.2.0/function";
@@ -70,6 +70,10 @@ export class Plugin {
 
     if (p.info.dependencies.length > 0) {
       p.info.dependencies = p.info.dependencies.map((d) => convertUrl(d));
+    }
+
+    if (p.info.dependencies.includes(p.info.url)) {
+      logger().error(`${p.info.url} is a dependency of itself !`);
     }
     return p;
   }
