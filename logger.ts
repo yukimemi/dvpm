@@ -4,7 +4,7 @@
 // Last Change : 2024/09/29 11:01:47.
 // =============================================================================
 
-import { getLogger } from "jsr:@std/log@0.224.8";
+import { getLogger } from "jsr:@std/log@0.224.9";
 
 export function logger() {
   return getLogger("dvpm");
