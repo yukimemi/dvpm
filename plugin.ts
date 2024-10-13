@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2024/10/01 23:05:26.
+// Last Change : 2024/10/13 12:31:55.
 // =============================================================================
 
 import * as fn from "jsr:@denops/std@7.2.0/function";
@@ -113,7 +113,8 @@ export class Plugin {
       }
       cacheStr.push(this.info.cache?.after || "");
       return cacheStr.join("\n");
-    } catch (e) {
+      // deno-lint-ignore no-explicit-any
+    } catch (e: any) {
       logger().error(`[cache] ${this.info.url} ${e.message}, ${e.stack}`);
       return "";
     } finally {
@@ -140,7 +141,8 @@ export class Plugin {
       });
       this.info.isLoad = true;
       return added;
-    } catch (e) {
+      // deno-lint-ignore no-explicit-any
+    } catch (e: any) {
       logger().error(`[addRuntimepath] ${this.info.url} ${e.message}, ${e.stack}`);
       return false;
     } finally {
@@ -162,7 +164,8 @@ export class Plugin {
         logger().debug(`[before] ${this.info.url} execute beforeFile !`);
         await executeFile(this.denops, this.info.beforeFile);
       }
-    } catch (e) {
+      // deno-lint-ignore no-explicit-any
+    } catch (e: any) {
       logger().error(`[before] ${this.info.url} ${e.message}, ${e.stack}`);
     } finally {
       logger().debug(`[before] ${this.info.url} end !`);
@@ -182,7 +185,8 @@ export class Plugin {
         logger().debug(`[after] ${this.info.url} execute afterFile !`);
         await executeFile(this.denops, this.info.afterFile);
       }
-    } catch (e) {
+      // deno-lint-ignore no-explicit-any
+    } catch (e: any) {
       logger().error(`[after] ${this.info.url} ${e.message}, ${e.stack}`);
     } finally {
       logger().debug(`[after] ${this.info.url} end !`);
@@ -198,7 +202,8 @@ export class Plugin {
         logger().debug(`[build] ${this.info.url} execute build !`);
         await this.info.build({ denops: this.denops, info: this.info });
       }
-    } catch (e) {
+      // deno-lint-ignore no-explicit-any
+    } catch (e: any) {
       logger().error(`[build] ${this.info.url} ${e.message}, ${e.stack}`);
     } finally {
       logger().debug(`[build] ${this.info.url} end !`);
@@ -213,7 +218,8 @@ export class Plugin {
       logger().debug(`[source] ${this.info.url} start !`);
       await this.sourceVimPre();
       await this.sourceLuaPre();
-    } catch (e) {
+      // deno-lint-ignore no-explicit-any
+    } catch (e: any) {
       logger().error(`[source] ${this.info.url} ${e.message}, ${e.stack}`);
     } finally {
       logger().debug(`[source] ${this.info.url} end !`);
@@ -227,7 +233,8 @@ export class Plugin {
       logger().debug(`[sourceAfter] ${this.info.url} start !`);
       await this.sourceVimAfter();
       await this.sourceLuaAfter();
-    } catch (e) {
+      // deno-lint-ignore no-explicit-any
+    } catch (e: any) {
       logger().error(`[sourceAfter] ${this.info.url} ${e.message}, ${e.stack}`);
     } finally {
       logger().debug(`[sourceAfter] ${this.info.url} end !`);
@@ -247,11 +254,13 @@ export class Plugin {
             `[denopsPluginLoad] ${this.info.url} load name: [${name}], path: [${file.path}] !`,
           );
           await this.denops.call("denops#plugin#load", name, file.path);
-        } catch (e) {
+          // deno-lint-ignore no-explicit-any
+        } catch (e: any) {
           logger().error(`[denopsPluginLoad] ${this.info.url} ${e.message}, ${e.stack}`);
         }
       }
-    } catch (e) {
+      // deno-lint-ignore no-explicit-any
+    } catch (e: any) {
       logger().error(`[denopsPluginLoad] ${this.info.url} ${e.message}, ${e.stack}`);
     } finally {
       logger().debug(`[denopsPluginLoad] ${this.info.url} end !`);
@@ -358,7 +367,8 @@ export class Plugin {
         `stderr:`,
         ...cmdOutToString(output.stderr),
       ]);
-    } catch (e) {
+      // deno-lint-ignore no-explicit-any
+    } catch (e: any) {
       logger().error(`[install] ${this.info.url} ${e.message}, ${e.stack}`);
       return Result.failure([`Failed to install ${this.info.url}`]);
     } finally {
@@ -428,7 +438,8 @@ export class Plugin {
         `stderr:`,
         ...cmdOutToString(output.stderr),
       ]);
-    } catch (e) {
+      // deno-lint-ignore no-explicit-any
+    } catch (e: any) {
       logger().error(`[update] ${this.info.url} ${e.message}, ${e.stack}`);
       return Result.failure([`Failed to update ${this.info.url}`]);
     } finally {

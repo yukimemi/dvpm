@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2024/10/13 11:53:13.
+// Last Change : 2024/10/13 12:31:57.
 // =============================================================================
 
 import * as buffer from "jsr:@denops/std@7.2.0/buffer";
@@ -165,7 +165,8 @@ export class Dvpm {
             await notify(this.denops, output.join("\r"));
           }
         }
-      } catch (e) {
+        // deno-lint-ignore no-explicit-any
+      } catch (e: any) {
         logger().error(`[_install] ${p.info.url} ${e.message}, ${e.stack}`);
       }
     });
@@ -317,7 +318,8 @@ export class Dvpm {
       if (p.info.enabled) {
         this.#dependencies.push(...p.info.dependencies);
       }
-    } catch (e) {
+      // deno-lint-ignore no-explicit-any
+    } catch (e: any) {
       logger().error(`[add] ${plug.url} ${e.message}, ${e.stack}`);
     }
   }
@@ -416,7 +418,8 @@ export class Dvpm {
           path: this.option.cache,
         });
       }
-    } catch (e) {
+      // deno-lint-ignore no-explicit-any
+    } catch (e: any) {
       logger().error(`[end] ${e.message}, ${e.stack}`);
     } finally {
       logger().debug(`[end] Dvpm end end !`);
