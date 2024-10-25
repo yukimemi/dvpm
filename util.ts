@@ -7,7 +7,7 @@
 import * as fn from "jsr:@denops/std@7.2.0/function";
 import * as fs from "jsr:@std/fs@1.0.5";
 import type { Denops } from "jsr:@denops/std@7.2.0";
-import { dirname, extname } from "jsr:@std/path@1.0.6";
+import { dirname, extname } from "jsr:@std/path@1.0.7";
 import { echo, echoerr, execute } from "jsr:@denops/std@7.2.0/helper";
 import { logger } from "./logger.ts";
 import { z } from "npm:zod@3.23.8";
