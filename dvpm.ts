@@ -12,7 +12,7 @@ import { cache, convertUrl, notify } from "./util.ts";
 import { logger } from "./logger.ts";
 import { echo, execute } from "jsr:@denops/std@7.2.0/helper";
 import { z } from "npm:zod@3.23.8";
-import { sprintf } from "jsr:@std/fmt@1.0.2/printf";
+import { sprintf } from "jsr:@std/fmt@1.0.3/printf";
 import { type DvpmOption, DvpmOptionSchema, type Plug } from "./types.ts";
 import { Plugin } from "./plugin.ts";
 
