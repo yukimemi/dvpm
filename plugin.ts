@@ -16,7 +16,7 @@ import { Result } from "npm:result-type-ts@2.1.4";
 import { Semaphore } from "jsr:@lambdalisue/async@2.1.1";
 import { cmdOutToString, convertUrl, executeFile, getExecuteStr } from "./util.ts";
 import { echo, execute } from "jsr:@denops/std@7.2.0/helper";
-import { exists, expandGlob } from "jsr:@std/fs@1.0.4";
+import { exists, expandGlob } from "jsr:@std/fs@1.0.5";
 import { z } from "npm:zod@3.23.8";
 
 export class Plugin {
