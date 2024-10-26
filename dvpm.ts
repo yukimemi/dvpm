@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2024/10/13 12:31:57.
+// Last Change : 2024/10/26 13:29:31.
 // =============================================================================
 
 import * as buffer from "jsr:@denops/std@7.2.0/buffer";
@@ -165,9 +165,10 @@ export class Dvpm {
             await notify(this.denops, output.join("\r"));
           }
         }
-        // deno-lint-ignore no-explicit-any
-      } catch (e: any) {
-        logger().error(`[_install] ${p.info.url} ${e.message}, ${e.stack}`);
+      } catch (e) {
+        if (e instanceof Error) {
+          logger().error(`[_install] ${p.info.url} ${e.message}, ${e.stack}`);
+        }
       }
     });
   }
@@ -318,9 +319,10 @@ export class Dvpm {
       if (p.info.enabled) {
         this.#dependencies.push(...p.info.dependencies);
       }
-      // deno-lint-ignore no-explicit-any
-    } catch (e: any) {
-      logger().error(`[add] ${plug.url} ${e.message}, ${e.stack}`);
+    } catch (e) {
+      if (e instanceof Error) {
+        logger().error(`[add] ${plug.url} ${e.message}, ${e.stack}`);
+      }
     }
   }
 
@@ -418,9 +420,10 @@ export class Dvpm {
           path: this.option.cache,
         });
       }
-      // deno-lint-ignore no-explicit-any
-    } catch (e: any) {
-      logger().error(`[end] ${e.message}, ${e.stack}`);
+    } catch (e) {
+      if (e instanceof Error) {
+        logger().error(`[end] ${e.message}, ${e.stack}`);
+      }
     } finally {
       logger().debug(`[end] Dvpm end end !`);
     }

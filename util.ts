@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : util.ts
 // Author      : yukimemi
-// Last Change : 2024/09/29 11:03:54.
+// Last Change : 2024/10/26 13:33:03.
 // =============================================================================
 
 import * as fn from "jsr:@denops/std@7.2.0/function";
@@ -16,14 +16,20 @@ import { z } from "npm:zod@3.23.8";
  * vim.notify function
  */
 export async function notify(denops: Denops, msg: string) {
-  if (await fn.has(denops, "nvim")) {
-    logger().debug(msg);
-    await execute(
-      denops,
-      `lua vim.notify([[${msg}]], vim.log.levels.INFO)`,
-    );
-  } else {
-    await echo(denops, msg);
+  try {
+    if (await fn.has(denops, "nvim")) {
+      logger().debug(msg);
+      await execute(
+        denops,
+        `lua vim.notify([[${msg}]], vim.log.levels.INFO)`,
+      );
+    } else {
+      await echo(denops, msg);
+    }
+  } catch (e) {
+    if (e instanceof Error) {
+      logger().error(e.message);
+    }
   }
 }
 
