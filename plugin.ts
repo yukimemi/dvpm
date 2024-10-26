@@ -4,18 +4,18 @@
 // Last Change : 2024/10/26 13:31:55.
 // =============================================================================
 
-import * as fn from "jsr:@denops/std@7.2.0/function";
-import * as op from "jsr:@denops/std@7.2.0/option";
+import * as fn from "jsr:@denops/std@7.3.0/function";
+import * as op from "jsr:@denops/std@7.3.0/option";
 import * as path from "jsr:@std/path@1.0.7";
 import type { Bool, Plug, PlugInfo, PlugOption } from "./types.ts";
-import type { Denops } from "jsr:@denops/std@7.2.0";
+import type { Denops } from "jsr:@denops/std@7.3.0";
 import { Git } from "./git.ts";
 import { PlugInfoSchema, PlugOptionSchema, PlugSchema } from "./types.ts";
 import { logger } from "./logger.ts";
 import { Result } from "npm:result-type-ts@2.1.4";
 import { Semaphore } from "jsr:@lambdalisue/async@2.1.1";
 import { cmdOutToString, convertUrl, executeFile, getExecuteStr } from "./util.ts";
-import { echo, execute } from "jsr:@denops/std@7.2.0/helper";
+import { echo, execute } from "jsr:@denops/std@7.3.0/helper";
 import { exists, expandGlob } from "jsr:@std/fs@1.0.5";
 import { z } from "npm:zod@3.23.8";
 
