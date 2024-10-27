@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : util.ts
 // Author      : yukimemi
-// Last Change : 2024/10/26 13:33:03.
+// Last Change : 2024/10/27 11:48:35.
 // =============================================================================
 
 import * as fn from "jsr:@denops/std@7.3.0/function";
@@ -28,7 +28,7 @@ export async function notify(denops: Denops, msg: string) {
     }
   } catch (e) {
     if (e instanceof Error) {
-      logger().error(e.message);
+      logger().error(`[notify] ${e.message}, ${e.stack}`);
     }
   }
 }
