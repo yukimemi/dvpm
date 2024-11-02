@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2024/10/26 13:29:31.
+// Last Change : 2024/11/02 18:16:07.
 // =============================================================================
 
 import * as buffer from "jsr:@denops/std@7.3.0/buffer";
@@ -10,7 +10,7 @@ import type { Denops } from "jsr:@denops/std@7.3.0";
 import { Semaphore } from "jsr:@lambdalisue/async@2.1.1";
 import { cache, convertUrl, notify } from "./util.ts";
 import { logger } from "./logger.ts";
-import { echo, execute } from "jsr:@denops/std@7.3.0/helper";
+import { echo, echoerr, execute } from "jsr:@denops/std@7.3.0/helper";
 import { z } from "npm:zod@3.23.8";
 import { sprintf } from "jsr:@std/fmt@1.0.3/printf";
 import { type DvpmOption, DvpmOptionSchema, type Plug } from "./types.ts";
@@ -168,6 +168,7 @@ export class Dvpm {
       } catch (e) {
         if (e instanceof Error) {
           logger().error(`[_install] ${p.info.url} ${e.message}, ${e.stack}`);
+          await echoerr(this.denops, `${p.info.url} ${e.message}, ${e.stack}`);
         }
       }
     });
@@ -322,6 +323,7 @@ export class Dvpm {
     } catch (e) {
       if (e instanceof Error) {
         logger().error(`[add] ${plug.url} ${e.message}, ${e.stack}`);
+        await echoerr(this.denops, `${plug.url} ${e.message}, ${e.stack}`);
       }
     }
   }
@@ -423,6 +425,7 @@ export class Dvpm {
     } catch (e) {
       if (e instanceof Error) {
         logger().error(`[end] ${e.message}, ${e.stack}`);
+        await echoerr(this.denops, `${e.message}, ${e.stack}`);
       }
     } finally {
       logger().debug(`[end] Dvpm end end !`);
