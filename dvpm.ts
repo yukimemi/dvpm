@@ -1,20 +1,20 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2024/11/02 18:16:07.
+// Last Change : 2024/11/03 16:42:34.
 // =============================================================================
 
 import * as buffer from "jsr:@denops/std@7.3.0/buffer";
 import * as fn from "jsr:@denops/std@7.3.0/function";
 import type { Denops } from "jsr:@denops/std@7.3.0";
+import { Plugin } from "./plugin.ts";
 import { Semaphore } from "jsr:@lambdalisue/async@2.1.1";
 import { cache, convertUrl, notify } from "./util.ts";
-import { logger } from "./logger.ts";
 import { echo, echoerr, execute } from "jsr:@denops/std@7.3.0/helper";
-import { z } from "npm:zod@3.23.8";
+import { logger } from "./logger.ts";
 import { sprintf } from "jsr:@std/fmt@1.0.3/printf";
 import { type DvpmOption, DvpmOptionSchema, type Plug } from "./types.ts";
-import { Plugin } from "./plugin.ts";
+import { z } from "npm:zod@3.23.8";
 
 const listSpace = 3;
 
@@ -23,8 +23,6 @@ export class Dvpm {
   #cacheScript: string[] = [];
   #installLogs: string[] = [];
   #updateLogs: string[] = [];
-  #dependencies: string[] = [];
-  #urls: string[] = [];
 
   /// Is install or update
   public isInstallOrUpdate = false;
@@ -138,6 +136,32 @@ export class Dvpm {
     });
 
     return plugins;
+  }
+
+  private resolveDependencies(plugins: Plugin[]): Plugin[] {
+    const sortedPlugins: Plugin[] = [];
+    const visited = new Set();
+
+    const resolve = async (url: string) => {
+      if (visited.has(url)) {
+        return;
+      }
+      visited.add(url);
+      const p = this.findPlugin(url);
+      if (p == undefined) {
+        logger().error(`[resolveDependencies] ${url} is not found in plugin list !`);
+        await echoerr(this.denops, `${url} is not found in plugin list !`);
+        return;
+      }
+      if (p.info.dependencies) {
+        p.info.dependencies.forEach((dependency) => resolve(dependency));
+      }
+      sortedPlugins.push(p);
+    };
+
+    plugins.forEach((p) => resolve(p.info.url));
+
+    return sortedPlugins;
   }
 
   private async bufWrite(bufname: string, data: string[], opts?: { filetype?: string }) {
@@ -311,15 +335,7 @@ export class Dvpm {
           logarg: z.array(z.string()).parse(this.option.logarg),
         },
       );
-      this.#urls = [
-        ...p.info.dependencies,
-        p.info.url,
-        ...this.#urls.filter((url) => !p.info.dependencies.includes(url) && url !== p.info.url),
-      ];
       this.plugins.push(p);
-      if (p.info.enabled) {
-        this.#dependencies.push(...p.info.dependencies);
-      }
     } catch (e) {
       if (e instanceof Error) {
         logger().error(`[add] ${plug.url} ${e.message}, ${e.stack}`);
@@ -334,9 +350,7 @@ export class Dvpm {
   public async end() {
     try {
       logger().debug(`[end] Dvpm end start !`);
-      this.plugins = this.#urls.map((url) => this.findPlugin(url)).filter((p): p is Plugin =>
-        p !== undefined
-      );
+      this.plugins = this.resolveDependencies(this.plugins);
       await this.install();
       const enablePlugins = this.plugins.filter((p) => p.info.enabled);
       logger().debug(`Enable plugins: ${enablePlugins.map((p) => p.plug.url)}`);
@@ -362,15 +376,6 @@ export class Dvpm {
       }
       logger().debug(`doautocmd VimEnter`);
       await this.denops.cmd(`doautocmd VimEnter`);
-
-      for (const d of Array.from(new Set(this.#dependencies))) {
-        const p = this.findPlugin(d);
-        if (p == undefined) {
-          logger().warn(`dependency ${d} plugin is not found !`);
-        } else if (!p.info.isLoad) {
-          logger().warn(`dependency ${d} plugin is not enabled !`);
-        }
-      }
       if (this.#installLogs.length > 0) {
         await this.bufWrite("dvpm://install", this.#installLogs);
       }
