@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2024/11/18 15:50:10.
+// Last Change : 2024/11/18 16:08:42.
 // =============================================================================
 
 import * as buffer from "jsr:@denops/std@7.3.2/buffer";
@@ -142,8 +142,14 @@ export class Dvpm {
     const sortedPlugins: Plugin[] = [];
     const seen = new Set();
 
-    const resolve = (url: string) => {
+    const resolve = (url: string, fromDependency: boolean = false) => {
       if (seen.has(url)) {
+        if (!fromDependency) {
+          logger().warn(
+            `[resolveDependencies] Circular dependency or already processed plugin detected: ${url}`,
+          );
+          console.warn(`Circular dependency or already processed plugin detected: ${url}`);
+        }
         return;
       }
       seen.add(url);
@@ -158,7 +164,7 @@ export class Dvpm {
         return;
       }
       if (p.info.dependencies) {
-        p.info.dependencies.forEach((dependency) => resolve(dependency));
+        p.info.dependencies.forEach((dependency) => resolve(dependency, true));
       }
       sortedPlugins.push(p);
     };
@@ -324,12 +330,6 @@ export class Dvpm {
   public async add(plug: Plug) {
     try {
       logger().debug(`Add plugin: ${plug.url}`);
-      if (this.findPlugin(plug.url) !== undefined) {
-        logger().warn(`[add] ${plug.url} already exists`);
-        console.warn(`${plug.url} already exists`);
-        return;
-      }
-
       const p = await Plugin.create(
         this.denops,
         plug,
