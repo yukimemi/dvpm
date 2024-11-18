@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2024/11/18 20:12:51.
+// Last Change : 2024/11/18 20:46:43.
 // =============================================================================
 
 import * as buffer from "jsr:@denops/std@7.3.2/buffer";
@@ -170,7 +170,14 @@ export class Dvpm {
 
   private checkPluginUrlDuplicates(plugins: Plugin[]): void {
     const urlSet = new Set<string>();
-    const duplicates = plugins.filter((p) => !urlSet.add(p.info.url));
+    const duplicates = plugins.filter((p) => {
+      if (urlSet.has(p.info.url)) {
+        return true;
+      } else {
+        urlSet.add(p.info.url);
+        return false;
+      }
+    });
     if (duplicates.length > 0) {
       logger().warn(
         `[checkPluginUrlDuplicates] Duplicate plugin URLs detected: ${
