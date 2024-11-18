@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2024/11/18 09:09:21.
+// Last Change : 2024/11/18 09:24:52.
 // =============================================================================
 
 import * as buffer from "jsr:@denops/std@7.3.2/buffer";
@@ -151,6 +151,10 @@ export class Dvpm {
       if (p == undefined) {
         logger().error(`[resolveDependencies] ${url} is not found in plugin list !`);
         console.error(`${url} is not found in plugin list !`);
+        return;
+      }
+      if (!p.info.enabled) {
+        logger().debug(`[resolveDependencies] ${url} is disabled !`);
         return;
       }
       if (p.info.dependencies) {
@@ -352,16 +356,15 @@ export class Dvpm {
       logger().debug(`[end] Dvpm end start !`);
       this.plugins = this.resolveDependencies(this.plugins);
       await this.install();
-      const enablePlugins = this.plugins.filter((p) => p.info.enabled);
-      logger().debug(`Enable plugins: ${enablePlugins.map((p) => p.plug.url)}`);
-      for (const p of enablePlugins) {
+      logger().debug(`Enable plugins: ${this.plugins}`);
+      for (const p of this.plugins) {
         await p.addRuntimepath();
         await p.denopsPluginLoad();
         await p.before();
         await p.source();
         await p.after();
       }
-      for (const p of enablePlugins) {
+      for (const p of this.plugins) {
         await p.sourceAfter();
       }
       if (await fn.exists(this.denops, "denops_server_addr")) {
@@ -403,7 +406,7 @@ export class Dvpm {
         ]);
       }
       if (this.option.cache) {
-        for (const p of this.updateCache(enablePlugins)) {
+        for (const p of this.updateCache(this.plugins)) {
           this.#cacheScript.push(await p.cache());
         }
         logger().debug(`Cache: ${this.option.cache}`);
