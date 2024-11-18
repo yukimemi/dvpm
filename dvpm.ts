@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2024/11/18 20:46:43.
+// Last Change : 2024/11/18 20:51:15.
 // =============================================================================
 
 import * as buffer from "jsr:@denops/std@7.3.2/buffer";
@@ -179,14 +179,10 @@ export class Dvpm {
       }
     });
     if (duplicates.length > 0) {
-      logger().warn(
-        `[checkPluginUrlDuplicates] Duplicate plugin URLs detected: ${
-          duplicates.map((p) => p.info.url).join(", ")
-        }`,
-      );
-      console.warn(
-        `Duplicate plugin URLs detected: ${duplicates.map((p) => p.info.url).join(", ")}`,
-      );
+      duplicates.forEach((d) => {
+        logger().warn(`[checkPluginUrlDuplicates] Duplicate plugin URLs detected: ${d.info.url}`);
+        console.warn(`Duplicate plugin URLs detected: ${d.info.url}`);
+      });
     }
   }
 
