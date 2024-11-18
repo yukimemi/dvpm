@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : util.ts
 // Author      : yukimemi
-// Last Change : 2024/11/18 09:03:24.
+// Last Change : 2024/11/18 09:10:09.
 // =============================================================================
 
 import * as fn from "jsr:@denops/std@7.3.2/function";
@@ -67,7 +67,7 @@ export async function getExecuteStr(denops: Denops, path: string): Promise<strin
     return `source ${p}`;
   }
 
-  console.error(denops, `unknown extension: ${extension}`);
+  console.error(`unknown extension: ${extension}`);
   return "";
 }
 

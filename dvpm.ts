@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2024/11/18 09:02:26.
+// Last Change : 2024/11/18 09:09:21.
 // =============================================================================
 
 import * as buffer from "jsr:@denops/std@7.3.2/buffer";
@@ -140,17 +140,17 @@ export class Dvpm {
 
   private resolveDependencies(plugins: Plugin[]): Plugin[] {
     const sortedPlugins: Plugin[] = [];
-    const visited = new Set();
+    const seen = new Set();
 
-    const resolve = async (url: string) => {
-      if (visited.has(url)) {
+    const resolve = (url: string) => {
+      if (seen.has(url)) {
         return;
       }
-      visited.add(url);
+      seen.add(url);
       const p = this.findPlugin(url);
       if (p == undefined) {
         logger().error(`[resolveDependencies] ${url} is not found in plugin list !`);
-        console.error(this.denops, `${url} is not found in plugin list !`);
+        console.error(`${url} is not found in plugin list !`);
         return;
       }
       if (p.info.dependencies) {
@@ -192,7 +192,7 @@ export class Dvpm {
       } catch (e) {
         if (e instanceof Error) {
           logger().error(`[_install] ${p.info.url} ${e.message}, ${e.stack}`);
-          console.error(this.denops, `${p.info.url} ${e.message}, ${e.stack}`);
+          console.error(`${p.info.url} ${e.message}, ${e.stack}`);
         }
       }
     });
@@ -339,7 +339,7 @@ export class Dvpm {
     } catch (e) {
       if (e instanceof Error) {
         logger().error(`[add] ${plug.url} ${e.message}, ${e.stack}`);
-        console.error(this.denops, `${plug.url} ${e.message}, ${e.stack}`);
+        console.error(`${plug.url} ${e.message}, ${e.stack}`);
       }
     }
   }
@@ -430,7 +430,7 @@ export class Dvpm {
     } catch (e) {
       if (e instanceof Error) {
         logger().error(`[end] ${e.message}, ${e.stack}`);
-        console.error(this.denops, `${e.message}, ${e.stack}`);
+        console.error(`${e.message}, ${e.stack}`);
       }
     } finally {
       logger().debug(`[end] Dvpm end end !`);

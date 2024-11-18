@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2024/11/18 09:03:04.
+// Last Change : 2024/11/18 09:09:57.
 // =============================================================================
 
 import * as fn from "jsr:@denops/std@7.3.2/function";
@@ -116,7 +116,7 @@ export class Plugin {
     } catch (e) {
       if (e instanceof Error) {
         logger().error(`[cache] ${this.info.url} ${e.message}, ${e.stack}`);
-        console.error(this.denops, `${this.info.url} ${e.message}, ${e.stack}`);
+        console.error(`${this.info.url} ${e.message}, ${e.stack}`);
       }
       return "";
     } finally {
@@ -146,7 +146,7 @@ export class Plugin {
     } catch (e) {
       if (e instanceof Error) {
         logger().error(`[addRuntimepath] ${this.info.url} ${e.message}, ${e.stack}`);
-        console.error(this.denops, `${this.info.url} ${e.message}, ${e.stack}`);
+        console.error(`${this.info.url} ${e.message}, ${e.stack}`);
       }
       return false;
     } finally {
@@ -171,7 +171,7 @@ export class Plugin {
     } catch (e) {
       if (e instanceof Error) {
         logger().error(`[before] ${this.info.url} ${e.message}, ${e.stack}`);
-        console.error(this.denops, `${this.info.url} ${e.message}, ${e.stack}`);
+        console.error(`${this.info.url} ${e.message}, ${e.stack}`);
       }
     } finally {
       logger().debug(`[before] ${this.info.url} end !`);
@@ -194,7 +194,7 @@ export class Plugin {
     } catch (e) {
       if (e instanceof Error) {
         logger().error(`[after] ${this.info.url} ${e.message}, ${e.stack}`);
-        console.error(this.denops, `${this.info.url} ${e.message}, ${e.stack}`);
+        console.error(`${this.info.url} ${e.message}, ${e.stack}`);
       }
     } finally {
       logger().debug(`[after] ${this.info.url} end !`);
@@ -213,7 +213,7 @@ export class Plugin {
     } catch (e) {
       if (e instanceof Error) {
         logger().error(`[build] ${this.info.url} ${e.message}, ${e.stack}`);
-        console.error(this.denops, `${this.info.url} ${e.message}, ${e.stack}`);
+        console.error(`${this.info.url} ${e.message}, ${e.stack}`);
       }
     } finally {
       logger().debug(`[build] ${this.info.url} end !`);
@@ -231,7 +231,7 @@ export class Plugin {
     } catch (e) {
       if (e instanceof Error) {
         logger().error(`[source] ${this.info.url} ${e.message}, ${e.stack}`);
-        console.error(this.denops, `${this.info.url} ${e.message}, ${e.stack}`);
+        console.error(`${this.info.url} ${e.message}, ${e.stack}`);
       }
     } finally {
       logger().debug(`[source] ${this.info.url} end !`);
@@ -248,7 +248,7 @@ export class Plugin {
     } catch (e) {
       if (e instanceof Error) {
         logger().error(`[sourceAfter] ${this.info.url} ${e.message}, ${e.stack}`);
-        console.error(this.denops, `${this.info.url} ${e.message}, ${e.stack}`);
+        console.error(`${this.info.url} ${e.message}, ${e.stack}`);
       }
     } finally {
       logger().debug(`[sourceAfter] ${this.info.url} end !`);
@@ -271,14 +271,14 @@ export class Plugin {
         } catch (e) {
           if (e instanceof Error) {
             logger().error(`[denopsPluginLoad] ${this.info.url} ${e.message}, ${e.stack}`);
-            console.error(this.denops, `${this.info.url} ${e.message}, ${e.stack}`);
+            console.error(`${this.info.url} ${e.message}, ${e.stack}`);
           }
         }
       }
     } catch (e) {
       if (e instanceof Error) {
         logger().error(`[denopsPluginLoad] ${this.info.url} ${e.message}, ${e.stack}`);
-        console.error(this.denops, `${this.info.url} ${e.message}, ${e.stack}`);
+        console.error(`${this.info.url} ${e.message}, ${e.stack}`);
       }
     } finally {
       logger().debug(`[denopsPluginLoad] ${this.info.url} end !`);
@@ -388,7 +388,7 @@ export class Plugin {
     } catch (e) {
       if (e instanceof Error) {
         logger().error(`[install] ${this.info.url} ${e.message}, ${e.stack}`);
-        console.error(this.denops, `${this.info.url} ${e.message}, ${e.stack}`);
+        console.error(`${this.info.url} ${e.message}, ${e.stack}`);
       }
       return Result.failure([`Failed to install ${this.info.url}`]);
     } finally {
@@ -461,7 +461,7 @@ export class Plugin {
     } catch (e) {
       if (e instanceof Error) {
         logger().error(`[update] ${this.info.url} ${e.message}, ${e.stack}`);
-        console.error(this.denops, `${this.info.url} ${e.message}, ${e.stack}`);
+        console.error(`${this.info.url} ${e.message}, ${e.stack}`);
       }
       return Result.failure([`Failed to update ${this.info.url}`]);
     } finally {
