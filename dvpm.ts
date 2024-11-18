@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2024/11/18 15:44:53.
+// Last Change : 2024/11/18 15:50:10.
 // =============================================================================
 
 import * as buffer from "jsr:@denops/std@7.3.2/buffer";
@@ -357,7 +357,7 @@ export class Dvpm {
       logger().debug(`[end] Dvpm end start !`);
       this.plugins = this.resolveDependencies(this.plugins);
       await this.install();
-      logger().debug(`Enable plugins: ${this.plugins}`);
+      logger().debug(`Enable plugins: ${this.plugins.map((p) => p.info.url).join(", ")}`);
       for (const p of this.plugins) {
         await p.addRuntimepath();
         await p.denopsPluginLoad();
