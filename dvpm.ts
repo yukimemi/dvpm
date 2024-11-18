@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2024/11/03 16:42:34.
+// Last Change : 2024/11/18 09:02:26.
 // =============================================================================
 
 import * as buffer from "jsr:@denops/std@7.3.2/buffer";
@@ -10,7 +10,7 @@ import type { Denops } from "jsr:@denops/std@7.3.2";
 import { Plugin } from "./plugin.ts";
 import { Semaphore } from "jsr:@lambdalisue/async@2.1.1";
 import { cache, convertUrl, notify } from "./util.ts";
-import { echo, echoerr, execute } from "jsr:@denops/std@7.3.2/helper";
+import { echo, execute } from "jsr:@denops/std@7.3.2/helper";
 import { logger } from "./logger.ts";
 import { sprintf } from "jsr:@std/fmt@1.0.3/printf";
 import { type DvpmOption, DvpmOptionSchema, type Plug } from "./types.ts";
@@ -150,7 +150,7 @@ export class Dvpm {
       const p = this.findPlugin(url);
       if (p == undefined) {
         logger().error(`[resolveDependencies] ${url} is not found in plugin list !`);
-        await echoerr(this.denops, `${url} is not found in plugin list !`);
+        console.error(this.denops, `${url} is not found in plugin list !`);
         return;
       }
       if (p.info.dependencies) {
@@ -192,7 +192,7 @@ export class Dvpm {
       } catch (e) {
         if (e instanceof Error) {
           logger().error(`[_install] ${p.info.url} ${e.message}, ${e.stack}`);
-          await echoerr(this.denops, `${p.info.url} ${e.message}, ${e.stack}`);
+          console.error(this.denops, `${p.info.url} ${e.message}, ${e.stack}`);
         }
       }
     });
@@ -339,7 +339,7 @@ export class Dvpm {
     } catch (e) {
       if (e instanceof Error) {
         logger().error(`[add] ${plug.url} ${e.message}, ${e.stack}`);
-        await echoerr(this.denops, `${plug.url} ${e.message}, ${e.stack}`);
+        console.error(this.denops, `${plug.url} ${e.message}, ${e.stack}`);
       }
     }
   }
@@ -430,7 +430,7 @@ export class Dvpm {
     } catch (e) {
       if (e instanceof Error) {
         logger().error(`[end] ${e.message}, ${e.stack}`);
-        await echoerr(this.denops, `${e.message}, ${e.stack}`);
+        console.error(this.denops, `${e.message}, ${e.stack}`);
       }
     } finally {
       logger().debug(`[end] Dvpm end end !`);

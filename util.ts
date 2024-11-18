@@ -1,14 +1,14 @@
 // =============================================================================
 // File        : util.ts
 // Author      : yukimemi
-// Last Change : 2024/10/27 11:48:35.
+// Last Change : 2024/11/18 09:03:24.
 // =============================================================================
 
 import * as fn from "jsr:@denops/std@7.3.2/function";
 import * as fs from "jsr:@std/fs@1.0.5";
 import type { Denops } from "jsr:@denops/std@7.3.2";
 import { dirname, extname } from "jsr:@std/path@1.0.8";
-import { echo, echoerr, execute } from "jsr:@denops/std@7.3.2/helper";
+import { echo, execute } from "jsr:@denops/std@7.3.2/helper";
 import { logger } from "./logger.ts";
 import { z } from "npm:zod@3.23.8";
 
@@ -67,7 +67,7 @@ export async function getExecuteStr(denops: Denops, path: string): Promise<strin
     return `source ${p}`;
   }
 
-  await echoerr(denops, `unknown extension: ${extension}`);
+  console.error(denops, `unknown extension: ${extension}`);
   return "";
 }
 
