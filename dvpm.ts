@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2024/11/18 21:57:23.
+// Last Change : 2024/11/18 22:40:27.
 // =============================================================================
 
 import * as buffer from "jsr:@denops/std@7.3.2/buffer";
@@ -419,7 +419,7 @@ export class Dvpm {
         ]);
       }
       if (this.option.cache) {
-        for (const p of this.updateCache(this.plugins)) {
+        for (const p of this.updateCache(enabledPlugins)) {
           this.#cacheScript.push(await p.cache());
         }
         logger().debug(`Cache: ${this.option.cache}`);
