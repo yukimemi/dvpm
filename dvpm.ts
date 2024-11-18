@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2024/11/18 17:40:57.
+// Last Change : 2024/11/18 19:31:57.
 // =============================================================================
 
 import * as buffer from "jsr:@denops/std@7.3.2/buffer";
@@ -140,14 +140,10 @@ export class Dvpm {
 
   private resolveDependencies(plugins: Plugin[]): Plugin[] {
     const sortedPlugins: Plugin[] = [];
-    const seen = new Map<string, boolean>();
+    const seen = new Set<string>();
 
-    const resolve = (url: string, fromDependency: boolean = false) => {
+    const resolve = (url: string) => {
       if (seen.has(url)) {
-        if (!seen.get(url)! && !fromDependency) {
-          logger().warn(`[resolveDependencies] Duplicate top-level plugin detected: ${url}`);
-          console.warn(`Duplicate top-level plugin detected: ${url}`);
-        }
         return;
       }
       const p = this.findPlugin(url);
@@ -160,11 +156,11 @@ export class Dvpm {
         logger().debug(`[resolveDependencies] ${url} is disabled !`);
         return;
       }
-      seen.set(url, fromDependency);
       if (p.info.dependencies) {
-        p.info.dependencies.forEach((dependency) => resolve(dependency, true));
+        p.info.dependencies.forEach((dependency) => resolve(dependency));
       }
       sortedPlugins.push(p);
+      seen.add(url);
     };
 
     plugins.forEach((p) => resolve(p.info.url));
