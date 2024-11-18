@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2024/11/18 19:31:57.
+// Last Change : 2024/11/18 20:12:51.
 // =============================================================================
 
 import * as buffer from "jsr:@denops/std@7.3.2/buffer";
@@ -166,6 +166,21 @@ export class Dvpm {
     plugins.forEach((p) => resolve(p.info.url));
 
     return sortedPlugins;
+  }
+
+  private checkPluginUrlDuplicates(plugins: Plugin[]): void {
+    const urlSet = new Set<string>();
+    const duplicates = plugins.filter((p) => !urlSet.add(p.info.url));
+    if (duplicates.length > 0) {
+      logger().warn(
+        `[checkPluginUrlDuplicates] Duplicate plugin URLs detected: ${
+          duplicates.map((p) => p.info.url).join(", ")
+        }`,
+      );
+      console.warn(
+        `Duplicate plugin URLs detected: ${duplicates.map((p) => p.info.url).join(", ")}`,
+      );
+    }
   }
 
   private async bufWrite(bufname: string, data: string[], opts?: { filetype?: string }) {
@@ -349,17 +364,17 @@ export class Dvpm {
   public async end() {
     try {
       logger().debug(`[end] Dvpm end start !`);
-      this.plugins = this.resolveDependencies(this.plugins);
+      const enabledPlugins = this.resolveDependencies(this.plugins);
       await this.install();
-      logger().debug(`Enable plugins: ${this.plugins.map((p) => p.info.url).join(", ")}`);
-      for (const p of this.plugins) {
+      logger().debug(`Enable plugins: ${enabledPlugins.map((p) => p.info.url).join(", ")}`);
+      for (const p of enabledPlugins) {
         await p.addRuntimepath();
         await p.denopsPluginLoad();
         await p.before();
         await p.source();
         await p.after();
       }
-      for (const p of this.plugins) {
+      for (const p of enabledPlugins) {
         await p.sourceAfter();
       }
       if (await fn.exists(this.denops, "denops_server_addr")) {
@@ -425,6 +440,7 @@ export class Dvpm {
           path: this.option.cache,
         });
       }
+      this.checkPluginUrlDuplicates(this.plugins);
     } catch (e) {
       if (e instanceof Error) {
         logger().error(`[end] ${e.message}, ${e.stack}`);
