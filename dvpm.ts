@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2024/12/01 10:27:43.
+// Last Change : 2024/12/01 10:53:45.
 // =============================================================================
 
 import * as buffer from "jsr:@denops/std@7.4.0/buffer";
@@ -156,7 +156,6 @@ export class Dvpm {
       if (seen.has(url)) {
         return;
       }
-      seen.add(url);
       const p = this.findPlugin(url);
       if (p == undefined) {
         logger().error(`[resolveDependencies] ${url} is not found in plugin list !`);
@@ -171,6 +170,7 @@ export class Dvpm {
         p.info.dependencies.forEach((dependency) => resolve(dependency, currentDepth + 1));
       }
       sortedPlugins.push(p);
+      seen.add(url);
     };
 
     plugins.forEach((p) => resolve(p.info.url, 0));
