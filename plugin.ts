@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2024/11/18 09:09:57.
+// Last Change : 2024/12/01 11:09:00.
 // =============================================================================
 
 import * as fn from "jsr:@denops/std@7.4.0/function";
@@ -369,7 +369,6 @@ export class Plugin {
       if (output.success) {
         await this.genHelptags();
         this.info.isUpdate = true;
-        await this.build();
         let returnMsg = `Git clone ${this.info.url}`;
         if (this.info.rev) {
           returnMsg += ` --branch=${this.info.rev}`;
