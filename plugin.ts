@@ -369,6 +369,7 @@ export class Plugin {
       if (output.success) {
         await this.genHelptags();
         this.info.isUpdate = true;
+        await this.build();
         let returnMsg = `Git clone ${this.info.url}`;
         if (this.info.rev) {
           returnMsg += ` --branch=${this.info.rev}`;
