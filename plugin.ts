@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2024/12/01 11:09:00.
+// Last Change : 2024/12/01 11:18:32.
 // =============================================================================
 
 import * as fn from "jsr:@denops/std@7.4.0/function";
@@ -206,7 +206,7 @@ export class Plugin {
   public async build() {
     try {
       logger().debug(`[build] ${this.info.url} start !`);
-      if (this.info.build && this.info.enabled) {
+      if (this.info.build && this.info.isLoad && this.info.isUpdate) {
         logger().debug(`[build] ${this.info.url} execute build !`);
         await this.info.build({ denops: this.denops, info: this.info });
       }
