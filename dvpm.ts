@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2024/11/18 22:40:27.
+// Last Change : 2024/12/01 10:27:43.
 // =============================================================================
 
 import * as buffer from "jsr:@denops/std@7.4.0/buffer";
@@ -141,11 +141,22 @@ export class Dvpm {
   private resolveDependencies(plugins: Plugin[]): Plugin[] {
     const sortedPlugins: Plugin[] = [];
     const seen = new Set<string>();
+    const recursionDepthLimit = 100;
 
-    const resolve = (url: string) => {
+    const resolve = (url: string, currentDepth: number): void => {
+      if (currentDepth > recursionDepthLimit) {
+        logger().error(
+          `[resolveDependencies] Maximum recursion depth exceeded! Possible circular dependency detected involving ${url}`,
+        );
+        console.error(
+          `Maximum recursion depth exceeded! Possible circular dependency detected involving ${url}`,
+        );
+        return;
+      }
       if (seen.has(url)) {
         return;
       }
+      seen.add(url);
       const p = this.findPlugin(url);
       if (p == undefined) {
         logger().error(`[resolveDependencies] ${url} is not found in plugin list !`);
@@ -157,13 +168,12 @@ export class Dvpm {
         return;
       }
       if (p.info.dependencies) {
-        p.info.dependencies.forEach((dependency) => resolve(dependency));
+        p.info.dependencies.forEach((dependency) => resolve(dependency, currentDepth + 1));
       }
       sortedPlugins.push(p);
-      seen.add(url);
     };
 
-    plugins.forEach((p) => resolve(p.info.url));
+    plugins.forEach((p) => resolve(p.info.url, 0));
 
     return sortedPlugins;
   }
