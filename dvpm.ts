@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2024/12/01 11:07:58.
+// Last Change : 2024/12/01 17:45:11.
 // =============================================================================
 
 import * as buffer from "jsr:@denops/std@7.4.0/buffer";
@@ -120,18 +120,31 @@ export class Dvpm {
 
   private updateCache(plugins: Plugin[]) {
     const pluginMap = new Map(plugins.map((p) => [p.info.url, p]));
+    const recursionDepthLimit = 100;
 
-    function enableCache(url: string) {
-      const p = pluginMap.get(url);
-      if (p && !p.info.cache.enabled) {
-        p.info.cache.enabled = true;
-        p.info.dependencies.forEach(enableCache);
+    const enableCache = (url: string, currentDepth: number): void => {
+      if (currentDepth > recursionDepthLimit) {
+        logger().error(
+          `[updateCache] Maximum recursion depth exceeded! Possible circular dependency detected involving ${url}`,
+        );
+        console.error(
+          `Maximum recursion depth exceeded! Possible circular dependency detected involving ${url}`,
+        );
+        return;
       }
-    }
+      const p = pluginMap.get(url);
+      if (p == undefined) {
+        logger().warn(`[updateCache] Cache dependency error: plugin not found: ${url}`);
+        console.warn(`Cache dependency error: plugin not found: ${url}`);
+        return;
+      }
+      p.info.cache.enabled = true;
+      p.info.dependencies?.forEach((dependency) => enableCache(dependency, currentDepth + 1));
+    };
 
     plugins.forEach((p) => {
       if (p.info.cache.enabled) {
-        p.info.dependencies.forEach(enableCache);
+        p.info.dependencies?.forEach((dependency) => enableCache(dependency, 0));
       }
     });
 
