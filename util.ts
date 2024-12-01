@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : util.ts
 // Author      : yukimemi
-// Last Change : 2024/11/18 09:10:09.
+// Last Change : 2024/12/01 18:32:26.
 // =============================================================================
 
 import * as fn from "jsr:@denops/std@7.4.0/function";
@@ -15,7 +15,7 @@ import { z } from "npm:zod@3.23.8";
 /**
  * vim.notify function
  */
-export async function notify(denops: Denops, msg: string) {
+export async function notify(denops: Denops, msg: string): Promise<void> {
   try {
     if (await fn.has(denops, "nvim")) {
       logger().debug(msg);
@@ -39,7 +39,7 @@ export async function notify(denops: Denops, msg: string) {
 export async function cache(
   denops: Denops,
   arg: { script: string; path: string },
-) {
+): Promise<boolean> {
   const p = z.string().parse(await fn.expand(denops, arg.path));
   const s = arg.script.trim();
   await fs.ensureDir(dirname(p));
@@ -48,11 +48,13 @@ export async function cache(
     if (s !== content) {
       logger().debug(`Save to ${p}`);
       await Deno.writeTextFile(p, s);
+      return true;
     }
-  } else {
-    logger().debug(`Save to ${p}`);
-    await Deno.writeTextFile(p, s);
+    return false;
   }
+  logger().debug(`Save to ${p}`);
+  await Deno.writeTextFile(p, s);
+  return true;
 }
 
 /**
