@@ -4,7 +4,7 @@
 // Last Change : 2024/06/30 12:59:58.
 // =============================================================================
 
-import { assertEquals } from "jsr:@std/assert@1.0.8";
+import { assertEquals } from "jsr:@std/assert@1.0.9";
 
 import { Git } from "./git.ts";
 
