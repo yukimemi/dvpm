@@ -5,7 +5,7 @@
 // =============================================================================
 
 import type { Denops } from "jsr:@denops/std@7.4.0";
-import { z } from "npm:zod@3.23.8";
+import { z } from "npm:zod@3.24.1";
 
 export type Bool =
   | boolean
