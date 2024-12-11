@@ -17,7 +17,7 @@ import { cmdOutToString, convertUrl, executeFile, getExecuteStr } from "./util.t
 import { echo, execute } from "jsr:@denops/std@7.4.0/helper";
 import { exists, expandGlob } from "jsr:@std/fs@1.0.6";
 import { logger } from "./logger.ts";
-import { z } from "npm:zod@3.23.8";
+import { z } from "npm:zod@3.24.1";
 
 export class Plugin {
   static mutex: Semaphore = new Semaphore(1);
