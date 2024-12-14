@@ -11,7 +11,7 @@ import type { Bool, Plug, PlugInfo, PlugOption } from "./types.ts";
 import type { Denops } from "jsr:@denops/std@7.4.0";
 import { Git } from "./git.ts";
 import { PlugInfoSchema, PlugOptionSchema, PlugSchema } from "./types.ts";
-import { Result } from "npm:result-type-ts@2.1.4";
+import { Result } from "npm:result-type-ts@2.2.0";
 import { Semaphore } from "jsr:@lambdalisue/async@2.1.1";
 import { cmdOutToString, convertUrl, executeFile, getExecuteStr } from "./util.ts";
 import { echo, execute } from "jsr:@denops/std@7.4.0/helper";
