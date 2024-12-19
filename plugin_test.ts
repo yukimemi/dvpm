@@ -5,7 +5,7 @@
 // =============================================================================
 
 import { Plugin } from "./plugin.ts";
-import { assertEquals } from "jsr:@std/assert@1.0.9";
+import { assertEquals } from "jsr:@std/assert@1.0.10";
 import { DenopsStub } from "jsr:@denops/test@3.0.4";
 
 const createDenops = () => (
