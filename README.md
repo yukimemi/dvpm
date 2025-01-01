@@ -87,6 +87,11 @@ export async function main(denops: Denops): Promise<void> {
     url: "neoclide/coc.nvim",
     branch: "master",
     build: async ({ info }) => {
+      if (!info.isUpdate || !info.isLoad) {
+        // build option is called after git pull, even if there are no changes
+        // so you need to check for changes
+        return;
+      }
       const args = ["install", "--frozen-lockfile"];
       const cmd = new Deno.Command("yarn", { args, cwd: info.dst });
       const output = await cmd.output();
@@ -246,6 +251,8 @@ export type Plug = {
   // File path of processing to be performed after source plugin/*.vim and plugin/*.lua. (Option)
   afterFile?: string;
   // build option. Execute after install or update. (Option)
+  // Executed even if there are no changes in the update
+  // Therefore, conditionally branch on `info.isLoad` and `info.isUpdate` as necessary
   build?: ({
     denops,
     info,
