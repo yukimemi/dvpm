@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : types.ts
 // Author      : yukimemi
-// Last Change : 2025/01/01 22:09:02.
+// Last Change : 2025/01/02 01:14:11.
 // =============================================================================
 
 import type { Denops } from "jsr:@denops/std@7.4.0";
@@ -89,7 +89,6 @@ export const PlugOptionSchema = z.object({
   base: z.string(),
   debug: z.boolean().default(false),
   profiles: z.array(z.string()).default([]),
-  profile: z.boolean().default(false),
   logarg: z.array(z.string()).default([]),
 });
 export type PlugOption = z.infer<typeof PlugOptionSchema>;
@@ -100,7 +99,6 @@ export const DvpmOptionSchema = z.object({
   debug: z.boolean().default(false),
   profiles: z.array(z.string()).default([]),
   concurrency: z.number().default(8),
-  profile: z.boolean().default(false),
   notify: z.boolean().default(false),
   logarg: z.array(z.string()).default([]),
 });
@@ -108,7 +106,6 @@ const DvpmOptionPartialSchema = DvpmOptionSchema.partial({
   debug: true,
   profiles: true,
   concurrency: true,
-  profile: true,
   notify: true,
   logarg: true,
 });

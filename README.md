@@ -192,9 +192,6 @@ export type DvpmOption = {
   // Number of concurrent processes. Default is 8.
   // This is used plugin install, update, source.
   concurrency?: number;
-  // When this option is set, the time taken to source each plugin is output to dvpm://profile buffer after Vim is launched.
-  // `before` and `after` execution times are not included. Default is false.
-  profile?: boolean;
   // Use `vim.notify` for Install and Update log. Default is false. (Neovim only)
   notify?: boolean;
   // git log arg. Used for :DvpmUpdate command output. Default is [].

@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2025/01/01 22:09:34.
+// Last Change : 2025/01/02 01:13:52.
 // =============================================================================
 
 import * as autocmd from "jsr:@denops/std@7.4.0/autocmd";
@@ -373,7 +373,6 @@ export class Dvpm {
           base: this.option.base,
           debug: z.boolean().parse(this.option.debug),
           profiles: z.array(z.string()).parse(this.option.profiles),
-          profile: z.boolean().parse(this.option.profile),
           logarg: z.array(z.string()).parse(this.option.logarg),
         },
       );
@@ -420,29 +419,6 @@ export class Dvpm {
       await this.denops.cmd(`doautocmd VimEnter`);
       if (this.#installLogs.length > 0) {
         await this.bufWrite("dvpm://install", this.#installLogs);
-      }
-      if (this.option.profile) {
-        const maxLen = this.maxUrlLen(this.plugins);
-        const sortedPlugins = this.plugins.filter((p) => p.info.isLoad)
-          .sort((a, b) => b.info.elaps - a.info.elaps).map((p) =>
-            sprintf(
-              `%-${maxLen + listSpace}s : %s`,
-              p.plug.url,
-              `${Math.round(p.info.elaps * 1000) / 1000}`,
-            )
-          );
-        this.totalElaps = performance.now() - this.totalElaps;
-        await this.bufWrite("dvpm://profile", [
-          sprintf(`%-${maxLen + listSpace}s : %s`, `url`, `elaps`),
-          `${"-".repeat(maxLen + listSpace)} : ------`,
-          ...sortedPlugins,
-          `${"-".repeat(maxLen + listSpace)} : ------`,
-          sprintf(
-            `%-${maxLen + listSpace}s : %s`,
-            `Total`,
-            `${Math.round(this.totalElaps * 1000) / 1000}`,
-          ),
-        ]);
       }
       if (this.option.cache) {
         for (const p of this.updateCache(enabledPlugins)) {
