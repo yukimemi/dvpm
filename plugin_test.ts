@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : plugin_test.ts
 // Author      : yukimemi
-// Last Change : 2024/11/02 15:58:07.
+// Last Change : 2025/01/01 22:20:51.
 // =============================================================================
 
 import { Plugin } from "./plugin.ts";
@@ -28,6 +28,7 @@ Deno.test({
     const option = {
       base: "/tmp",
       debug: false,
+      profiles: [],
       profile: false,
       logarg: [],
     };
@@ -48,6 +49,7 @@ Deno.test({
     const option = {
       base: "/tmp",
       debug: false,
+      profiles: [],
       profile: false,
       logarg: [],
     };
@@ -68,6 +70,7 @@ Deno.test({
     const option = {
       base: "/tmp",
       debug: false,
+      profiles: [],
       profile: false,
       logarg: [],
     };

@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : types.ts
 // Author      : yukimemi
-// Last Change : 2024/09/29 21:19:19.
+// Last Change : 2025/01/01 22:09:02.
 // =============================================================================
 
 import type { Denops } from "jsr:@denops/std@7.4.0";
@@ -31,6 +31,7 @@ export type Plug = {
   dst?: string;
   rev?: string;
   enabled?: Bool;
+  profiles?: string[];
   before?: Config;
   after?: Config;
   beforeFile?: string;
@@ -57,6 +58,7 @@ export const PlugSchema = z.object({
   dst: z.string().optional(),
   rev: z.string().optional(),
   enabled: BoolSchema.default(true),
+  profiles: z.array(z.string()).default([]),
   before: ConfigSchema.optional(),
   after: ConfigSchema.optional(),
   beforeFile: z.string().optional(),
@@ -86,6 +88,7 @@ export type PlugInfo = z.infer<typeof PlugInfoSchema>;
 export const PlugOptionSchema = z.object({
   base: z.string(),
   debug: z.boolean().default(false),
+  profiles: z.array(z.string()).default([]),
   profile: z.boolean().default(false),
   logarg: z.array(z.string()).default([]),
 });
@@ -95,6 +98,7 @@ export const DvpmOptionSchema = z.object({
   base: z.string(),
   cache: z.string().optional(),
   debug: z.boolean().default(false),
+  profiles: z.array(z.string()).default([]),
   concurrency: z.number().default(8),
   profile: z.boolean().default(false),
   notify: z.boolean().default(false),
@@ -102,6 +106,7 @@ export const DvpmOptionSchema = z.object({
 });
 const DvpmOptionPartialSchema = DvpmOptionSchema.partial({
   debug: true,
+  profiles: true,
   concurrency: true,
   profile: true,
   notify: true,

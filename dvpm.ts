@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2024/12/01 18:37:19.
+// Last Change : 2025/01/01 22:09:34.
 // =============================================================================
 
 import * as autocmd from "jsr:@denops/std@7.4.0/autocmd";
@@ -372,6 +372,7 @@ export class Dvpm {
         {
           base: this.option.base,
           debug: z.boolean().parse(this.option.debug),
+          profiles: z.array(z.string()).parse(this.option.profiles),
           profile: z.boolean().parse(this.option.profile),
           logarg: z.array(z.string()).parse(this.option.logarg),
         },
