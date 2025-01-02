@@ -513,7 +513,7 @@ export const main: Entrypoint = async (denops: Denops) => {
 
   const dvpm = await Dvpm.begin(denops, {
     base,
-    // Use only minimal plugins
+    // Use only minimal and default plugins
     profiles: ["minimal", "default"],
   });
 
