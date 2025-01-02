@@ -194,6 +194,9 @@ export type DvpmOption = {
   cache?: string;
   // debug print. Default is false.
   debug?: boolean;
+  // If specified in profiles, only plugins that match the profiles specified in `Plug` will be loaded
+  // See `Profile setting`
+  profiles?: string[];
   // Number of concurrent processes. Default is 8.
   // This is used plugin install, update, source.
   concurrency?: number;
@@ -230,6 +233,8 @@ export type Plug = {
   depth?: number;
   // enable or disable. Default is true.
   enabled?: Bool;
+  // If profiles are specified in DvpmOption, the plugin will be enabled only if the profiles specified here are included in the profiles of DvpmOption.
+  profiles: string[];
   // Processing to be performed before source plugin/*.vim and plugin/*.lua. (Option)
   before?: ({
     denops,
@@ -461,3 +466,74 @@ import * as autocmd from "jsr:@denops/std/autocmd";
 await autocmd.define(denops, "User", "DvpmCacheUpdated", "echo 'dvpm cache updated !'");
 ```
 
+## Profile setting
+
+If `profiles` is specified in `DvpmOption`, the plugins to be enabled can be restricted by the specified profile.
+
+e.g.
+
+```typescript
+~~~
+export async function main(denops: Denops): Promise<void> {
+  const base_path = (await fn.has(denops, "nvim")) ? "~/.cache/nvim/dvpm" : "~/.cache/vim/dvpm";
+  const base = ensure(await fn.expand(denops, base_path), is.String);
+
+  const dvpm = await Dvpm.begin(denops, {
+    base,
+    // Use only minimal plugins
+    profiles: ["minimal"],
+  });
+
+  await dvpm.add({
+    url: "yukimemi/chronicle.vim",
+    profiles: ["minimal"],
+  });
+  await dvpm.add({
+    url: "yukimemi/silentsaver.vim",
+    profiles: ["default"],
+  });
+  await dvpm.add({
+    url: "yukimemi/autocursor.vim",
+    profiles: ["full"],
+  });
+
+  await dvpm.end();
+}
+```
+
+In this case, only `yukimemi/chronicle.vim` is enabled.
+
+e.g.
+
+```typescript
+~~~
+export async function main(denops: Denops): Promise<void> {
+  const base_path = (await fn.has(denops, "nvim")) ? "~/.cache/nvim/dvpm" : "~/.cache/vim/dvpm";
+  const base = ensure(await fn.expand(denops, base_path), is.String);
+
+  const dvpm = await Dvpm.begin(denops, {
+    base,
+    // Use only minimal plugins
+    profiles: ["minimal", "default"],
+  });
+
+  await dvpm.add({
+    url: "yukimemi/chronicle.vim",
+    profiles: ["minimal"],
+  });
+  await dvpm.add({
+    url: "yukimemi/silentsaver.vim",
+    profiles: ["default"],
+  });
+  await dvpm.add({
+    url: "yukimemi/autocursor.vim",
+    profiles: ["full"],
+  });
+
+  await dvpm.end();
+}
+```
+
+In this case, `yukimemi/chronicle.vim` and `yukimemi/silentsaver.vim` are enabled.
+
+If you specify `["minimal", "default", "full"]` in `DvpmOption.profiles`, all three plugins will be enabled.
