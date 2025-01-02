@@ -60,7 +60,7 @@ execute 'set runtimepath^=' . substitute(fnamemodify(s:denops, ':p') , '[/\\]$',
 - ~/vimfiles/denops/config/main.ts (Windows)
 
 ```typescript
-import type { Denops } from "jsr:@denops/std";
+import type { Denops, Entrypoint } from "jsr:@denops/std";
 import * as fn from "jsr:@denops/std/function";
 import * as mapping from "jsr:@denops/std/mapping";
 import * as vars from "jsr:@denops/std/variable";
@@ -69,7 +69,7 @@ import { execute } from "jsr:@denops/std/helper";
 
 import { Dvpm } from "jsr:@yukimemi/dvpm";
 
-export async function main(denops: Denops): Promise<void> {
+export const main: Entrypoint = async (denops: Denops) => {
   const base_path = (await fn.has(denops, "nvim")) ? "~/.cache/nvim/dvpm" : "~/.cache/vim/dvpm";
   const base = ensure(await fn.expand(denops, base_path), is.String);
 
@@ -171,7 +171,7 @@ export async function main(denops: Denops): Promise<void> {
   await dvpm.end();
 
   console.log("Load completed !");
-}
+};
 ```
 
 See my dotfiles for more complex examples.
@@ -365,7 +365,7 @@ If you want some plugins to be loaded before VimEnter, enable the `cache` settin
 configuration is shown below.
 
 ```typescript
-export async function main(denops: Denops): Promise<void> {
+export const main: Entrypoint = async (denops: Denops) => {
   const base_path = (await fn.has(denops, "nvim")) ? "~/.cache/nvim/dvpm" : "~/.cache/vim/dvpm";
   const base = ensure(await fn.expand(denops, base_path), is.String);
   const cache_path = (await fn.has(denops, "nvim"))
@@ -425,7 +425,7 @@ export async function main(denops: Denops): Promise<void> {
 
   // Finally, call Dvpm.end.
   await dvpm.end();
-}
+};
 ```
 
 After performing the above settings, when you start Vim / Neovim, the following should be output to
@@ -474,7 +474,7 @@ e.g.
 
 ```typescript
 ~~~
-export async function main(denops: Denops): Promise<void> {
+export const main: Entrypoint = async (denops: Denops) => {
   const base_path = (await fn.has(denops, "nvim")) ? "~/.cache/nvim/dvpm" : "~/.cache/vim/dvpm";
   const base = ensure(await fn.expand(denops, base_path), is.String);
 
@@ -498,7 +498,7 @@ export async function main(denops: Denops): Promise<void> {
   });
 
   await dvpm.end();
-}
+};
 ```
 
 In this case, only `yukimemi/chronicle.vim` is enabled.
@@ -507,7 +507,7 @@ e.g.
 
 ```typescript
 ~~~
-export async function main(denops: Denops): Promise<void> {
+export const main: Entrypoint = async (denops: Denops) => {
   const base_path = (await fn.has(denops, "nvim")) ? "~/.cache/nvim/dvpm" : "~/.cache/vim/dvpm";
   const base = ensure(await fn.expand(denops, base_path), is.String);
 
@@ -531,7 +531,7 @@ export async function main(denops: Denops): Promise<void> {
   });
 
   await dvpm.end();
-}
+};
 ```
 
 In this case, `yukimemi/chronicle.vim` and `yukimemi/silentsaver.vim` are enabled.
