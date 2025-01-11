@@ -15,7 +15,7 @@ import { Result } from "npm:result-type-ts@2.2.0";
 import { Semaphore } from "jsr:@lambdalisue/async@2.1.1";
 import { cmdOutToString, convertUrl, executeFile, getExecuteStr } from "./util.ts";
 import { echo, execute } from "jsr:@denops/std@7.4.0/helper";
-import { exists, expandGlob } from "jsr:@std/fs@1.0.8";
+import { exists, expandGlob } from "jsr:@std/fs@1.0.9";
 import { logger } from "./logger.ts";
 import { z } from "npm:zod@3.24.1";
 
