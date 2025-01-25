@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2025/01/02 01:39:25.
+// Last Change : 2025/01/25 15:40:09.
 // =============================================================================
 
 import * as autocmd from "jsr:@denops/std@7.4.0/autocmd";
@@ -396,10 +396,12 @@ export class Dvpm {
       await this.install();
       logger().debug(`Enable plugins: ${enabledPlugins.map((p) => p.info.url).join(", ")}`);
       for (const p of enabledPlugins) {
-        await p.addRuntimepath();
+        const added = await p.addRuntimepath();
         await p.denopsPluginLoad();
         await p.before();
-        await p.source();
+        if (added) {
+          await p.source();
+        }
         await p.after();
       }
       for (const p of enabledPlugins) {
