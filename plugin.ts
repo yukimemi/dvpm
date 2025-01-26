@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2025/01/02 01:35:10.
+// Last Change : 2025/01/26 16:31:12.
 // =============================================================================
 
 import * as fn from "jsr:@denops/std@7.4.0/function";
@@ -13,7 +13,7 @@ import { Git } from "./git.ts";
 import { PlugInfoSchema, PlugOptionSchema, PlugSchema } from "./types.ts";
 import { Result } from "npm:result-type-ts@2.2.0";
 import { Semaphore } from "jsr:@lambdalisue/async@2.1.1";
-import { cmdOutToString, convertUrl, executeFile, getExecuteStr } from "./util.ts";
+import { cmdOutToString, convertUrl, executeFile, getExecuteStr, parseUrl } from "./util.ts";
 import { echo, execute } from "jsr:@denops/std@7.4.0/helper";
 import { exists, expandGlob } from "jsr:@std/fs@1.0.10";
 import { logger } from "./logger.ts";
@@ -54,8 +54,8 @@ export class Plugin {
       logger().debug(`[create] set dst to ${p.plug.dst}`);
       p.info.dst = z.string().parse(await fn.expand(p.denops, p.plug.dst));
     } else {
-      const url = new URL(p.info.url);
-      p.info.dst = path.join(option.base, url.hostname, url.pathname);
+      const { hostname, pathname } = parseUrl(p.info.url);
+      p.info.dst = path.join(option.base, hostname, pathname);
     }
     p.info.clone = await p.is(p.info.clone);
     p.info.enabled = await p.is(p.info.enabled) && p.info.clone &&
