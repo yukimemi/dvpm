@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : util.ts
 // Author      : yukimemi
-// Last Change : 2024/12/01 18:32:26.
+// Last Change : 2025/01/26 16:43:06.
 // =============================================================================
 
 import * as fn from "jsr:@denops/std@7.4.0/function";
@@ -92,8 +92,27 @@ export function cmdOutToString(cmdout: Uint8Array): string[] {
  * Convert url
  */
 export function convertUrl(url: string): string {
-  if (url.startsWith("https://") || url.startsWith("git")) {
+  const hasProtocol = /^(https?:\/\/|git:\/\/|ssh:\/\/|git@)/.test(url);
+  if (hasProtocol) {
     return url;
+  } else {
+    return `https://github.com/${url}`;
   }
-  return `https://github.com/${url}`;
+}
+
+/**
+ * Parse url
+ */
+export function parseUrl(url: string): { hostname: string; pathname: string } {
+  if (url.startsWith("git@")) {
+    url = url.replace(":", "/").replace("git@", "https://");
+  }
+  if (url.endsWith(".git")) {
+    url = url.slice(0, -4);
+  }
+  const urlObj = new URL(url);
+  return {
+    hostname: urlObj.hostname,
+    pathname: urlObj.pathname,
+  };
 }

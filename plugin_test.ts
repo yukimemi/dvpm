@@ -1,12 +1,13 @@
 // =============================================================================
 // File        : plugin_test.ts
 // Author      : yukimemi
-// Last Change : 2025/01/01 22:20:51.
+// Last Change : 2025/01/26 16:41:56.
 // =============================================================================
 
+import * as path from "jsr:@std/path@1.0.8";
+import { DenopsStub } from "jsr:@denops/test@3.0.4";
 import { Plugin } from "./plugin.ts";
 import { assertEquals } from "jsr:@std/assert@1.0.11";
-import { DenopsStub } from "jsr:@denops/test@3.0.4";
 
 const createDenops = () => (
   new DenopsStub({
@@ -17,14 +18,11 @@ const createDenops = () => (
 );
 
 Deno.test({
-  name: "Create Plugin with full URL",
+  name: "Plugin URL conversion test",
   sanitizeOps: false,
   sanitizeResources: false,
   fn: async () => {
     const denops = createDenops();
-    const plug = {
-      url: "https://github.com/vim-jp/vimdoc-ja",
-    };
     const option = {
       base: "/tmp",
       debug: false,
@@ -32,49 +30,73 @@ Deno.test({
       profile: false,
       logarg: [],
     };
-    const plugin = await Plugin.create(denops, plug, option);
-    assertEquals(plugin.info.url, "https://github.com/vim-jp/vimdoc-ja");
-  },
-});
 
-Deno.test({
-  name: "Create Plugin with shorthand URL",
-  sanitizeOps: false,
-  sanitizeResources: false,
-  fn: async () => {
-    const denops = createDenops();
-    const plug = {
-      url: "vim-jp/vimdoc-ja",
-    };
-    const option = {
-      base: "/tmp",
-      debug: false,
-      profiles: [],
-      profile: false,
-      logarg: [],
-    };
-    const plugin = await Plugin.create(denops, plug, option);
-    assertEquals(plugin.info.url, "https://github.com/vim-jp/vimdoc-ja");
-  },
-});
+    const testCases = [
+      {
+        name: "Shorthand github owner URL",
+        inputUrl: "github/copilot.vim",
+        expectedUrl: "https://github.com/github/copilot.vim",
+        expectedDst: path.join("/tmp", "github.com", "github", "copilot.vim"),
+      },
+      {
+        name: "https:// URL",
+        inputUrl: "https://github.com/owner/repo",
+        expectedUrl: "https://github.com/owner/repo",
+        expectedDst: path.join("/tmp", "github.com", "owner", "repo"),
+      },
+      {
+        name: "git:// URL",
+        inputUrl: "git://github.com/owner/repo",
+        expectedUrl: "git://github.com/owner/repo",
+        expectedDst: path.join("/tmp", "github.com", "owner", "repo"),
+      },
+      {
+        name: "ssh:// URL",
+        inputUrl: "ssh://github.com/owner/repo",
+        expectedUrl: "ssh://github.com/owner/repo",
+        expectedDst: path.join("/tmp", "github.com", "owner", "repo"),
+      },
+      {
+        name: "git@ URL",
+        inputUrl: "git@github.com:owner/repo",
+        expectedUrl: "git@github.com:owner/repo",
+        expectedDst: path.join("/tmp", "github.com", "owner", "repo"),
+      },
+      {
+        name: "http:// URL",
+        inputUrl: "http://github.com/owner/repo",
+        expectedUrl: "http://github.com/owner/repo",
+        expectedDst: path.join("/tmp", "github.com", "owner", "repo"),
+      },
+      {
+        name: "https:// URL with .git suffix",
+        inputUrl: "https://github.com/owner/repo.git",
+        expectedUrl: "https://github.com/owner/repo.git",
+        expectedDst: path.join("/tmp", "github.com", "owner", "repo"),
+      },
+      {
+        name: "git@ URL with .git suffix",
+        inputUrl: "git@github.com:owner/repo.git",
+        expectedUrl: "git@github.com:owner/repo.git",
+        expectedDst: path.join("/tmp", "github.com", "owner", "repo"),
+      },
+    ];
 
-Deno.test({
-  name: "Create Plugin with git URL",
-  sanitizeOps: false,
-  sanitizeResources: false,
-  fn: async () => {
-    const denops = createDenops();
-    const plug = {
-      url: "git://github.com/vim-jp/vimdoc-ja",
-    };
-    const option = {
-      base: "/tmp",
-      debug: false,
-      profiles: [],
-      profile: false,
-      logarg: [],
-    };
-    const plugin = await Plugin.create(denops, plug, option);
-    assertEquals(plugin.info.url, "git://github.com/vim-jp/vimdoc-ja");
+    for (const testCase of testCases) {
+      const plug = {
+        url: testCase.inputUrl,
+      };
+      const plugin = await Plugin.create(denops, plug, option);
+      assertEquals(
+        plugin.info.url,
+        testCase.expectedUrl,
+        `Test Case: ${testCase.name} - url`,
+      );
+      assertEquals(
+        plugin.info.dst,
+        testCase.expectedDst,
+        `Test Case: ${testCase.name} - dst`,
+      );
+    }
   },
 });
