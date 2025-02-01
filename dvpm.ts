@@ -13,7 +13,7 @@ import { Semaphore } from "jsr:@lambdalisue/async@2.1.1";
 import { cache, convertUrl, notify } from "./util.ts";
 import { echo, execute } from "jsr:@denops/std@7.4.0/helper";
 import { logger } from "./logger.ts";
-import { sprintf } from "jsr:@std/fmt@1.0.4/printf";
+import { sprintf } from "jsr:@std/fmt@1.0.5/printf";
 import { type DvpmOption, DvpmOptionSchema, type Plug } from "./types.ts";
 import { z } from "npm:zod@3.24.1";
 
