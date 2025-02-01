@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2025/01/26 16:31:12.
+// Last Change : 2025/02/01 19:08:29.
 // =============================================================================
 
 import * as fn from "jsr:@denops/std@7.4.0/function";
@@ -21,7 +21,7 @@ import { z } from "npm:zod@3.24.1";
 
 export class Plugin {
   static mutex: Semaphore = new Semaphore(1);
-
+  #clone = false;
   public info: PlugInfo;
 
   constructor(
@@ -209,7 +209,7 @@ export class Plugin {
   public async build() {
     try {
       logger().debug(`[build] ${this.info.url} start !`);
-      if (this.info.build) {
+      if (this.info.build && this.#clone) {
         logger().debug(`[build] ${this.info.url} execute build !`);
         await this.info.build({ denops: this.denops, info: this.info });
       }
@@ -370,6 +370,7 @@ export class Plugin {
         this.info.depth,
       );
       if (output.success) {
+        this.#clone = true;
         await this.genHelptags();
         this.info.isUpdate = true;
         let returnMsg = `Git clone ${this.info.url}`;
@@ -409,6 +410,7 @@ export class Plugin {
       if (!this.info.clone) {
         return Result.success([]);
       }
+      this.#clone = true;
       const git = new Git(this.info.dst);
       const beforeRev = await git.getRevision();
       this.info.rev
@@ -420,7 +422,6 @@ export class Plugin {
       if (output.success) {
         if (beforeRev !== afterRev) {
           this.info.isUpdate = true;
-          await this.build();
           const outputLog = await git.getLog(
             beforeRev,
             afterRev,
@@ -450,7 +451,6 @@ export class Plugin {
             ...cmdOutToString(outputLog.stderr),
           ]);
         }
-        await this.build();
         return Result.success([]);
       }
       return Result.failure([
