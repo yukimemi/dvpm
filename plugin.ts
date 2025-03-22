@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2025/02/01 19:30:13.
+// Last Change : 2025/03/22 13:03:53.
 // =============================================================================
 
 import * as fn from "jsr:@denops/std@7.5.0/function";
@@ -58,11 +58,11 @@ export class Plugin {
       const { hostname, pathname } = parseUrl(p.info.url);
       p.info.dst = path.join(option.base, hostname, pathname);
     }
-    p.info.clone = await p.is(p.info.clone);
-    p.info.enabled = await p.is(p.info.enabled) && p.info.clone &&
+    p.info.enabled = await p.is(p.info.enabled) &&
       (p.option.profiles.length === 0 ||
         (p.option.profiles.length > 0 &&
           p.option.profiles.some((profile) => p.info.profiles.includes(profile))));
+    p.info.clone = await p.is(p.info.clone == undefined ? p.info.enabled : p.info.clone);
 
     p.info.cache.enabled = await p.is(p.info.cache.enabled);
     if (
