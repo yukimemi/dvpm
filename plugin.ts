@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2025/03/22 13:03:53.
+// Last Change : 2025/03/22 14:58:56.
 // =============================================================================
 
 import * as fn from "jsr:@denops/std@7.5.0/function";
@@ -62,7 +62,7 @@ export class Plugin {
       (p.option.profiles.length === 0 ||
         (p.option.profiles.length > 0 &&
           p.option.profiles.some((profile) => p.info.profiles.includes(profile))));
-    p.info.clone = await p.is(p.info.clone == undefined ? p.info.enabled : p.info.clone);
+    p.info.clone = await p.is(p.info.enabled ? p.info.enabled : p.info.clone);
 
     p.info.cache.enabled = await p.is(p.info.cache.enabled);
     if (

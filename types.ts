@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : types.ts
 // Author      : yukimemi
-// Last Change : 2025/01/02 01:14:11.
+// Last Change : 2025/03/22 14:55:56.
 // =============================================================================
 
 import type { Denops } from "jsr:@denops/std@7.5.0";
@@ -64,7 +64,7 @@ export const PlugSchema = z.object({
   beforeFile: z.string().optional(),
   afterFile: z.string().optional(),
   build: ConfigSchema.optional(),
-  clone: BoolSchema.default(true),
+  clone: BoolSchema.default(false),
   depth: z.number().default(0),
   dependencies: z.array(z.string()).default([]),
   cache: z.object({
