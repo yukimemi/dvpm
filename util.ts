@@ -5,7 +5,7 @@
 // =============================================================================
 
 import * as fn from "jsr:@denops/std@7.5.0/function";
-import * as fs from "jsr:@std/fs@1.0.14";
+import * as fs from "jsr:@std/fs@1.0.15";
 import type { Denops } from "jsr:@denops/std@7.5.0";
 import { dirname, extname } from "jsr:@std/path@1.0.8";
 import { echo, execute } from "jsr:@denops/std@7.5.0/helper";
