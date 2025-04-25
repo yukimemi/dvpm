@@ -4,7 +4,7 @@
 // Last Change : 2024/11/02 15:32:24.
 // =============================================================================
 
-import { assertEquals } from "jsr:@std/assert@1.0.12";
+import { assertEquals } from "jsr:@std/assert@1.0.13";
 
 import { convertUrl } from "./util.ts";
 
