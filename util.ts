@@ -5,9 +5,9 @@
 // =============================================================================
 
 import * as fn from "jsr:@denops/std@7.5.0/function";
-import * as fs from "jsr:@std/fs@1.0.16";
+import * as fs from "jsr:@std/fs@1.0.17";
 import type { Denops } from "jsr:@denops/std@7.5.0";
-import { dirname, extname } from "jsr:@std/path@1.0.8";
+import { dirname, extname } from "jsr:@std/path@1.0.9";
 import { echo, execute } from "jsr:@denops/std@7.5.0/helper";
 import { logger } from "./logger.ts";
 import { z } from "npm:zod@3.24.3";

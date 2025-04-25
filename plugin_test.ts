@@ -4,10 +4,10 @@
 // Last Change : 2025/01/26 16:41:56.
 // =============================================================================
 
-import * as path from "jsr:@std/path@1.0.8";
+import * as path from "jsr:@std/path@1.0.9";
 import { DenopsStub } from "jsr:@denops/test@3.0.4";
 import { Plugin } from "./plugin.ts";
-import { assertEquals } from "jsr:@std/assert@1.0.12";
+import { assertEquals } from "jsr:@std/assert@1.0.13";
 
 const createDenops = () => (
   new DenopsStub({
