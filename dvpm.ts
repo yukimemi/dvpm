@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2025/05/06 10:11:56.
+// Last Change : 2025/05/06 11:57:02.
 // =============================================================================
 
 import * as autocmd from "jsr:@denops/std@7.5.0/autocmd";
@@ -212,8 +212,8 @@ export class Dvpm {
   }
 
   private async bufWrite(bufname: string, data: string[], opts?: { filetype?: string }) {
+    const buf = await buffer.open(this.denops, bufname);
     await batch(this.denops, async (denops) => {
-      const buf = await buffer.open(denops, bufname);
       await fn.setbufvar(denops, buf.bufnr, "&buftype", "nofile");
       await fn.setbufvar(denops, buf.bufnr, "&swapfile", 0);
       if (opts?.filetype) {
