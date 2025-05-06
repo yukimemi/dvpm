@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2025/02/01 19:30:37.
+// Last Change : 2025/05/06 10:11:56.
 // =============================================================================
 
 import * as autocmd from "jsr:@denops/std@7.5.0/autocmd";
@@ -16,6 +16,7 @@ import { logger } from "./logger.ts";
 import { sprintf } from "jsr:@std/fmt@1.0.7/printf";
 import { type DvpmOption, DvpmOptionSchema, type Plug } from "./types.ts";
 import { z } from "npm:zod@3.24.4";
+import { batch } from "jsr:@denops/std@7.5.0/batch";
 
 const listSpace = 3;
 
@@ -211,14 +212,16 @@ export class Dvpm {
   }
 
   private async bufWrite(bufname: string, data: string[], opts?: { filetype?: string }) {
-    const buf = await buffer.open(this.denops, bufname);
-    await fn.setbufvar(this.denops, buf.bufnr, "&buftype", "nofile");
-    await fn.setbufvar(this.denops, buf.bufnr, "&swapfile", 0);
-    if (opts?.filetype) {
-      await fn.setbufvar(this.denops, buf.bufnr, "&filetype", opts.filetype);
-    }
-    await buffer.replace(this.denops, buf.bufnr, data);
-    await buffer.concrete(this.denops, buf.bufnr);
+    await batch(this.denops, async (denops) => {
+      const buf = await buffer.open(denops, bufname);
+      await fn.setbufvar(denops, buf.bufnr, "&buftype", "nofile");
+      await fn.setbufvar(denops, buf.bufnr, "&swapfile", 0);
+      if (opts?.filetype) {
+        await fn.setbufvar(denops, buf.bufnr, "&filetype", opts.filetype);
+      }
+      await buffer.replace(denops, buf.bufnr, data);
+      await buffer.concrete(denops, buf.bufnr);
+    });
   }
 
   private async _install(p: Plugin) {
