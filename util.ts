@@ -10,7 +10,7 @@ import type { Denops } from "jsr:@denops/std@7.5.0";
 import { dirname, extname } from "jsr:@std/path@1.0.9";
 import { echo, execute } from "jsr:@denops/std@7.5.0/helper";
 import { logger } from "./logger.ts";
-import { z } from "npm:zod@3.25.23";
+import { z } from "npm:zod@3.25.28";
 
 /**
  * vim.notify function
