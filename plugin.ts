@@ -15,9 +15,9 @@ import { Result } from "npm:result-type-ts@2.2.0";
 import { Semaphore } from "jsr:@lambdalisue/async@2.1.1";
 import { cmdOutToString, convertUrl, executeFile, getExecuteStr, parseUrl } from "./util.ts";
 import { echo, execute } from "jsr:@denops/std@7.5.0/helper";
-import { exists, expandGlob } from "jsr:@std/fs@1.0.17";
+import { exists, expandGlob } from "jsr:@std/fs@1.0.18";
 import { logger } from "./logger.ts";
-import { z } from "npm:zod@3.25.41";
+import { z } from "npm:zod@3.25.42";
 
 export class Plugin {
   static mutex: Semaphore = new Semaphore(1);

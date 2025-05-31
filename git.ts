@@ -5,7 +5,7 @@
 // =============================================================================
 
 import * as path from "jsr:@std/path@1.1.0";
-import { exists } from "jsr:@std/fs@1.0.17";
+import { exists } from "jsr:@std/fs@1.0.18";
 import { TextLineStream } from "jsr:@std/streams@1.0.9";
 
 /**
