@@ -4,7 +4,7 @@
 // Last Change : 2025/03/22 14:55:56.
 // =============================================================================
 
-import type { Denops } from "jsr:@denops/std@7.5.0";
+import type { Denops } from "jsr:@denops/std@7.5.1";
 import { z } from "npm:zod@3.25.56";
 
 export type Bool =
