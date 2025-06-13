@@ -15,7 +15,7 @@ import { echo, execute } from "jsr:@denops/std@7.5.1/helper";
 import { logger } from "./logger.ts";
 import { sprintf } from "jsr:@std/fmt@1.0.8/printf";
 import { type DvpmOption, DvpmOptionSchema, type Plug } from "./types.ts";
-import { z } from "npm:zod@3.25.62";
+import { z } from "npm:zod@3.25.63";
 import { batch } from "jsr:@denops/std@7.5.1/batch";
 
 const listSpace = 3;
