@@ -6,7 +6,7 @@
 
 import * as fn from "jsr:@denops/std@7.6.0/function";
 import * as op from "jsr:@denops/std@7.6.0/option";
-import * as path from "jsr:@std/path@1.1.0";
+import * as path from "jsr:@std/path@1.1.1";
 import type { Bool, Plug, PlugInfo, PlugOption } from "./types.ts";
 import type { Denops } from "jsr:@denops/std@7.6.0";
 import { Git } from "./git.ts";
@@ -15,7 +15,7 @@ import { Result } from "npm:result-type-ts@2.2.0";
 import { Semaphore } from "jsr:@lambdalisue/async@2.1.1";
 import { cmdOutToString, convertUrl, executeFile, getExecuteStr, parseUrl } from "./util.ts";
 import { echo, execute } from "jsr:@denops/std@7.6.0/helper";
-import { exists, expandGlob } from "jsr:@std/fs@1.0.18";
+import { exists, expandGlob } from "jsr:@std/fs@1.0.19";
 import { logger } from "./logger.ts";
 import { z } from "npm:zod@3.25.67";
 
