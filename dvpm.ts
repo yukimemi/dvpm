@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2025/05/06 11:57:02.
+// Last Change : 2025/07/21 12:55:27.
 // =============================================================================
 
 import * as autocmd from "jsr:@denops/std@7.6.0/autocmd";
@@ -297,8 +297,6 @@ export class Dvpm {
       await Promise.all(this.plugins.map((p) => this._update(p)));
     }
 
-    this.denops.call("denops#cache#update");
-
     if (this.#updateLogs.length > 0) {
       await this.bufWrite("dvpm://update", this.#updateLogs, { filetype: "diff" });
     }
@@ -307,6 +305,8 @@ export class Dvpm {
     } else {
       await echo(this.denops, `Update done`);
     }
+
+    await this.denops.call("denops#cache#update");
   }
 
   /**
