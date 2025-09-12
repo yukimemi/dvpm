@@ -6,7 +6,7 @@
 
 import * as path from "jsr:@std/path@1.1.2";
 import { exists } from "jsr:@std/fs@1.0.19";
-import { TextLineStream } from "jsr:@std/streams@1.0.10";
+import { TextLineStream } from "jsr:@std/streams@1.0.12";
 
 /**
  * Git
