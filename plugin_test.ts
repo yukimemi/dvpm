@@ -7,7 +7,7 @@
 import * as path from "jsr:@std/path@1.1.1";
 import { DenopsStub } from "jsr:@denops/test@3.0.4";
 import { Plugin } from "./plugin.ts";
-import { assertEquals } from "jsr:@std/assert@1.0.13";
+import { assertEquals } from "jsr:@std/assert@1.0.14";
 
 const createDenops = () => (
   new DenopsStub({
