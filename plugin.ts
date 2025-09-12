@@ -6,7 +6,7 @@
 
 import * as fn from "jsr:@denops/std@8.0.0/function";
 import * as op from "jsr:@denops/std@8.0.0/option";
-import * as path from "jsr:@std/path@1.1.1";
+import * as path from "jsr:@std/path@1.1.2";
 import type { Bool, Plug, PlugInfo, PlugOption } from "./types.ts";
 import type { Denops } from "jsr:@denops/std@8.0.0";
 import { Git } from "./git.ts";
