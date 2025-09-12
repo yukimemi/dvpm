@@ -4,19 +4,19 @@
 // Last Change : 2025/07/21 12:55:27.
 // =============================================================================
 
-import * as autocmd from "jsr:@denops/std@7.6.0/autocmd";
-import * as buffer from "jsr:@denops/std@7.6.0/buffer";
-import * as fn from "jsr:@denops/std@7.6.0/function";
-import type { Denops } from "jsr:@denops/std@7.6.0";
+import * as autocmd from "jsr:@denops/std@8.0.0/autocmd";
+import * as buffer from "jsr:@denops/std@8.0.0/buffer";
+import * as fn from "jsr:@denops/std@8.0.0/function";
+import type { Denops } from "jsr:@denops/std@8.0.0";
 import { Plugin } from "./plugin.ts";
 import { Semaphore } from "jsr:@lambdalisue/async@2.1.1";
 import { cache, convertUrl, notify } from "./util.ts";
-import { echo, execute } from "jsr:@denops/std@7.6.0/helper";
+import { echo, execute } from "jsr:@denops/std@8.0.0/helper";
 import { logger } from "./logger.ts";
 import { sprintf } from "jsr:@std/fmt@1.0.8/printf";
 import { type DvpmOption, DvpmOptionSchema, type Plug } from "./types.ts";
 import { z } from "npm:zod@3.25.76";
-import { batch } from "jsr:@denops/std@7.6.0/batch";
+import { batch } from "jsr:@denops/std@8.0.0/batch";
 
 const listSpace = 3;
 
