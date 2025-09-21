@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : git.ts
 // Author      : yukimemi
-// Last Change : 2025/09/21 19:50:20.
+// Last Change : 2025/09/21 20:19:10.
 // =============================================================================
 
 import * as path from "@std/path";
@@ -49,8 +49,8 @@ export class Git {
   /**
    * Checkout a revision
    */
-  public async checkout(rev: string): Promise<void> {
-    await this.git(["checkout", rev]);
+  public async checkout(rev: string): Promise<Deno.CommandOutput> {
+    return await this.git(["checkout", rev]);
   }
 
   /**
@@ -170,7 +170,7 @@ export class Git {
     const currentBranch = await this.getBranch();
     branch ??= await this.getDefaultBranchGit();
     if (branch !== currentBranch) {
-      await this.checkout(branch);
+      return await this.checkout(branch);
     }
     const args = ["-C", this.base, "pull", "--ff"];
     const cmd = new Deno.Command("git", { args });
