@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2025/09/21 19:36:55.
+// Last Change : 2025/09/21 20:31:02.
 // =============================================================================
 
 import * as autocmd from "@denops/std/autocmd";
@@ -305,8 +305,6 @@ export class Dvpm {
     } else {
       await echo(this.denops, `Update done`);
     }
-
-    await this.denops.call("denops#cache#update");
   }
 
   /**
