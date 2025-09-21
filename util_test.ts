@@ -1,10 +1,10 @@
 // =============================================================================
 // File        : util_test.ts
 // Author      : yukimemi
-// Last Change : 2024/11/02 15:32:24.
+// Last Change : 2025/09/21 20:15:08.
 // =============================================================================
 
-import { assertEquals } from "jsr:@std/assert@1.0.13";
+import { assertEquals } from "@std/assert";
 
 import { convertUrl } from "./util.ts";
 

@@ -1,16 +1,16 @@
 // =============================================================================
 // File        : util.ts
 // Author      : yukimemi
-// Last Change : 2025/01/26 16:43:06.
+// Last Change : 2025/09/21 20:14:50.
 // =============================================================================
 
-import * as fn from "jsr:@denops/std@7.6.0/function";
-import * as fs from "jsr:@std/fs@1.0.19";
-import type { Denops } from "jsr:@denops/std@7.6.0";
-import { dirname, extname } from "jsr:@std/path@1.1.1";
-import { echo, execute } from "jsr:@denops/std@7.6.0/helper";
+import * as fn from "@denops/std/function";
+import * as fs from "@std/fs";
+import type { Denops } from "@denops/std";
+import { dirname, extname } from "@std/path";
+import { echo, execute } from "@denops/std/helper";
 import { logger } from "./logger.ts";
-import { z } from "npm:zod@3.25.76";
+import { z } from "zod";
 
 /**
  * vim.notify function

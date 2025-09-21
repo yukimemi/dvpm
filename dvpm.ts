@@ -1,22 +1,22 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2025/07/21 12:55:27.
+// Last Change : 2025/09/21 19:36:55.
 // =============================================================================
 
-import * as autocmd from "jsr:@denops/std@7.6.0/autocmd";
-import * as buffer from "jsr:@denops/std@7.6.0/buffer";
-import * as fn from "jsr:@denops/std@7.6.0/function";
-import type { Denops } from "jsr:@denops/std@7.6.0";
+import * as autocmd from "@denops/std/autocmd";
+import * as buffer from "@denops/std/buffer";
+import * as fn from "@denops/std/function";
+import type { Denops } from "@denops/std";
 import { Plugin } from "./plugin.ts";
-import { Semaphore } from "jsr:@lambdalisue/async@2.1.1";
+import { Semaphore } from "@core/asyncutil";
+import { batch } from "@denops/std/batch";
 import { cache, convertUrl, notify } from "./util.ts";
-import { echo, execute } from "jsr:@denops/std@7.6.0/helper";
+import { echo, execute } from "@denops/std/helper";
 import { logger } from "./logger.ts";
-import { sprintf } from "jsr:@std/fmt@1.0.8/printf";
+import { sprintf } from "@std/fmt/printf";
 import { type DvpmOption, DvpmOptionSchema, type Plug } from "./types.ts";
-import { z } from "npm:zod@3.25.76";
-import { batch } from "jsr:@denops/std@7.6.0/batch";
+import { z } from "zod";
 
 const listSpace = 3;
 

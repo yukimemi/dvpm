@@ -1,23 +1,23 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2025/03/22 14:58:56.
+// Last Change : 2025/09/21 20:13:27.
 // =============================================================================
 
-import * as fn from "jsr:@denops/std@7.6.0/function";
-import * as op from "jsr:@denops/std@7.6.0/option";
-import * as path from "jsr:@std/path@1.1.1";
+import * as fn from "@denops/std/function";
+import * as op from "@denops/std/option";
+import * as path from "@std/path";
 import type { Bool, Plug, PlugInfo, PlugOption } from "./types.ts";
-import type { Denops } from "jsr:@denops/std@7.6.0";
+import type { Denops } from "@denops/std";
 import { Git } from "./git.ts";
 import { PlugInfoSchema, PlugOptionSchema, PlugSchema } from "./types.ts";
-import { Result } from "npm:result-type-ts@2.2.0";
-import { Semaphore } from "jsr:@lambdalisue/async@2.1.1";
+import { Result } from "result-type-ts";
+import { Semaphore } from "@core/asyncutil";
 import { cmdOutToString, convertUrl, executeFile, getExecuteStr, parseUrl } from "./util.ts";
-import { echo, execute } from "jsr:@denops/std@7.6.0/helper";
-import { exists, expandGlob } from "jsr:@std/fs@1.0.19";
+import { echo, execute } from "@denops/std/helper";
+import { exists, expandGlob } from "@std/fs";
 import { logger } from "./logger.ts";
-import { z } from "npm:zod@3.25.76";
+import { z } from "zod";
 
 export class Plugin {
   static mutex: Semaphore = new Semaphore(1);

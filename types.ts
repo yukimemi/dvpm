@@ -1,11 +1,11 @@
 // =============================================================================
 // File        : types.ts
 // Author      : yukimemi
-// Last Change : 2025/03/22 14:55:56.
+// Last Change : 2025/09/21 20:14:33.
 // =============================================================================
 
-import type { Denops } from "jsr:@denops/std@7.6.0";
-import { z } from "npm:zod@3.25.76";
+import type { Denops } from "@denops/std";
+import { z } from "zod";
 
 export type Bool =
   | boolean

@@ -62,14 +62,14 @@ execute 'set runtimepath^=' . substitute(fnamemodify(s:denops, ':p') , '[/\\]$',
 - ~/vimfiles/denops/config/main.ts (Windows)
 
 ```typescript
-import type { Denops, Entrypoint } from "jsr:@denops/std";
-import * as fn from "jsr:@denops/std/function";
-import * as mapping from "jsr:@denops/std/mapping";
-import * as vars from "jsr:@denops/std/variable";
-import { ensure, is } from "jsr:@core/unknownutil";
-import { execute } from "jsr:@denops/std/helper";
+import type { Denops, Entrypoint } from "@denops/std";
+import * as fn from "@denops/std/function";
+import * as mapping from "@denops/std/mapping";
+import * as vars from "@denops/std/variable";
+import { ensure, is } from "@core/unknownutil";
+import { execute } from "@denops/std/helper";
 
-import { Dvpm } from "jsr:@yukimemi/dvpm";
+import { Dvpm } from "@yukimemi/dvpm";
 
 export const main: Entrypoint = async (denops: Denops) => {
   const base_path = (await fn.has(denops, "nvim")) ? "~/.cache/nvim/dvpm" : "~/.cache/vim/dvpm";
@@ -461,7 +461,7 @@ Fires after updating the cache.
 e.g.
 
 ```typescript
-import * as autocmd from "jsr:@denops/std/autocmd";
+import * as autocmd from "@denops/std/autocmd";
 
 ~~~
 

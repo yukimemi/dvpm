@@ -1,12 +1,12 @@
 // =============================================================================
 // File        : git.ts
 // Author      : yukimemi
-// Last Change : 2024/09/29 00:24:42.
+// Last Change : 2025/09/21 19:50:20.
 // =============================================================================
 
-import * as path from "jsr:@std/path@1.1.1";
-import { exists } from "jsr:@std/fs@1.0.19";
-import { TextLineStream } from "jsr:@std/streams@1.0.10";
+import * as path from "@std/path";
+import { exists } from "@std/fs";
+import { TextLineStream } from "@std/streams";
 
 /**
  * Git

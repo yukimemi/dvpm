@@ -1,13 +1,13 @@
 // =============================================================================
 // File        : plugin_test.ts
 // Author      : yukimemi
-// Last Change : 2025/01/26 16:41:56.
+// Last Change : 2025/09/21 19:50:58.
 // =============================================================================
 
-import * as path from "jsr:@std/path@1.1.1";
-import { DenopsStub } from "jsr:@denops/test@3.0.4";
+import * as path from "@std/path";
+import { DenopsStub } from "@denops/test";
 import { Plugin } from "./plugin.ts";
-import { assertEquals } from "jsr:@std/assert@1.0.13";
+import { assertEquals } from "@std/assert";
 
 const createDenops = () => (
   new DenopsStub({
