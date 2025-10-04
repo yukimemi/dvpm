@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : git.ts
 // Author      : yukimemi
-// Last Change : 2025/10/04 19:29:41.
+// Last Change : 2025/10/04 21:00:26.
 // =============================================================================
 
 import * as path from "@std/path";
@@ -173,7 +173,7 @@ export class Git {
    * Pull a git repository
    * Returns CommandOutput if pull was performed, undefined if skipped (e.g. for tags).
    */
-  public async pull(refToPull?: string): Promise<Deno.CommandOutput | undefined> {
+  public async pull(refToPull?: string): Promise<Deno.CommandOutput> {
     const currentRef = await this.getBranch();
     const targetRef = refToPull ?? await this.getDefaultBranchGit();
 
@@ -181,15 +181,22 @@ export class Git {
 
     if (!isTargetRefABranch) {
       if (currentRef !== targetRef) {
+        await this.git(["fetch"]);
         await this.checkout(targetRef);
       }
-      return undefined;
+      return {
+        success: true,
+        code: 0,
+        stdout: new Uint8Array(),
+        stderr: new Uint8Array(),
+        signal: null,
+      };
     }
     if (currentRef === undefined || currentRef !== targetRef) {
+      await this.git(["fetch"]);
       await this.checkout(targetRef);
     }
 
-    const args = ["pull", "--ff"];
-    return await this.git(args);
+    return await this.git(["pull", "--ff"]);
   }
 }
