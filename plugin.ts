@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2025/09/21 20:13:27.
+// Last Change : 2025/10/04 19:47:46.
 // =============================================================================
 
 import * as fn from "@denops/std/function";
@@ -419,7 +419,7 @@ export class Plugin {
       const output = await git.pull(this.info.rev);
       const afterRev = await git.getRevision();
       await this.genHelptags();
-      if (output.success) {
+      if (output?.success) {
         if (beforeRev !== afterRev) {
           this.info.isUpdate = true;
           const outputLog = await git.getLog(
@@ -457,9 +457,9 @@ export class Plugin {
         `--- ×: ${this.info.dst} --------------------`,
         `Failed to git pull ${this.info.url}`,
         `stdout:`,
-        ...cmdOutToString(output.stdout),
+        ...cmdOutToString(output?.stdout),
         `stderr:`,
-        ...cmdOutToString(output.stderr),
+        ...cmdOutToString(output?.stderr),
       ]);
     } catch (e) {
       if (e instanceof Error) {

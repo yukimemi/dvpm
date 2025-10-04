@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : git_test.ts
 // Author      : yukimemi
-// Last Change : 2025/09/21 19:50:37.
+// Last Change : 2025/10/04 19:47:11.
 // =============================================================================
 
 import { assertEquals } from "@std/assert";
@@ -34,7 +34,7 @@ Deno.test({
   sanitizeResources: false,
   fn: async () => {
     const git = await init();
-    const expected = await git.getBranchGit();
+    const expected = "main";
     const actual = await git.getBranch();
     assertEquals(actual, expected);
   },

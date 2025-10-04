@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : git.ts
 // Author      : yukimemi
-// Last Change : 2025/09/21 20:19:10.
+// Last Change : 2025/10/04 19:29:41.
 // =============================================================================
 
 import * as path from "@std/path";
@@ -47,19 +47,19 @@ export class Git {
   }
 
   /**
+   * Check if the given ref is a local branch.
+   */
+  private async isBranch(ref: string): Promise<boolean> {
+    const args = ["show-ref", "--verify", `refs/heads/${ref}`];
+    const output = await this.git(args);
+    return output.success;
+  }
+
+  /**
    * Checkout a revision
    */
   public async checkout(rev: string): Promise<Deno.CommandOutput> {
     return await this.git(["checkout", rev]);
-  }
-
-  /**
-   * Get the current branch from git
-   */
-  public async getBranchGit(): Promise<string> {
-    return this.cmdOutToString(
-      await this.git(["rev-parse", "--abbrev-ref", "HEAD"]),
-    );
   }
 
   /**
@@ -105,13 +105,19 @@ export class Git {
 
   /**
    * Get the current branch
+   * Returns undefined if in detached HEAD state.
    */
-  public async getBranch(): Promise<string> {
+  public async getBranch(): Promise<string | undefined> {
     const head = await this.getHead();
     if (head.match(/^ref: refs\/heads\//)) {
       return head.substring(16);
     }
-    return await this.getBranchGit();
+    // `git rev-parse --abbrev-ref HEAD` returns "HEAD" when in a detached HEAD state.
+    // However, since it's not an actual branch name, we return `undefined` here.
+    const branchName = this.cmdOutToString(
+      await this.git(["rev-parse", "--abbrev-ref", "HEAD"]),
+    );
+    return branchName === "HEAD" ? undefined : branchName;
   }
 
   /**
@@ -165,15 +171,25 @@ export class Git {
 
   /**
    * Pull a git repository
+   * Returns CommandOutput if pull was performed, undefined if skipped (e.g. for tags).
    */
-  public async pull(branch?: string): Promise<Deno.CommandOutput> {
-    const currentBranch = await this.getBranch();
-    branch ??= await this.getDefaultBranchGit();
-    if (branch !== currentBranch) {
-      return await this.checkout(branch);
+  public async pull(refToPull?: string): Promise<Deno.CommandOutput | undefined> {
+    const currentRef = await this.getBranch();
+    const targetRef = refToPull ?? await this.getDefaultBranchGit();
+
+    const isTargetRefABranch = await this.isBranch(targetRef);
+
+    if (!isTargetRefABranch) {
+      if (currentRef !== targetRef) {
+        await this.checkout(targetRef);
+      }
+      return undefined;
     }
-    const args = ["-C", this.base, "pull", "--ff"];
-    const cmd = new Deno.Command("git", { args });
-    return await cmd.output();
+    if (currentRef === undefined || currentRef !== targetRef) {
+      await this.checkout(targetRef);
+    }
+
+    const args = ["pull", "--ff"];
+    return await this.git(args);
   }
 }

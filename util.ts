@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : util.ts
 // Author      : yukimemi
-// Last Change : 2025/09/21 20:14:50.
+// Last Change : 2025/10/04 19:48:24.
 // =============================================================================
 
 import * as fn from "@denops/std/function";
@@ -84,7 +84,7 @@ export async function executeFile(denops: Denops, path: string): Promise<void> {
 /**
  * Convert command output to string
  */
-export function cmdOutToString(cmdout: Uint8Array): string[] {
+export function cmdOutToString(cmdout: Uint8Array | undefined): string[] {
   return new TextDecoder().decode(cmdout).split("\n").map((l) => l.trim());
 }
 
