@@ -23,7 +23,7 @@
   "imports": {
     "@core/asyncutil": "jsr:@core/asyncutil@^1.2.0",
     "@denops/std": "jsr:@denops/std@^8.0.0",
-    "@denops/test": "jsr:@denops/test@^3.0.4",
+    "@denops/test": "jsr:@denops/test@^4.0.0",
     "@std/assert": "jsr:@std/assert@^1.0.14",
     "@std/fmt": "jsr:@std/fmt@^1.0.8",
     "@std/fs": "jsr:@std/fs@^1.0.19",
