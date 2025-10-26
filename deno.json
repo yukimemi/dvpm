@@ -1,6 +1,6 @@
 {
   "name": "@yukimemi/dvpm",
-  "version": "8.2.1",
+  "version": "8.3.0",
   "exports": "./mod.ts",
   "tasks": {
     "check": "deno check ./**/*.ts",
@@ -31,7 +31,7 @@
     "@std/path": "jsr:@std/path@^1.1.2",
     "@std/streams": "jsr:@std/streams@^1.0.12",
     "result-type-ts": "npm:result-type-ts@^2.2.0",
-    "zod": "npm:zod@^3.25.76"
+    "zod": "npm:zod@^4.1.12"
   },
   "lint": {
     "rules": {

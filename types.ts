@@ -13,18 +13,16 @@ export type Bool =
 
 export const BoolSchema: z.ZodType<Bool> = z.union([
   z.boolean(),
-  z.function().args(z.object({
-    denops: z.any().transform((v) => v as Denops),
-    info: z.lazy(() => PlugInfoSchema),
-  })).returns(z.promise(z.boolean())),
+  z.custom<({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<boolean>>((val) =>
+    typeof val === "function"
+  ),
 ]);
 
 export type Config = ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>;
 
-export const ConfigSchema: z.ZodType<Config> = z.function().args(z.object({
-  denops: z.any().transform((v) => v as Denops),
-  info: z.lazy(() => PlugInfoSchema),
-})).returns(z.promise(z.void()));
+export const ConfigSchema: z.ZodType<Config> = z.custom<Config>(
+  (val) => typeof val === "function",
+);
 
 export type Plug = {
   url: string;
@@ -80,9 +78,9 @@ export const PlugSchema = z.object({
   elaps: z.number().default(0),
 });
 
-export const PlugInfoSchema = PlugSchema.merge(z.object({
+export const PlugInfoSchema = PlugSchema.extend({
   dst: z.string(),
-}));
+});
 export type PlugInfo = z.infer<typeof PlugInfoSchema>;
 
 export const PlugOptionSchema = z.object({
