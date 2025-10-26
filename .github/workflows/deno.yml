@@ -1,10 +1,10 @@
 # =============================================================================
-# File        : molt.yml
+# File        : deno.yml
 # Author      : yukimemi
-# Last Change : 2024/09/21 15:46:08.
+# Last Change : 2025/10/04 20:37:40.
 # =============================================================================
 
-name: molt
+name: deno
 
 on:
   workflow_dispatch:
@@ -32,11 +32,15 @@ jobs:
           private-key: ${{ secrets.PRIVATE_KEY }}
 
       - uses: actions/checkout@v4
-      - uses: denoland/setup-deno@v1
+      - uses: denoland/setup-deno@v2
       - run: deno task ci
-      - uses: hasundue/molt-action@v1.0.2
+      - run: deno outdated --update --latest --recursive
+      - run: deno task ci
+      - uses: peter-evans/create-pull-request@v7
         with:
-          labels: automerge
           token: ${{ steps.app-token.outputs.token }}
-          config: false
-          source: "**/*.ts"
+          labels: automerge
+          branch: update/deno-imports
+          delete-branch: true
+          title: Update Deno imports
+          commit-message: "chore(deps): Update deno imports"
