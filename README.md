@@ -83,11 +83,11 @@ export const main: Entrypoint = async (denops: Denops) => {
   // URL only (not GitHub).
   await dvpm.add({ url: "https://notgithub.com/some/other/plugin" });
   // With branch.
-  // await dvpm.add({ url: "neoclide/coc.nvim", branch: "release" });
+  // await dvpm.add({ url: "neoclide/coc.nvim", rev: "release" });
   // build option. Execute after install or update.
   await dvpm.add({
     url: "neoclide/coc.nvim",
-    branch: "master",
+    rev: "master",
     build: async ({ info }) => {
       if (!info.isUpdate || !info.isLoad) {
         // build option is called after git pull, even if there are no changes
