@@ -6,6 +6,7 @@
 
 import * as autocmd from "@denops/std/autocmd";
 import * as buffer from "@denops/std/buffer";
+import type { OpenOptions } from "@denops/std/buffer";
 import * as fn from "@denops/std/function";
 import type { Denops } from "@denops/std";
 import { Plugin } from "./plugin.ts";
@@ -211,13 +212,18 @@ export class Dvpm {
     }
   }
 
-  private async bufWrite(bufname: string, data: string[], opts?: { filetype?: string }) {
-    const buf = await buffer.open(this.denops, bufname);
+  private async bufWrite(
+    bufname: string,
+    data: string[],
+    filetype?: string,
+    openOptions?: OpenOptions,
+  ) {
+    const buf = await buffer.open(this.denops, bufname, openOptions);
     await batch(this.denops, async (denops) => {
       await fn.setbufvar(denops, buf.bufnr, "&buftype", "nofile");
       await fn.setbufvar(denops, buf.bufnr, "&swapfile", 0);
-      if (opts?.filetype) {
-        await fn.setbufvar(denops, buf.bufnr, "&filetype", opts.filetype);
+      if (filetype) {
+        await fn.setbufvar(denops, buf.bufnr, "&filetype", filetype);
       }
       await buffer.replace(denops, buf.bufnr, data);
       await buffer.concrete(denops, buf.bufnr);
@@ -276,7 +282,9 @@ export class Dvpm {
     }
 
     if (this.#installLogs.length > 0) {
-      await this.bufWrite("dvpm://install", this.#installLogs);
+      await this.bufWrite("dvpm://install", this.#installLogs, undefined, {
+        opener: "tabedit",
+      });
     }
   }
 
@@ -298,7 +306,7 @@ export class Dvpm {
     }
 
     if (this.#updateLogs.length > 0) {
-      await this.bufWrite("dvpm://update", this.#updateLogs, { filetype: "diff" });
+      await this.bufWrite("dvpm://update", this.#updateLogs, "diff", { opener: "tabedit" });
     }
     if (this.option.notify) {
       await notify(this.denops, `Update done`);
@@ -424,7 +432,9 @@ export class Dvpm {
       logger().debug(`doautocmd VimEnter`);
       await this.denops.cmd(`doautocmd VimEnter`);
       if (this.#installLogs.length > 0) {
-        await this.bufWrite("dvpm://install", this.#installLogs);
+        await this.bufWrite("dvpm://install", this.#installLogs, undefined, {
+          opener: "tabedit",
+        });
       }
       if (this.option.cache) {
         for (const p of this.updateCache(enabledPlugins)) {
