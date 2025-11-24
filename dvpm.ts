@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2025/09/21 20:31:02.
+// Last Change : 2025/11/24 23:51:00.
 // =============================================================================
 
 import * as autocmd from "@denops/std/autocmd";
@@ -279,12 +279,6 @@ export class Dvpm {
       await this._install(p);
     } else {
       await Promise.all(this.plugins.map((p) => this._install(p)));
-    }
-
-    if (this.#installLogs.length > 0) {
-      await this.bufWrite("dvpm://install", this.#installLogs, undefined, {
-        opener: "tabedit",
-      });
     }
   }
 
