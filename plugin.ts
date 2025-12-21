@@ -17,7 +17,7 @@ import { cmdOutToString, convertUrl, executeFile, getExecuteStr, parseUrl } from
 import { echo, execute } from "@denops/std/helper";
 import { exists, expandGlob } from "@std/fs";
 import { logger } from "./logger.ts";
-import { z } from "zod";
+import { type } from "arktype";
 
 export class Plugin {
   static mutex: Semaphore = new Semaphore(1);
@@ -29,9 +29,9 @@ export class Plugin {
     public plug: Plug,
     public option: PlugOption,
   ) {
-    this.plug = PlugSchema.parse(this.plug);
-    this.option = PlugOptionSchema.parse(this.option);
-    this.info = PlugInfoSchema.parse({
+    this.plug = PlugSchema.assert(this.plug);
+    this.option = PlugOptionSchema.assert(this.option);
+    this.info = PlugInfoSchema.assert({
       dst: "",
       ...this.plug,
     });
@@ -53,18 +53,22 @@ export class Plugin {
 
     if (p.plug.dst) {
       logger().debug(`[create] set dst to ${p.plug.dst}`);
-      p.info.dst = z.string().parse(await fn.expand(p.denops, p.plug.dst));
+      p.info.dst = type("string").assert(await fn.expand(p.denops, p.plug.dst));
     } else {
       const { hostname, pathname } = parseUrl(p.info.url);
       p.info.dst = path.join(option.base, hostname, pathname);
     }
-    p.info.enabled = await p.is(p.info.enabled) &&
-      (p.option.profiles.length === 0 ||
-        (p.option.profiles.length > 0 &&
-          p.option.profiles.some((profile) => p.info.profiles.includes(profile))));
-    p.info.clone = await p.is(p.info.enabled ? p.info.enabled : p.info.clone);
+    p.info.enabled = await p.is(p.info.enabled as Bool) &&
+      (
+        p.option.profiles.length === 0 ||
+        (
+          p.option.profiles.length > 0 &&
+          p.option.profiles.some((profile) => p.info.profiles.includes(profile))
+        )
+      );
+    p.info.clone = await p.is((p.info.enabled ? p.info.enabled : p.info.clone) as Bool);
 
-    p.info.cache.enabled = await p.is(p.info.cache.enabled);
+    p.info.cache.enabled = await p.is(p.info.cache.enabled as Bool);
     if (
       p.info.cache?.before || p.info.cache?.after || p.info.cache?.beforeFile ||
       p.info.cache?.afterFile

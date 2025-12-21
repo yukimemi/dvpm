@@ -17,7 +17,7 @@ import { echo, execute } from "@denops/std/helper";
 import { logger } from "./logger.ts";
 import { sprintf } from "@std/fmt/printf";
 import { type DvpmOption, DvpmOptionSchema, type Plug } from "./types.ts";
-import { z } from "zod";
+import { type } from "arktype";
 
 const listSpace = 3;
 
@@ -44,8 +44,8 @@ export class Dvpm {
     public option: DvpmOption,
   ) {
     this.totalElaps = performance.now();
-    this.option = DvpmOptionSchema.parse(this.option);
-    this.#semaphore = new Semaphore(z.number().parse(this.option.concurrency));
+    this.option = DvpmOptionSchema.assert(this.option);
+    this.#semaphore = new Semaphore(type("number").assert(this.option.concurrency));
   }
 
   /**
@@ -63,7 +63,7 @@ export class Dvpm {
 
       async update(url: unknown): Promise<void> {
         if (url) {
-          await dvpm.update(z.string().parse(url));
+          await dvpm.update(type("string").assert(url));
         } else {
           await dvpm.update();
         }
@@ -375,9 +375,9 @@ export class Dvpm {
         plug,
         {
           base: this.option.base,
-          debug: z.boolean().parse(this.option.debug),
-          profiles: z.array(z.string()).parse(this.option.profiles),
-          logarg: z.array(z.string()).parse(this.option.logarg),
+          debug: type("boolean").assert(this.option.debug),
+          profiles: type("string[]").assert(this.option.profiles),
+          logarg: type("string[]").assert(this.option.logarg),
         },
       );
       this.plugins.push(p);

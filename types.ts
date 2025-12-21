@@ -5,24 +5,21 @@
 // =============================================================================
 
 import type { Denops } from "@denops/std";
-import { z } from "zod";
+import { type Type, type } from "arktype";
 
 export type Bool =
   | boolean
   | (({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<boolean>);
 
-export const BoolSchema: z.ZodType<Bool> = z.union([
-  z.boolean(),
-  z.custom<({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<boolean>>((val) =>
-    typeof val === "function"
-  ),
-]);
+/**
+ * Represents a boolean or a function that returns a Promise<boolean>.
+ * Corresponds to the `Bool` type.
+ */
+export const BoolSchema = type("boolean | Function") as Type<Bool>;
 
 export type Config = ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>;
 
-export const ConfigSchema: z.ZodType<Config> = z.custom<Config>(
-  (val) => typeof val === "function",
-);
+export const ConfigSchema = type("Function") as Type<Config>;
 
 export type Plug = {
   url: string;
@@ -51,60 +48,62 @@ export type Plug = {
   elaps?: number;
 };
 
-export const PlugSchema = z.object({
-  url: z.string(),
-  dst: z.string().optional(),
-  rev: z.string().optional(),
+export const PlugSchema = type({
+  url: "string",
+  "dst?": "string",
+  "rev?": "string",
   enabled: BoolSchema.default(true),
-  profiles: z.array(z.string()).default([]),
-  before: ConfigSchema.optional(),
-  after: ConfigSchema.optional(),
-  beforeFile: z.string().optional(),
-  afterFile: z.string().optional(),
-  build: ConfigSchema.optional(),
+  profiles: type("string[]").default(() => []),
+  "before?": ConfigSchema,
+  "after?": ConfigSchema,
+  "beforeFile?": "string",
+  "afterFile?": "string",
+  "build?": ConfigSchema,
   clone: BoolSchema.default(false),
-  depth: z.number().default(0),
-  dependencies: z.array(z.string()).default([]),
-  cache: z.object({
+  depth: "number = 0",
+  dependencies: type("string[]").default(() => []),
+  cache: type({
     enabled: BoolSchema.default(false),
-    before: z.string().optional(),
-    after: z.string().optional(),
-    beforeFile: z.string().optional(),
-    afterFile: z.string().optional(),
-  }).default({ enabled: false }),
-  isLoad: z.boolean().default(false),
-  isUpdate: z.boolean().default(false),
-  isCache: z.boolean().default(false),
-  elaps: z.number().default(0),
+    "before?": "string",
+    "after?": "string",
+    "beforeFile?": "string",
+    "afterFile?": "string",
+  }).default(() => ({ enabled: false })),
+  isLoad: "boolean = false",
+  isUpdate: "boolean = false",
+  isCache: "boolean = false",
+  elaps: "number = 0",
 });
 
-export const PlugInfoSchema = PlugSchema.extend({
-  dst: z.string(),
+export const PlugInfoSchema = type(PlugSchema, "&", {
+  dst: "string",
 });
-export type PlugInfo = z.infer<typeof PlugInfoSchema>;
+export type PlugInfo = typeof PlugInfoSchema.infer;
 
-export const PlugOptionSchema = z.object({
-  base: z.string(),
-  debug: z.boolean().default(false),
-  profiles: z.array(z.string()).default([]),
-  logarg: z.array(z.string()).default([]),
+export const PlugOptionSchema = type({
+  base: "string",
+  debug: "boolean = false",
+  profiles: type("string[]").default(() => []),
+  logarg: type("string[]").default(() => []),
 });
-export type PlugOption = z.infer<typeof PlugOptionSchema>;
+export type PlugOption = typeof PlugOptionSchema.infer;
 
-export const DvpmOptionSchema = z.object({
-  base: z.string(),
-  cache: z.string().optional(),
-  debug: z.boolean().default(false),
-  profiles: z.array(z.string()).default([]),
-  concurrency: z.number().default(8),
-  notify: z.boolean().default(false),
-  logarg: z.array(z.string()).default([]),
+export const DvpmOptionSchema = type({
+  base: "string",
+  "cache?": "string",
+  debug: "boolean = false",
+  profiles: type("string[]").default(() => []),
+  concurrency: "number = 8",
+  notify: "boolean = false",
+  logarg: type("string[]").default(() => []),
 });
-const DvpmOptionPartialSchema = DvpmOptionSchema.partial({
-  debug: true,
-  profiles: true,
-  concurrency: true,
-  notify: true,
-  logarg: true,
-});
-export type DvpmOption = z.infer<typeof DvpmOptionPartialSchema>;
+
+export type DvpmOption = {
+  base: string;
+  cache?: string;
+  debug?: boolean;
+  profiles?: string[];
+  concurrency?: number;
+  notify?: boolean;
+  logarg?: string[];
+};

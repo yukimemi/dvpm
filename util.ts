@@ -10,7 +10,7 @@ import type { Denops } from "@denops/std";
 import { dirname, extname } from "@std/path";
 import { echo, execute } from "@denops/std/helper";
 import { logger } from "./logger.ts";
-import { z } from "zod";
+import { type } from "arktype";
 
 /**
  * vim.notify function
@@ -40,7 +40,7 @@ export async function cache(
   denops: Denops,
   arg: { script: string; path: string },
 ): Promise<boolean> {
-  const p = z.string().parse(await fn.expand(denops, arg.path));
+  const p = type("string").assert(await fn.expand(denops, arg.path));
   const s = arg.script.trim();
   await fs.ensureDir(dirname(p));
   if (await fs.exists(p)) {
@@ -61,7 +61,7 @@ export async function cache(
  * Determine whether it is typescript, lua or vim and return the string to read
  */
 export async function getExecuteStr(denops: Denops, path: string): Promise<string> {
-  const p = z.string().parse(await fn.expand(denops, path));
+  const p = type("string").assert(await fn.expand(denops, path));
   const extension = extname(p);
   if (extension === ".lua") {
     return `luafile ${p}`;
