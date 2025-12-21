@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : types.ts
 // Author      : yukimemi
-// Last Change : 2025/09/21 20:14:33.
+// Last Change : 2025/12/21 15:35:27.
 // =============================================================================
 
 import type { Denops } from "@denops/std";
@@ -17,9 +17,9 @@ export type Bool =
  */
 export const BoolSchema = type("boolean | Function") as Type<Bool>;
 
-export type Config = ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>;
-
-export const ConfigSchema = type("Function") as Type<Config>;
+export const ConfigSchema = type("Function") as Type<
+  ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>
+>;
 
 export type Plug = {
   url: string;
@@ -27,11 +27,11 @@ export type Plug = {
   rev?: string;
   enabled?: Bool;
   profiles?: string[];
-  before?: Config;
-  after?: Config;
+  before?: ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>;
+  after?: ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>;
   beforeFile?: string;
   afterFile?: string;
-  build?: Config;
+  build?: ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>;
   clone?: Bool;
   depth?: number;
   dependencies?: string[];
