@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2025/12/21 15:36:12.
+// Last Change : 2025/12/27 21:05:00.
 // =============================================================================
 
 import * as fn from "@denops/std/function";
@@ -431,39 +431,70 @@ export class Plugin {
             afterRev,
             this.option.logarg,
           );
+          const outputDiffStat = await git.getDiffStat(
+            beforeRev,
+            afterRev,
+          );
           const outputDiff = await git.getDiff(
             beforeRev,
             afterRev,
           );
           if (outputLog.success) {
             const log = [
-              `--- ○: ${this.info.dst} --------------------`,
-              ...cmdOutToString(outputLog.stdout),
+              `================================================================================`,
+              `Update: ${this.info.dst}`,
+              `Old: ${beforeRev}`,
+              `New: ${afterRev}`,
+              `================================================================================`,
             ];
+
+            if (outputDiffStat.success) {
+              log.push(...cmdOutToString(outputDiffStat.stdout));
+              log.push(
+                `--------------------------------------------------------------------------------`,
+              );
+            }
+
+            log.push(...cmdOutToString(outputLog.stdout));
+
             if (outputDiff.success) {
-              log.push(`---`);
+              log.push(
+                `--------------------------------------------------------------------------------`,
+              );
+              log.push(`Diff details: {{{`);
               log.push(...cmdOutToString(outputDiff.stdout));
+              log.push(`}}}`);
             }
             return log;
           }
           throw new Error([
-            `--- ×: ${this.info.dst} --------------------`,
+            `================================================================================`,
+            `Update failed: ${this.info.dst}`,
             `Failed to git log ${this.info.dst}`,
+            `--------------------------------------------------------------------------------`,
+            `Details: {{{`,
             `stdout:`,
             ...cmdOutToString(outputLog.stdout),
             `stderr:`,
             ...cmdOutToString(outputLog.stderr),
+            `}}}`,
+            `================================================================================`,
           ].join("\n"));
         }
         return [];
       }
       throw new Error([
-        `--- ×: ${this.info.dst} --------------------`,
+        `================================================================================`,
+        `Update failed: ${this.info.dst}`,
         `Failed to git pull ${this.info.url}`,
+        `--------------------------------------------------------------------------------`,
+        `Details: {{{`,
         `stdout:`,
         ...cmdOutToString(output.stdout),
         `stderr:`,
         ...cmdOutToString(output.stderr),
+        `}}}`,
+        `================================================================================`,
       ].join("\n"));
     } catch (e) {
       if (e instanceof Error) {

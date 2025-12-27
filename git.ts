@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : git.ts
 // Author      : yukimemi
-// Last Change : 2025/10/04 21:00:26.
+// Last Change : 2025/12/27 21:05:00.
 // =============================================================================
 
 import * as path from "@std/path";
@@ -146,6 +146,16 @@ export class Git {
       "README",
       "README.md",
     ]);
+  }
+
+  /**
+   * Get the git diff stat
+   */
+  public async getDiffStat(
+    from: string,
+    to: string,
+  ): Promise<Deno.CommandOutput> {
+    return await this.git(["diff", "--stat", `${from}..${to}`]);
   }
 
   /**

@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2025/12/27 19:55:40.
+// Last Change : 2025/12/27 21:05:00.
 // =============================================================================
 
 import * as autocmd from "@denops/std/autocmd";
@@ -219,7 +219,7 @@ export class Dvpm {
     data: string[],
     filetype?: string,
     openOptions?: OpenOptions,
-  ) {
+  ): Promise<number> {
     const buf = await buffer.open(this.denops, bufname, openOptions);
     await batch(this.denops, async (denops) => {
       await fn.setbufvar(denops, buf.bufnr, "&buftype", "nofile");
@@ -230,6 +230,7 @@ export class Dvpm {
       await buffer.replace(denops, buf.bufnr, data);
       await buffer.concrete(denops, buf.bufnr);
     });
+    return buf.bufnr;
   }
 
   private async _install(p: Plugin) {
@@ -312,7 +313,13 @@ export class Dvpm {
     }
 
     if (this.#updateLogs.length > 0) {
-      await this.bufWrite("dvpm://update", this.#updateLogs, "diff", { opener: "tabedit" });
+      const bufnr = await this.bufWrite("dvpm://update", this.#updateLogs, "diff", {
+        opener: "tabedit",
+      });
+      const winid = await fn.bufwinid(this.denops, bufnr);
+      if (winid !== -1) {
+        await fn.win_execute(this.denops, winid, "setlocal foldmethod=marker | normal! zM");
+      }
     }
     if (this.option.notify) {
       await notify(this.denops, `Update done`);
