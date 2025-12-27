@@ -11,7 +11,6 @@ import type { Bool, Plug, PlugInfo, PlugOption } from "./types.ts";
 import type { Denops } from "@denops/std";
 import { Git } from "./git.ts";
 import { PlugInfoSchema, PlugOptionSchema, PlugSchema } from "./types.ts";
-import { Result } from "result-type-ts";
 import { Semaphore } from "@core/asyncutil";
 import { cmdOutToString, convertUrl, executeFile, getExecuteStr, parseUrl } from "./util.ts";
 import { echo, execute } from "@denops/std/helper";
@@ -63,7 +62,7 @@ export class Plugin {
         p.option.profiles.length === 0 ||
         (
           p.option.profiles.length > 0 &&
-          p.option.profiles.some((profile) => p.info.profiles.includes(profile))
+          p.option.profiles.some((profile: string) => p.info.profiles.includes(profile))
         )
       );
     p.info.clone = await p.is((p.info.enabled ? p.info.enabled : p.info.clone) as Bool);
@@ -77,7 +76,7 @@ export class Plugin {
     }
 
     if (p.info.dependencies.length > 0) {
-      p.info.dependencies = p.info.dependencies.map((d) => convertUrl(d));
+      p.info.dependencies = p.info.dependencies.map((d: string) => convertUrl(d));
     }
 
     if (p.info.dependencies.includes(p.info.url)) {
@@ -355,17 +354,17 @@ export class Plugin {
   /**
    * Install a plugin
    */
-  public async install(): Promise<Result<string[], string[]>> {
+  public async install(): Promise<string[]> {
     try {
       logger().debug(`[install] ${this.info.url} start !`);
 
       if (!this.info.clone) {
-        return Result.success([]);
+        return [];
       }
 
       const gitDir = path.join(this.info.dst, ".git");
       if (await exists(gitDir)) {
-        return Result.success([]);
+        return [];
       }
 
       const output = await Git.clone(
@@ -385,21 +384,22 @@ export class Plugin {
         if (this.info.depth != undefined && this.info.depth > 0) {
           returnMsg += ` --depth=${this.info.depth}`;
         }
-        return Result.success([returnMsg]);
+        return [returnMsg];
       }
-      return Result.failure([
+      throw new Error([
         `Failed to clone ${this.info.url}`,
         `stdout:`,
         ...cmdOutToString(output.stdout),
         `stderr:`,
         ...cmdOutToString(output.stderr),
-      ]);
+      ].join("\n"));
     } catch (e) {
       if (e instanceof Error) {
         logger().error(`[install] ${this.info.url} ${e.message}, ${e.stack}`);
         console.error(`${this.info.url} ${e.message}, ${e.stack}`);
+        throw e;
       }
-      return Result.failure([`Failed to install ${this.info.url}`]);
+      throw new Error(`Failed to install ${this.info.url}`);
     } finally {
       logger().debug(`[install] ${this.info.url} end !`);
     }
@@ -408,12 +408,12 @@ export class Plugin {
   /**
    * Update a plugin
    */
-  public async update(): Promise<Result<string[], string[]>> {
+  public async update(): Promise<string[]> {
     try {
       logger().debug(`[update] ${this.info.url} start !`);
 
       if (!this.info.clone) {
-        return Result.success([]);
+        return [];
       }
       const git = new Git(this.info.dst);
       const beforeRev = await git.getRevision();
@@ -444,33 +444,34 @@ export class Plugin {
               log.push(`---`);
               log.push(...cmdOutToString(outputDiff.stdout));
             }
-            return Result.success(log);
+            return log;
           }
-          return Result.success([
+          throw new Error([
             `--- ×: ${this.info.dst} --------------------`,
             `Failed to git log ${this.info.dst}`,
             `stdout:`,
             ...cmdOutToString(outputLog.stdout),
             `stderr:`,
             ...cmdOutToString(outputLog.stderr),
-          ]);
+          ].join("\n"));
         }
-        return Result.success([]);
+        return [];
       }
-      return Result.failure([
+      throw new Error([
         `--- ×: ${this.info.dst} --------------------`,
         `Failed to git pull ${this.info.url}`,
         `stdout:`,
         ...cmdOutToString(output.stdout),
         `stderr:`,
         ...cmdOutToString(output.stderr),
-      ]);
+      ].join("\n"));
     } catch (e) {
       if (e instanceof Error) {
         logger().error(`[update] ${this.info.url} ${e.message}, ${e.stack}`);
         console.error(`${this.info.url} ${e.message}, ${e.stack}`);
+        throw e;
       }
-      return Result.failure([`Failed to update ${this.info.url}`]);
+      throw new Error(`Failed to update ${this.info.url}`);
     } finally {
       logger().debug(`[update] ${this.info.url} end !`);
     }

@@ -1,14 +1,14 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2025/12/21 15:36:16.
+// Last Change : 2025/12/27 19:55:40.
 // =============================================================================
 
 import * as autocmd from "@denops/std/autocmd";
 import * as buffer from "@denops/std/buffer";
-import type { OpenOptions } from "@denops/std/buffer";
 import * as fn from "@denops/std/function";
 import type { Denops } from "@denops/std";
+import type { OpenOptions } from "@denops/std/buffer";
 import { Plugin } from "./plugin.ts";
 import { Semaphore } from "@core/asyncutil";
 import { batch } from "@denops/std/batch";
@@ -142,12 +142,14 @@ export class Dvpm {
         return;
       }
       p.info.cache.enabled = true;
-      p.info.dependencies?.forEach((dependency) => enableCache(dependency, currentDepth + 1));
+      p.info.dependencies?.forEach((dependency: string) =>
+        enableCache(dependency, currentDepth + 1)
+      );
     };
 
     plugins.forEach((p) => {
       if (p.info.cache.enabled) {
-        p.info.dependencies?.forEach((dependency) => enableCache(dependency, 0));
+        p.info.dependencies?.forEach((dependency: string) => enableCache(dependency, 0));
       }
     });
 
@@ -183,7 +185,7 @@ export class Dvpm {
         return;
       }
       if (p.info.dependencies) {
-        p.info.dependencies.forEach((dependency) => resolve(dependency, currentDepth + 1));
+        p.info.dependencies.forEach((dependency: string) => resolve(dependency, currentDepth + 1));
       }
       sortedPlugins.push(p);
       seen.add(url);
@@ -233,12 +235,9 @@ export class Dvpm {
   private async _install(p: Plugin) {
     await this.#semaphore.lock(async () => {
       try {
-        const result = await p.install();
-        const output = result.value ?? result.error ?? [];
+        const output = await p.install();
         if (output.length > 0) {
-          if (result.isSuccess) {
-            this.isInstallOrUpdate = true;
-          }
+          this.isInstallOrUpdate = true;
           this.#installLogs.push(...output);
           if (this.option.notify) {
             await notify(this.denops, output.join("\r"));
@@ -248,24 +247,37 @@ export class Dvpm {
         if (e instanceof Error) {
           logger().error(`[_install] ${p.info.url} ${e.message}, ${e.stack}`);
           console.error(`${p.info.url} ${e.message}, ${e.stack}`);
+          this.#installLogs.push(e.message);
+          if (this.option.notify) {
+            await notify(this.denops, e.message.replace(/\n/g, "\r"));
+          }
         }
       }
     });
   }
   private async _update(p: Plugin) {
     await this.#semaphore.lock(async () => {
-      const result = await p.update();
-      if (result.isSuccess && result.value.length > 0) {
-        this.isInstallOrUpdate = true;
-      }
-      const output = result.value ?? result.error ?? [];
-      if (output.length > 0) {
-        this.#updateLogs.push(...output);
-        if (this.option.notify) {
-          await notify(this.denops, output.join("\r"));
+      try {
+        const output = await p.update();
+        if (output.length > 0) {
+          this.isInstallOrUpdate = true;
+          this.#updateLogs.push(...output);
+          if (this.option.notify) {
+            await notify(this.denops, output.join("\r"));
+          }
         }
+      } catch (e) {
+        if (e instanceof Error) {
+          logger().error(`[_update] ${p.info.url} ${e.message}, ${e.stack}`);
+          console.error(`${p.info.url} ${e.message}, ${e.stack}`);
+          this.#updateLogs.push(e.message);
+          if (this.option.notify) {
+            await notify(this.denops, e.message.replace(/\n/g, "\r"));
+          }
+        }
+      } finally {
+        await p.build();
       }
-      await p.build();
     });
   }
 

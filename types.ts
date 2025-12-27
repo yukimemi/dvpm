@@ -48,7 +48,7 @@ export type Plug = {
   elaps?: number;
 };
 
-export const PlugSchema = type({
+const _PlugSchema = type({
   url: "string",
   "dst?": "string",
   "rev?": "string",
@@ -75,20 +75,54 @@ export const PlugSchema = type({
   elaps: "number = 0",
 });
 
-export const PlugInfoSchema = type(PlugSchema, "&", {
+export const PlugSchema: Type<Plug> = _PlugSchema as unknown as Type<Plug>;
+
+const _PlugInfoSchema = type(_PlugSchema, "&", {
   dst: "string",
 });
-export type PlugInfo = typeof PlugInfoSchema.infer;
+export type PlugInfo = {
+  url: string;
+  dst: string;
+  rev?: string;
+  enabled: Bool;
+  profiles: string[];
+  before?: ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>;
+  after?: ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>;
+  beforeFile?: string;
+  afterFile?: string;
+  build?: ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>;
+  clone: Bool;
+  depth: number;
+  dependencies: string[];
+  cache: {
+    enabled: Bool;
+    before?: string;
+    after?: string;
+    beforeFile?: string;
+    afterFile?: string;
+  };
+  isLoad: boolean;
+  isUpdate: boolean;
+  isCache: boolean;
+  elaps: number;
+};
+export const PlugInfoSchema: Type<PlugInfo> = _PlugInfoSchema as unknown as Type<PlugInfo>;
 
-export const PlugOptionSchema = type({
+const _PlugOptionSchema = type({
   base: "string",
   debug: "boolean = false",
   profiles: type("string[]").default(() => []),
   logarg: type("string[]").default(() => []),
 });
-export type PlugOption = typeof PlugOptionSchema.infer;
+export type PlugOption = {
+  base: string;
+  debug: boolean;
+  profiles: string[];
+  logarg: string[];
+};
+export const PlugOptionSchema: Type<PlugOption> = _PlugOptionSchema as unknown as Type<PlugOption>;
 
-export const DvpmOptionSchema = type({
+const _DvpmOptionSchema = type({
   base: "string",
   "cache?": "string",
   debug: "boolean = false",
@@ -97,6 +131,7 @@ export const DvpmOptionSchema = type({
   notify: "boolean = false",
   logarg: type("string[]").default(() => []),
 });
+export const DvpmOptionSchema: Type<DvpmOption> = _DvpmOptionSchema as unknown as Type<DvpmOption>;
 
 export type DvpmOption = {
   base: string;

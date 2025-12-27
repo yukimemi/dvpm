@@ -1,6 +1,6 @@
 {
   "name": "@yukimemi/dvpm",
-  "version": "8.5.1",
+  "version": "8.6.0",
   "exports": "./mod.ts",
   "tasks": {
     "check": "deno check ./**/*.ts",
@@ -30,12 +30,7 @@
     "@std/log": "jsr:@std/log@^0.224.14",
     "@std/path": "jsr:@std/path@^1.1.4",
     "@std/streams": "jsr:@std/streams@^1.0.16",
-    "result-type-ts": "npm:result-type-ts@^2.2.0",
+    "@std/testing": "jsr:@std/testing@^1.0.16",
     "arktype": "npm:arktype@^2.1.29"
-  },
-  "lint": {
-    "rules": {
-      "exclude": ["no-slow-types"]
-    }
   }
 }
