@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2025/12/27 21:05:00.
+// Last Change : 2025/12/27 23:00:00.
 // =============================================================================
 
 import * as fn from "@denops/std/function";
@@ -457,12 +457,13 @@ export class Plugin {
 
             log.push(...cmdOutToString(outputLog.stdout));
 
-            if (outputDiff.success) {
+            const diff = cmdOutToString(outputDiff.stdout);
+            if (outputDiff.success && diff.some((l) => l.length > 0)) {
               log.push(
                 `--------------------------------------------------------------------------------`,
               );
               log.push(`Diff details: {{{`);
-              log.push(...cmdOutToString(outputDiff.stdout));
+              log.push(...diff);
               log.push(`}}}`);
             }
             return log;
