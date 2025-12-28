@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2025/12/27 21:05:00.
+// Last Change : 2025/12/28 14:00:00.
 // =============================================================================
 
 import * as autocmd from "@denops/std/autocmd";
@@ -341,42 +341,91 @@ export class Dvpm {
   public async bufWriteList() {
     const maxLen = this.maxUrlLen(this.plugins);
     const uniquePlug = this.uniqueUrlByIsLoad();
-    await this.bufWrite("dvpm://list", [
-      sprintf(
-        `%-${maxLen + listSpace}s : %-7s : %-7s : %s`,
-        `url`,
-        `isLoad`,
-        `isCache`,
-        `isClone`,
-      ),
-      `${"-".repeat(maxLen + listSpace)} : ------- : ------- : -------`,
-      ...uniquePlug.map((p) =>
+    const maxProfileLen = uniquePlug.reduce((max, p) => {
+      const len = (p.info.profiles?.join(",") || "").length;
+      return len > max ? len : max;
+    }, 0);
+
+    if (maxProfileLen > 0) {
+      const profileHeaderLen = Math.max(maxProfileLen, "profiles".length);
+      await this.bufWrite("dvpm://list", [
         sprintf(
-          `%-${maxLen + listSpace}s : %-7s : %-7s : %s`,
-          p.plug.url,
-          `${p.info.isLoad}`,
-          `${p.info.isCache}`,
-          `${p.info.clone}`,
-        )
-      ),
-      `${"-".repeat(maxLen + listSpace)} : ------- : ------- : -------`,
-      sprintf(
-        `%-${maxLen + listSpace}s : %s`,
-        `Loaded count`,
-        `${uniquePlug.filter((p) => p.info.isLoad).length}`,
-      ),
-      sprintf(
-        `%-${maxLen + listSpace}s : %s`,
-        `Not loaded count`,
-        `${uniquePlug.filter((p) => !p.info.isLoad).length}`,
-      ),
-      `${"-".repeat(maxLen + listSpace)} : -------`,
-      sprintf(
-        `%-${maxLen + listSpace}s : %s`,
-        `Total plugin count`,
-        `${uniquePlug.length}`,
-      ),
-    ]);
+          `%-${maxLen + listSpace}s : %-7s : %-7s : %-7s : %-${profileHeaderLen}s`,
+          `url`,
+          `isLoad`,
+          `isCache`,
+          `isClone`,
+          `profiles`,
+        ),
+        `${"-".repeat(maxLen + listSpace)} : ------- : ------- : ------- : ${
+          "-".repeat(profileHeaderLen)
+        }`,
+        ...uniquePlug.map((p) =>
+          sprintf(
+            `%-${maxLen + listSpace}s : %-7s : %-7s : %-7s : %-${profileHeaderLen}s`,
+            p.plug.url,
+            `${p.info.isLoad}`,
+            `${p.info.isCache}`,
+            `${p.info.clone}`,
+            `${p.info.profiles?.join(",") || ""}`,
+          )
+        ),
+        `${"-".repeat(maxLen + listSpace)} : ------- : ------- : -------`,
+        sprintf(
+          `%-${maxLen + listSpace}s : %s`,
+          `Loaded count`,
+          `${uniquePlug.filter((p) => p.info.isLoad).length}`,
+        ),
+        sprintf(
+          `%-${maxLen + listSpace}s : %s`,
+          `Not loaded count`,
+          `${uniquePlug.filter((p) => !p.info.isLoad).length}`,
+        ),
+        `${"-".repeat(maxLen + listSpace)} : -------`,
+        sprintf(
+          `%-${maxLen + listSpace}s : %s`,
+          `Total plugin count`,
+          `${uniquePlug.length}`,
+        ),
+      ]);
+    } else {
+      await this.bufWrite("dvpm://list", [
+        sprintf(
+          `%-${maxLen + listSpace}s : %-7s : %-7s : %-7s`,
+          `url`,
+          `isLoad`,
+          `isCache`,
+          `isClone`,
+        ),
+        `${"-".repeat(maxLen + listSpace)} : ------- : ------- : -------`,
+        ...uniquePlug.map((p) =>
+          sprintf(
+            `%-${maxLen + listSpace}s : %-7s : %-7s : %-7s`,
+            p.plug.url,
+            `${p.info.isLoad}`,
+            `${p.info.isCache}`,
+            `${p.info.clone}`,
+          )
+        ),
+        `${"-".repeat(maxLen + listSpace)} : ------- : ------- : -------`,
+        sprintf(
+          `%-${maxLen + listSpace}s : %s`,
+          `Loaded count`,
+          `${uniquePlug.filter((p) => p.info.isLoad).length}`,
+        ),
+        sprintf(
+          `%-${maxLen + listSpace}s : %s`,
+          `Not loaded count`,
+          `${uniquePlug.filter((p) => !p.info.isLoad).length}`,
+        ),
+        `${"-".repeat(maxLen + listSpace)} : -------`,
+        sprintf(
+          `%-${maxLen + listSpace}s : %s`,
+          `Total plugin count`,
+          `${uniquePlug.length}`,
+        ),
+      ]);
+    }
   }
 
   public async uninstall(_url: string) {
