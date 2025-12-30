@@ -6,7 +6,7 @@
 
 import { assertEquals } from "@std/assert";
 
-import { convertUrl, parseUrl } from "./util.ts";
+import { convertUrl, parseUrl } from "../util.ts";
 
 Deno.test({
   name: "convertUrl with repository path",

@@ -6,7 +6,7 @@
 
 import { assertEquals } from "@std/assert";
 
-import { Git } from "./git.ts";
+import { Git } from "../git.ts";
 
 async function init() {
   const repo = "https://github.com/yukimemi/dvpm";

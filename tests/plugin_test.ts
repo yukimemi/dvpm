@@ -6,7 +6,7 @@
 
 import * as path from "@std/path";
 import { DenopsStub } from "@denops/test";
-import { Plugin } from "./plugin.ts";
+import { Plugin } from "../plugin.ts";
 import { assertEquals } from "@std/assert";
 
 const createDenops = () => (

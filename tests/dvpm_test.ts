@@ -7,7 +7,7 @@
 import { assertEquals } from "@std/assert";
 import { assertSpyCall, stub } from "@std/testing/mock";
 import { DenopsStub } from "@denops/test";
-import { Dvpm } from "./dvpm.ts";
+import { Dvpm } from "../dvpm.ts";
 
 const createDenops = () => (
   new DenopsStub({
