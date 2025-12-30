@@ -443,7 +443,6 @@ export class Dvpm {
         plug,
         {
           base: this.option.base,
-          debug: type("boolean").assert(this.option.debug),
           profiles: type("string[]").assert(this.option.profiles),
           logarg: type("string[]").assert(this.option.logarg),
         },

@@ -25,7 +25,6 @@ Deno.test({
     const denops = createDenops();
     const option = {
       base: "/tmp",
-      debug: false,
       profiles: [],
       profile: false,
       logarg: [],

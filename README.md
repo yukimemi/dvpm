@@ -212,8 +212,6 @@ export type DvpmOption = {
   base: string;
   // Cache file path. See `Cache setting`.
   cache?: string;
-  // debug print. Default is false.
-  debug?: boolean;
   // If specified in profiles, only plugins that match the profiles specified in `Plug` will be loaded
   // See `Profile setting`
   profiles?: string[];
@@ -557,3 +555,26 @@ export const main: Entrypoint = async (denops: Denops) => {
 In this case, `yukimemi/chronicle.vim` and `yukimemi/silentsaver.vim` are enabled.
 
 If you specify `["minimal", "default", "full"]` in `DvpmOption.profiles`, all three plugins will be enabled.
+
+## Debug logging
+
+`dvpm` uses [@std/log](https://jsr.io/@std/log) for logging.
+If you want to see debug logs, you need to setup the logger.
+
+e.g.
+
+```typescript
+import { setup, handlers } from "@std/log";
+
+setup({
+  handlers: {
+    console: new handlers.ConsoleHandler("DEBUG"),
+  },
+  loggers: {
+    dvpm: {
+      level: "DEBUG",
+      handlers: ["console"],
+    },
+  },
+});
+```

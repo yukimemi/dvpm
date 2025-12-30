@@ -170,7 +170,6 @@ export const PlugInfoSchema: Type<PlugInfo> = _PlugInfoSchema as unknown as Type
 
 const _PlugOptionSchema = type({
   base: "string",
-  debug: "boolean = false",
   profiles: type("string[]").default(() => []),
   logarg: type("string[]").default(() => []),
 });
@@ -182,10 +181,6 @@ export type PlugOption = {
    * Base directory for plugins.
    */
   base: string;
-  /**
-   * Whether to enable debug logging.
-   */
-  debug: boolean;
   /**
    * Active profiles.
    */
@@ -200,7 +195,6 @@ export const PlugOptionSchema: Type<PlugOption> = _PlugOptionSchema as unknown a
 const _DvpmOptionSchema = type({
   base: "string",
   "cache?": "string",
-  debug: "boolean = false",
   profiles: type("string[]").default(() => []),
   concurrency: "number = 8",
   notify: "boolean = false",
@@ -220,10 +214,6 @@ export type DvpmOption = {
    * File path for the generated cache script.
    */
   cache?: string;
-  /**
-   * Whether to enable debug logging.
-   */
-  debug?: boolean;
   /**
    * List of active profiles to load.
    */
