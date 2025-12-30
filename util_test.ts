@@ -6,7 +6,7 @@
 
 import { assertEquals } from "@std/assert";
 
-import { convertUrl } from "./util.ts";
+import { convertUrl, parseUrl } from "./util.ts";
 
 Deno.test({
   name: "convertUrl with repository path",
@@ -37,6 +37,48 @@ Deno.test({
   fn: () => {
     const actual = convertUrl("git://github.com/vim-jp/vimdoc-ja");
     const expected = "git://github.com/vim-jp/vimdoc-ja";
+    assertEquals(actual, expected);
+  },
+});
+
+Deno.test({
+  name: "parseUrl with https URL",
+  sanitizeOps: false,
+  sanitizeResources: false,
+  fn: () => {
+    const actual = parseUrl("https://github.com/yukimemi/dvpm");
+    const expected = {
+      hostname: "github.com",
+      pathname: "/yukimemi/dvpm",
+    };
+    assertEquals(actual, expected);
+  },
+});
+
+Deno.test({
+  name: "parseUrl with git@ URL",
+  sanitizeOps: false,
+  sanitizeResources: false,
+  fn: () => {
+    const actual = parseUrl("git@github.com:yukimemi/dvpm");
+    const expected = {
+      hostname: "github.com",
+      pathname: "/yukimemi/dvpm",
+    };
+    assertEquals(actual, expected);
+  },
+});
+
+Deno.test({
+  name: "parseUrl with .git suffix",
+  sanitizeOps: false,
+  sanitizeResources: false,
+  fn: () => {
+    const actual = parseUrl("https://github.com/yukimemi/dvpm.git");
+    const expected = {
+      hostname: "github.com",
+      pathname: "/yukimemi/dvpm",
+    };
     assertEquals(actual, expected);
   },
 });
