@@ -139,9 +139,6 @@ export class Dvpm {
         logger().error(
           `[updateCache] Maximum recursion depth exceeded! Possible circular dependency detected involving ${url}`,
         );
-        console.error(
-          `Maximum recursion depth exceeded! Possible circular dependency detected involving ${url}`,
-        );
         return;
       }
       const p = pluginMap.get(url);
@@ -174,9 +171,6 @@ export class Dvpm {
         logger().error(
           `[resolveDependencies] Maximum recursion depth exceeded! Possible circular dependency detected involving ${url}`,
         );
-        console.error(
-          `Maximum recursion depth exceeded! Possible circular dependency detected involving ${url}`,
-        );
         return;
       }
       if (seen.has(url)) {
@@ -185,7 +179,6 @@ export class Dvpm {
       const p = this.findPlugin(url);
       if (p == undefined) {
         logger().error(`[resolveDependencies] ${url} is not found in plugin list !`);
-        console.error(`${url} is not found in plugin list !`);
         return;
       }
       if (!p.info.enabled) {
