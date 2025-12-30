@@ -140,8 +140,8 @@ export const main: Entrypoint = async (denops: Denops) => {
   });
   // dst setting. (for develop)
   await dvpm.add({
-    url: "yukimemi/spectrism.vim",
-    dst: "~/src/github.com/yukimemi/spectrism.vim",
+    url: "yukimemi/lumiris.vim",
+    dst: "~/src/github.com/yukimemi/lumiris.vim",
     before: async ({ denops }) => {
       await mapping.map(denops, "<space>ro", "<cmd>ChangeColorscheme<cr>", {
         mode: "n",
