@@ -416,61 +416,7 @@ export class Plugin {
       if (output.success) {
         if (beforeRev !== afterRev) {
           this.info.isUpdate = true;
-          const outputLog = await git.getLog(
-            beforeRev,
-            afterRev,
-            this.option.logarg,
-          );
-          const outputDiffStat = await git.getDiffStat(
-            beforeRev,
-            afterRev,
-          );
-          const outputDiff = await git.getDiff(
-            beforeRev,
-            afterRev,
-          );
-          if (outputLog.success) {
-            const log = [
-              `================================================================================`,
-              `Update: ${this.info.dst}`,
-              `Old: ${beforeRev}`,
-              `New: ${afterRev}`,
-              `================================================================================`,
-            ];
-
-            if (outputDiffStat.success) {
-              log.push(...cmdOutToString(outputDiffStat.stdout));
-              log.push(
-                `--------------------------------------------------------------------------------`,
-              );
-            }
-
-            log.push(...cmdOutToString(outputLog.stdout));
-
-            const diff = cmdOutToString(outputDiff.stdout);
-            if (outputDiff.success && diff.some((l) => l.length > 0)) {
-              log.push(
-                `--------------------------------------------------------------------------------`,
-              );
-              log.push(`Diff details: {{{`);
-              log.push(...diff);
-              log.push(`}}}`);
-            }
-            return log;
-          }
-          throw new Error([
-            `================================================================================`,
-            `Update failed: ${this.info.dst}`,
-            `Failed to git log ${this.info.dst}`,
-            `--------------------------------------------------------------------------------`,
-            `Details: {{{`,
-            `stdout:`,
-            ...cmdOutToString(outputLog.stdout),
-            `stderr:`,
-            ...cmdOutToString(outputLog.stderr),
-            `}}}`,
-            `================================================================================`,
-          ].join("\n"));
+          return await this.generateUpdateLog(git, beforeRev, afterRev);
         }
         return [];
       }
@@ -497,5 +443,67 @@ export class Plugin {
     } finally {
       logger().debug(`[update] ${this.info.url} end !`);
     }
+  }
+
+  private async generateUpdateLog(
+    git: Git,
+    beforeRev: string,
+    afterRev: string,
+  ): Promise<string[]> {
+    const outputLog = await git.getLog(
+      beforeRev,
+      afterRev,
+      this.option.logarg,
+    );
+    const outputDiffStat = await git.getDiffStat(
+      beforeRev,
+      afterRev,
+    );
+    const outputDiff = await git.getDiff(
+      beforeRev,
+      afterRev,
+    );
+    if (outputLog.success) {
+      const log = [
+        `================================================================================`,
+        `Update: ${this.info.dst}`,
+        `Old: ${beforeRev}`,
+        `New: ${afterRev}`,
+        `================================================================================`,
+      ];
+
+      if (outputDiffStat.success) {
+        log.push(...cmdOutToString(outputDiffStat.stdout));
+        log.push(
+          `--------------------------------------------------------------------------------`,
+        );
+      }
+
+      log.push(...cmdOutToString(outputLog.stdout));
+
+      const diff = cmdOutToString(outputDiff.stdout);
+      if (outputDiff.success && diff.some((l) => l.length > 0)) {
+        log.push(
+          `--------------------------------------------------------------------------------`,
+        );
+        log.push(`Diff details: {{{`);
+        log.push(...diff);
+        log.push(`}}}`);
+      }
+      return log;
+    }
+    throw new Error([
+      `================================================================================`,
+      `Update failed: ${this.info.dst}`,
+      `Failed to git log ${this.info.dst}`,
+      `--------------------------------------------------------------------------------`,
+      `Details: {{{`,
+      `stdout:`,
+      ...cmdOutToString(outputLog.stdout),
+      `stderr:`,
+      ...cmdOutToString(outputLog.stderr),
+      `}}}`,
+      `================================================================================`,
+    ].join("\n"));
   }
 }

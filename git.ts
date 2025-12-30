@@ -7,6 +7,7 @@
 import * as path from "@std/path";
 import { exists } from "@std/fs";
 import { TextLineStream } from "@std/streams";
+import { cmdOutToString } from "./util.ts";
 
 /**
  * Git
@@ -26,11 +27,6 @@ export class Git {
     return await cmd.output();
   }
 
-  /// Converts a CommandOutput to a string
-  private cmdOutToString(output: Deno.CommandOutput): string {
-    return new TextDecoder().decode(output.stdout).trim();
-  }
-
   /**
    * Get the HEAD
    */
@@ -43,7 +39,8 @@ export class Git {
    * Get the revision from git
    */
   public async getRevisionGit(): Promise<string> {
-    return this.cmdOutToString(await this.git(["rev-parse", "HEAD"]));
+    const output = await this.git(["rev-parse", "HEAD"]);
+    return cmdOutToString(output.stdout)[0] ?? "";
   }
 
   /**
@@ -66,14 +63,12 @@ export class Git {
    * Get the default branch from git
    */
   public async getDefaultBranchGit(): Promise<string> {
-    const branch = path.basename(this.cmdOutToString(
-      await this.git(["symbolic-ref", "--short", "refs/remotes/origin/HEAD"]),
-    ));
+    const output = await this.git(["symbolic-ref", "--short", "refs/remotes/origin/HEAD"]);
+    const branch = path.basename(cmdOutToString(output.stdout)[0] ?? "");
     if (branch.match(/fatal: /)) {
       await this.git(["remote", "set-head", "origin", "--auto"]);
-      return path.basename(this.cmdOutToString(
-        await this.git(["symbolic-ref", "--short", "refs/remotes/origin/HEAD"]),
-      ));
+      const output = await this.git(["symbolic-ref", "--short", "refs/remotes/origin/HEAD"]);
+      return path.basename(cmdOutToString(output.stdout)[0] ?? "");
     }
     return branch;
   }
@@ -114,9 +109,8 @@ export class Git {
     }
     // `git rev-parse --abbrev-ref HEAD` returns "HEAD" when in a detached HEAD state.
     // However, since it's not an actual branch name, we return `undefined` here.
-    const branchName = this.cmdOutToString(
-      await this.git(["rev-parse", "--abbrev-ref", "HEAD"]),
-    );
+    const output = await this.git(["rev-parse", "--abbrev-ref", "HEAD"]);
+    const branchName = cmdOutToString(output.stdout)[0] ?? "";
     return branchName === "HEAD" ? undefined : branchName;
   }
 
