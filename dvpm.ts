@@ -480,7 +480,8 @@ export class Dvpm {
         console.error(`${e.message}, ${e.stack}`);
       }
     } finally {
-      logger().debug(`[end] Dvpm end end !`);
+      this.totalElaps = performance.now() - this.totalElaps;
+      logger().debug(`[end] Dvpm end end ! ${this.totalElaps}`);
     }
   }
 
