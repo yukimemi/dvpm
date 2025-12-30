@@ -8,7 +8,7 @@
 - Vim / Neovim starts up very fast !
 
 <div align="center">
-  <img src="https://github.com/yukimemi/files/blob/main/dvpm/startuptime.png?raw=true" title="startuptime" />
+  <img src="https://raw.githubusercontent.com/yukimemi/files/main/dvpm/startuptime.png" title="startuptime" />
 </div>
 
 ...but plugins are not loaded yet at startup ＼(^o^)／
