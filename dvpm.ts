@@ -110,13 +110,20 @@ export class Dvpm {
   }
 
   private uniqueUrlByIsLoad(): Plugin[] {
-    return this.plugins.filter((value, index, self) => {
-      const found = self.find((v) => v.info.url === value.info.url && v.info.isLoad);
-      if (found) {
-        return found === value;
+    const map = new Map<string, Plugin>();
+
+    for (const p of this.plugins) {
+      const existing = map.get(p.info.url);
+      if (!existing) {
+        map.set(p.info.url, p);
+      } else {
+        if (p.info.isLoad && !existing.info.isLoad) {
+          map.set(p.info.url, p);
+        }
       }
-      return self.findIndex((v) => v.info.url === value.info.url) === index;
-    }).sort((a, b) => {
+    }
+
+    return Array.from(map.values()).sort((a, b) => {
       if (a.info.isLoad && !b.info.isLoad) return -1;
       if (!a.info.isLoad && b.info.isLoad) return 1;
       return a.info.url.localeCompare(b.info.url);
@@ -235,53 +242,44 @@ export class Dvpm {
     return buf.bufnr;
   }
 
-  private async _install(p: Plugin) {
+  private async runPluginTask(
+    p: Plugin,
+    taskName: "install" | "update",
+    task: () => Promise<string[]>,
+    logs: string[],
+  ) {
     await this.#semaphore.lock(async () => {
       try {
-        const output = await p.install();
+        const output = await task();
         if (output.length > 0) {
           this.isInstallOrUpdate = true;
-          this.#installLogs.push(...output);
+          logs.push(...output);
           if (this.option.notify) {
             await notify(this.denops, output.join("\r"));
           }
         }
       } catch (e) {
         if (e instanceof Error) {
-          logger().error(`[_install] ${p.info.url} ${e.message}, ${e.stack}`);
+          logger().error(`[${taskName}] ${p.info.url} ${e.message}, ${e.stack}`);
           console.error(`${p.info.url} ${e.message}, ${e.stack}`);
-          this.#installLogs.push(e.message);
-          if (this.option.notify) {
-            await notify(this.denops, e.message.replace(/\n/g, "\r"));
-          }
-        }
-      }
-    });
-  }
-  private async _update(p: Plugin) {
-    await this.#semaphore.lock(async () => {
-      try {
-        const output = await p.update();
-        if (output.length > 0) {
-          this.isInstallOrUpdate = true;
-          this.#updateLogs.push(...output);
-          if (this.option.notify) {
-            await notify(this.denops, output.join("\r"));
-          }
-        }
-      } catch (e) {
-        if (e instanceof Error) {
-          logger().error(`[_update] ${p.info.url} ${e.message}, ${e.stack}`);
-          console.error(`${p.info.url} ${e.message}, ${e.stack}`);
-          this.#updateLogs.push(e.message);
+          logs.push(e.message);
           if (this.option.notify) {
             await notify(this.denops, e.message.replace(/\n/g, "\r"));
           }
         }
       } finally {
-        await p.build();
+        if (taskName === "update") {
+          await p.build();
+        }
       }
     });
+  }
+
+  private async _install(p: Plugin) {
+    await this.runPluginTask(p, "install", () => p.install(), this.#installLogs);
+  }
+  private async _update(p: Plugin) {
+    await this.runPluginTask(p, "update", () => p.update(), this.#updateLogs);
   }
 
   /**

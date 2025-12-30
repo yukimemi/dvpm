@@ -21,7 +21,7 @@ export async function notify(denops: Denops, msg: string): Promise<void> {
       logger().debug(msg);
       await execute(
         denops,
-        `lua vim.notify([[${msg}]], vim.log.levels.INFO)`,
+        `lua vim.notify([[${msg.replace(/\]\]/g, "]] .. ']]' .. [[")}]], vim.log.levels.INFO)`,
       );
     } else {
       await echo(denops, msg);
