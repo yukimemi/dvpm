@@ -19,7 +19,9 @@ import { sprintf } from "@std/fmt/printf";
 import { type DvpmOption, DvpmOptionSchema, type Plug } from "./types.ts";
 import { type } from "arktype";
 
-const listSpace = 3;
+const LIST_SPACE = 3;
+const SEP = " : ";
+const COL_WIDTH_BOOL = 7;
 
 export class Dvpm {
   #semaphore: Semaphore;
@@ -349,10 +351,26 @@ export class Dvpm {
     const profileHeaderLen = Math.max(maxProfileLen, "profiles".length);
 
     const columns = [
-      { label: "url", width: maxLen + listSpace, get: (p: Plugin) => p.plug.url },
-      { label: "isLoad", width: 7, get: (p: Plugin) => `${p.info.isLoad}` },
-      { label: "isCache", width: 7, get: (p: Plugin) => `${p.info.isCache}` },
-      { label: "isClone", width: 7, get: (p: Plugin) => `${p.info.clone}` },
+      {
+        label: "url",
+        width: maxLen + LIST_SPACE,
+        get: (p: Plugin) => p.plug.url,
+      },
+      {
+        label: "isLoad",
+        width: COL_WIDTH_BOOL,
+        get: (p: Plugin) => `${p.info.isLoad}`,
+      },
+      {
+        label: "isCache",
+        width: COL_WIDTH_BOOL,
+        get: (p: Plugin) => `${p.info.isCache}`,
+      },
+      {
+        label: "isClone",
+        width: COL_WIDTH_BOOL,
+        get: (p: Plugin) => `${p.info.clone}`,
+      },
     ];
 
     if (hasProfiles) {
@@ -363,13 +381,15 @@ export class Dvpm {
       });
     }
 
-    const header = columns.map((c) => sprintf(`%-${c.width}s`, c.label)).join(" : ");
-    const separator = columns.map((c) => "-".repeat(c.width)).join(" : ");
+    const header = columns.map((c) => sprintf(`%-${c.width}s`, c.label)).join(SEP);
+    const separator = columns.map((c) => "-".repeat(c.width)).join(SEP);
     const rows = uniquePlug.map((p) =>
-      columns.map((c) => sprintf(`%-${c.width}s`, c.get(p))).join(" : ")
+      columns.map((c) => sprintf(`%-${c.width}s`, c.get(p))).join(SEP)
     );
 
-    const rowEndSeparator = columns.slice(0, 4).map((c) => "-".repeat(c.width)).join(" : ");
+    const rowEndSeparator = columns.map((c) => "-".repeat(c.width)).join(SEP);
+    // Length of "url" column + separator + "isLoad" column
+    const countSeparatorLen = columns[0].width + SEP.length + columns[1].width;
 
     await this.bufWrite("dvpm://list", [
       header,
@@ -377,18 +397,18 @@ export class Dvpm {
       ...rows,
       rowEndSeparator,
       sprintf(
-        `%-${maxLen + listSpace}s : %s`,
+        `%-${maxLen + LIST_SPACE}s${SEP}%s`,
         `Loaded count`,
         `${uniquePlug.filter((p) => p.info.isLoad).length}`,
       ),
       sprintf(
-        `%-${maxLen + listSpace}s : %s`,
+        `%-${maxLen + LIST_SPACE}s${SEP}%s`,
         `Not loaded count`,
         `${uniquePlug.filter((p) => !p.info.isLoad).length}`,
       ),
-      `${"-".repeat(maxLen + listSpace)} : -------`,
+      rowEndSeparator.slice(0, countSeparatorLen),
       sprintf(
-        `%-${maxLen + listSpace}s : %s`,
+        `%-${maxLen + LIST_SPACE}s${SEP}%s`,
         `Total plugin count`,
         `${uniquePlug.length}`,
       ),
