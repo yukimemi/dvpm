@@ -50,39 +50,59 @@ export class Plugin {
     p.info.url = convertUrl(p.plug.url);
     logger().debug(`[create] url ${p.info.url}`);
 
-    if (p.plug.dst) {
-      logger().debug(`[create] set dst to ${p.plug.dst}`);
-      p.info.dst = type("string").assert(await fn.expand(p.denops, p.plug.dst));
+    await p.initDst();
+    await p.initEnabled();
+    await p.initClone();
+    await p.initCache();
+    p.initDependencies();
+
+    return p;
+  }
+
+  private async initDst() {
+    if (this.plug.dst) {
+      logger().debug(`[create] set dst to ${this.plug.dst}`);
+      this.info.dst = type("string").assert(await fn.expand(this.denops, this.plug.dst));
     } else {
-      const { hostname, pathname } = parseUrl(p.info.url);
-      p.info.dst = path.join(option.base, hostname, pathname);
+      const { hostname, pathname } = parseUrl(this.info.url);
+      this.info.dst = path.join(this.option.base, hostname, pathname);
     }
-    p.info.enabled = await p.is(p.info.enabled as Bool) &&
+  }
+
+  private async initEnabled() {
+    this.info.enabled = await this.is(this.info.enabled as Bool) &&
       (
-        p.option.profiles.length === 0 ||
+        this.option.profiles.length === 0 ||
         (
-          p.option.profiles.length > 0 &&
-          p.option.profiles.some((profile: string) => p.info.profiles.includes(profile))
+          this.option.profiles.length > 0 &&
+          this.option.profiles.some((profile: string) => this.info.profiles.includes(profile))
         )
       );
-    p.info.clone = await p.is((p.info.enabled ? p.info.enabled : p.info.clone) as Bool);
+  }
 
-    p.info.cache.enabled = await p.is(p.info.cache.enabled as Bool);
+  private async initClone() {
+    const enabled = this.info.enabled as boolean;
+    this.info.clone = await this.is((enabled || this.info.clone) as Bool);
+  }
+
+  private async initCache() {
+    this.info.cache.enabled = await this.is(this.info.cache.enabled as Bool);
     if (
-      p.info.cache?.before || p.info.cache?.after || p.info.cache?.beforeFile ||
-      p.info.cache?.afterFile
+      this.info.cache?.before || this.info.cache?.after || this.info.cache?.beforeFile ||
+      this.info.cache?.afterFile
     ) {
-      p.info.cache.enabled = true;
+      this.info.cache.enabled = true;
+    }
+  }
+
+  private initDependencies() {
+    if (this.info.dependencies.length > 0) {
+      this.info.dependencies = this.info.dependencies.map((d: string) => convertUrl(d));
     }
 
-    if (p.info.dependencies.length > 0) {
-      p.info.dependencies = p.info.dependencies.map((d: string) => convertUrl(d));
+    if (this.info.dependencies.includes(this.info.url)) {
+      logger().error(`${this.info.url} is a dependency of itself !`);
     }
-
-    if (p.info.dependencies.includes(p.info.url)) {
-      logger().error(`${p.info.url} is a dependency of itself !`);
-    }
-    return p;
   }
 
   private async is(b: Bool) {
