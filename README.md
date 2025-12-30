@@ -51,6 +51,25 @@ execute 'set runtimepath^=' . substitute(fnamemodify(s:denops, ':p') , '[/\\]$',
 
 ---
 
+### deno.json
+
+If you use denops.vim v8 or later with `imports` in `deno.json`, you must specify `workspace`.
+
+```json
+{
+  "workspace": [
+    "./denops/config"
+  ]
+}
+```
+
+And add dependencies in `./denops/config`.
+
+```bash
+cd ./denops/config
+deno add jsr:@denops/std jsr:@yukimemi/dvpm
+```
+
 ### Neovim
 
 - ~/.config/nvim/denops/config/main.ts (Mac / Linux)
@@ -66,14 +85,13 @@ import type { Denops, Entrypoint } from "@denops/std";
 import * as fn from "@denops/std/function";
 import * as mapping from "@denops/std/mapping";
 import * as vars from "@denops/std/variable";
-import { ensure, is } from "@core/unknownutil";
 import { execute } from "@denops/std/helper";
 
 import { Dvpm } from "@yukimemi/dvpm";
 
 export const main: Entrypoint = async (denops: Denops) => {
   const base_path = (await fn.has(denops, "nvim")) ? "~/.cache/nvim/dvpm" : "~/.cache/vim/dvpm";
-  const base = ensure(await fn.expand(denops, base_path), is.String);
+  const base = (await fn.expand(denops, base_path)) as string;
 
   // First, call Dvpm.begin with denops object and base path.
   const dvpm = await Dvpm.begin(denops, { base });
@@ -109,7 +127,7 @@ export const main: Entrypoint = async (denops: Denops) => {
       await vars.g.set(
         denops,
         "silentsaver_dir",
-        ensure(await fn.expand(denops, "~/.cache/nvim/silentsaver"), is.String),
+        (await fn.expand(denops, "~/.cache/nvim/silentsaver")) as string,
       );
     },
   });
@@ -369,14 +387,14 @@ configuration is shown below.
 ```typescript
 export const main: Entrypoint = async (denops: Denops) => {
   const base_path = (await fn.has(denops, "nvim")) ? "~/.cache/nvim/dvpm" : "~/.cache/vim/dvpm";
-  const base = ensure(await fn.expand(denops, base_path), is.String);
+  const base = (await fn.expand(denops, base_path)) as string;
   const cache_path = (await fn.has(denops, "nvim"))
     ? "~/.config/nvim/plugin/dvpm_plugin_cache.vim"
     : "~/.config/vim/plugin/dvpm_plugin_cache.vim";
   // This cache path must be pre-appended to the runtimepath.
   // Add it in vimrc or init.lua by yourself, or specify the path originally added to
   // runtimepath of Vim / Neovim.
-  const cache = ensure(await fn.expand(denops, cache_path), is.String);
+  const cache = (await fn.expand(denops, cache_path)) as string;
 
   // Specify `cache` to Dvpm.begin.
   const dvpm = await Dvpm.begin(denops, { base, cache });
@@ -478,7 +496,7 @@ e.g.
 ~~~
 export const main: Entrypoint = async (denops: Denops) => {
   const base_path = (await fn.has(denops, "nvim")) ? "~/.cache/nvim/dvpm" : "~/.cache/vim/dvpm";
-  const base = ensure(await fn.expand(denops, base_path), is.String);
+  const base = (await fn.expand(denops, base_path)) as string;
 
   const dvpm = await Dvpm.begin(denops, {
     base,
@@ -511,7 +529,7 @@ e.g.
 ~~~
 export const main: Entrypoint = async (denops: Denops) => {
   const base_path = (await fn.has(denops, "nvim")) ? "~/.cache/nvim/dvpm" : "~/.cache/vim/dvpm";
-  const base = ensure(await fn.expand(denops, base_path), is.String);
+  const base = (await fn.expand(denops, base_path)) as string;
 
   const dvpm = await Dvpm.begin(denops, {
     base,
