@@ -147,7 +147,6 @@ export class Dvpm {
       const p = pluginMap.get(url);
       if (p == undefined) {
         logger().warn(`[updateCache] Cache dependency error: plugin not found: ${url}`);
-        console.warn(`Cache dependency error: plugin not found: ${url}`);
         return;
       }
       p.info.cache.enabled = true;
@@ -218,7 +217,6 @@ export class Dvpm {
     if (duplicates.length > 0) {
       duplicates.forEach((d) => {
         logger().warn(`[checkPluginUrlDuplicates] Duplicate plugin URLs detected: ${d.info.url}`);
-        console.warn(`Duplicate plugin URLs detected: ${d.info.url}`);
       });
     }
   }
@@ -261,7 +259,6 @@ export class Dvpm {
       } catch (e) {
         if (e instanceof Error) {
           logger().error(`[${taskName}] ${p.info.url} ${e.message}, ${e.stack}`);
-          console.error(`${p.info.url} ${e.message}, ${e.stack}`);
           logs.push(e.message);
           if (this.option.notify) {
             await notify(this.denops, e.message.replace(/\n/g, "\r"));
@@ -437,7 +434,6 @@ export class Dvpm {
     } catch (e) {
       if (e instanceof Error) {
         logger().error(`[add] ${plug.url} ${e.message}, ${e.stack}`);
-        console.error(`${plug.url} ${e.message}, ${e.stack}`);
       }
     }
   }
@@ -477,7 +473,6 @@ export class Dvpm {
     } catch (e) {
       if (e instanceof Error) {
         logger().error(`[end] ${e.message}, ${e.stack}`);
-        console.error(`${e.message}, ${e.stack}`);
       }
     } finally {
       this.totalElaps = performance.now() - this.totalElaps;
@@ -502,7 +497,6 @@ export class Dvpm {
       } catch (e) {
         if (e instanceof Error) {
           logger().error(`[loadPlugins] ${p.info.url} ${e.message}, ${e.stack}`);
-          console.error(`${p.info.url} ${e.message}, ${e.stack}`);
         }
       } finally {
         logger().debug(`[loadPlugins] ${p.info.url} end !`);
@@ -515,7 +509,6 @@ export class Dvpm {
       } catch (e) {
         if (e instanceof Error) {
           logger().error(`[loadPlugins] ${p.info.url} sourceAfter ${e.message}, ${e.stack}`);
-          console.error(`${p.info.url} sourceAfter ${e.message}, ${e.stack}`);
         }
       } finally {
         logger().debug(`[loadPlugins] ${p.info.url} sourceAfter end !`);
@@ -531,7 +524,6 @@ export class Dvpm {
       } catch (e) {
         if (e instanceof Error) {
           logger().error(`[generateCache] ${p.info.url} ${e.message}, ${e.stack}`);
-          console.error(`${p.info.url} ${e.message}, ${e.stack}`);
         }
       } finally {
         logger().debug(`[generateCache] ${p.info.url} end !`);

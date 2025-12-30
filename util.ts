@@ -69,7 +69,7 @@ export async function getExecuteStr(denops: Denops, path: string): Promise<strin
     return `source ${p}`;
   }
 
-  console.error(`unknown extension: ${extension}`);
+  logger().error(`unknown extension: ${extension}`);
   return "";
 }
 

@@ -315,7 +315,6 @@ export class Plugin {
     } catch (e) {
       if (e instanceof Error) {
         logger().error(`[install] ${this.info.url} ${e.message}, ${e.stack}`);
-        console.error(`${this.info.url} ${e.message}, ${e.stack}`);
         throw e;
       }
       throw new Error(`Failed to install ${this.info.url}`);
@@ -365,7 +364,6 @@ export class Plugin {
     } catch (e) {
       if (e instanceof Error) {
         logger().error(`[update] ${this.info.url} ${e.message}, ${e.stack}`);
-        console.error(`${this.info.url} ${e.message}, ${e.stack}`);
         throw e;
       }
       throw new Error(`Failed to update ${this.info.url}`);
