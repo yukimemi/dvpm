@@ -5,7 +5,7 @@
 `dvpm` is a plugin manager for Vim and Neovim, powered by
 [denops.vim](https://github.com/vim-denops/denops.vim).
 
-- Vim / Neovim starts up very fast !
+- Vim / Neovim start up very fast!
 
 <div align="center">
   <img src="https://raw.githubusercontent.com/yukimemi/files/main/dvpm/startuptime.png" title="startuptime" />
@@ -15,7 +15,7 @@
 
 All plugins are loaded lazily.
 
-- You can write all Vim / Neovim settings in typescript
+- You can write all Vim / Neovim settings in TypeScript
 
 ## Requirement
 
@@ -118,9 +118,9 @@ export const main: Entrypoint = async (denops: Denops) => {
       console.log(new TextDecoder().decode(output.stdout));
     },
   });
-  // shalow clone.
+  // shallow clone.
   await dvpm.add({ url: "yukimemi/chronicle.vim", depth: 1 });
-  // before setting.
+  // Setting before sourcing.
   await dvpm.add({
     url: "yukimemi/silentsaver.vim",
     before: async ({ denops }) => {
@@ -131,14 +131,14 @@ export const main: Entrypoint = async (denops: Denops) => {
       );
     },
   });
-  // after setting.
+  // Setting after sourcing.
   await dvpm.add({
     url: "folke/which-key.nvim",
     after: async ({ denops }) => {
       await execute(denops, `lua require("which-key").setup()`);
     },
   });
-  // dst setting. (for develop)
+  // dst setting (for development).
   await dvpm.add({
     url: "yukimemi/lumiris.vim",
     dst: "~/src/github.com/yukimemi/lumiris.vim",
@@ -233,7 +233,7 @@ export type DvpmOption = {
 public async end(): Promise<void>
 ```
 
-Add plugin to runtimepath and source plugin/*.vim and plugin/*.lua.
+Add plugins to runtimepath and source `plugin/*.vim` and `plugin/*.lua`.
 
 ### Dvpm.add
 
@@ -243,19 +243,19 @@ public async add(plug: Plug): Promise<void>
 
 ```typescript
 export type Plug = {
-  // Github `username/repository` or URL that can be cloned with git.
+  // GitHub `username/repository` or URL that can be cloned with git.
   url: string;
-  // The path to git clone. (Option)
+  // The path to git clone. (Optional)
   dst?: string;
-  // Git branch or revision name. (Option)
+  // Git branch or revision name. (Optional)
   rev?: string;
-  // clone depth. (Option)
+  // clone depth. (Optional)
   depth?: number;
-  // enable or disable. Default is true.
+  // Enable or disable. Default is true.
   enabled?: Bool;
   // If profiles are specified in DvpmOption, the plugin will be enabled only if the profiles specified here are included in the profiles of DvpmOption.
   profiles: string[];
-  // Processing to be performed before source plugin/*.vim and plugin/*.lua. (Option)
+  // Processing to be performed before sourcing plugin/*.vim and plugin/*.lua. (Optional)
   before?: ({
     denops,
     info,
@@ -263,7 +263,7 @@ export type Plug = {
     denops: Denops;
     info: PlugInfo;
   }) => Promise<void>;
-  // Processing to be performed after source plugin/*.vim and plugin/*.lua. (Option)
+  // Processing to be performed after sourcing plugin/*.vim and plugin/*.lua. (Optional)
   after?: ({
     denops,
     info,
@@ -271,13 +271,13 @@ export type Plug = {
     denops: Denops;
     info: PlugInfo;
   }) => Promise<void>;
-  // File path of processing to be performed before source plugin/*.vim and plugin/*.lua. (Option)
+  // File path of processing to be performed before sourcing plugin/*.vim and plugin/*.lua. (Optional)
   beforeFile?: string;
-  // File path of processing to be performed after source plugin/*.vim and plugin/*.lua. (Option)
+  // File path of processing to be performed after sourcing plugin/*.vim and plugin/*.lua. (Optional)
   afterFile?: string;
-  // build option. Execute after install or update. (Option)
-  // Executed even if there are no changes in the update
-  // Therefore, conditionally branch on `info.isLoad` and `info.isUpdate` as necessary
+  // Build option. Execute after install or update. (Optional)
+  // Executed even if there are no changes in the update.
+  // Therefore, conditionally branch on `info.isLoad` and `info.isUpdate` as necessary.
   build?: ({
     denops,
     info,
@@ -293,10 +293,10 @@ export type Plug = {
     beforeFile?: string;
     afterFile?: string;
   };
-  // Whether to git clone and update. Default is true. (Option)
+  // Whether to git clone and update. Default is true. (Optional)
   // If this option is set to false, then `enabled` is also set to false.
   clone?: Bool;
-  // dependencies. (Option)
+  // Dependencies. (Optional)
   dependencies?: string[];
 };
 ```
@@ -381,7 +381,7 @@ It outputs the list of plugins to the dvpm://list buffer.
 
 ## Cache setting
 
-If you want some plugins to be loaded before VimEnter, enable the `cache` setting. A sample
+If you want some plugins to be loaded before `VimEnter`, enable the `cache` setting. A sample
 configuration is shown below.
 
 ```typescript
@@ -391,9 +391,9 @@ export const main: Entrypoint = async (denops: Denops) => {
   const cache_path = (await fn.has(denops, "nvim"))
     ? "~/.config/nvim/plugin/dvpm_plugin_cache.vim"
     : "~/.config/vim/plugin/dvpm_plugin_cache.vim";
-  // This cache path must be pre-appended to the runtimepath.
-  // Add it in vimrc or init.lua by yourself, or specify the path originally added to
-  // runtimepath of Vim / Neovim.
+  // This cache path must be prepended to the runtimepath.
+  // Add it in your vimrc or init.lua yourself, or specify a path already included in
+  // the runtimepath of Vim / Neovim.
   const cache = (await fn.expand(denops, cache_path)) as string;
 
   // Specify `cache` to Dvpm.begin.
@@ -416,7 +416,7 @@ export const main: Entrypoint = async (denops: Denops) => {
     enabled: async ({ denops }) => denops.meta.host === "nvim",
     // Specify `before` or `after` if you need to configure the plugin.
     // `before` is executed before the plugin is added to the runtimepath.
-    // `after` runs after the plugin is added to the runtimepath.
+    // `after` is executed after the plugin is added to the runtimepath.
     cache: {
       before: `echomsg "Load startup !"`,
       after: `
@@ -438,7 +438,7 @@ export const main: Entrypoint = async (denops: Denops) => {
           vim.notify = require("notify")
         EOB
       `,
-      // If you want to read it in a separate file, specify as follows. (.lua and .vim can be specified)
+      // If you want to read from a separate file, specify it as follows. (.lua and .vim can be used)
       // afterFile: "~/.config/nvim/rc/after/notify.lua",
     },
   });
@@ -448,8 +448,8 @@ export const main: Entrypoint = async (denops: Denops) => {
 };
 ```
 
-After performing the above settings, when you start Vim / Neovim, the following should be output to
-the file specified as `cache` in `Dvpm.begin`. And the next time Vim / Neovim starts, the plugin
+After configuring the above settings, starting Vim / Neovim will output the following to
+the file specified as `cache` in `Dvpm.begin`. The next time Vim / Neovim starts, the plugin
 will be enabled before `VimEnter`.
 
 - `~/.config/nvim/plugin/dvpm_plugin_cache.vim` (for Neovim)
