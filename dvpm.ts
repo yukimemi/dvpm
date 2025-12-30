@@ -345,87 +345,54 @@ export class Dvpm {
       const len = (p.info.profiles?.join(",") || "").length;
       return len > max ? len : max;
     }, 0);
+    const hasProfiles = maxProfileLen > 0;
+    const profileHeaderLen = Math.max(maxProfileLen, "profiles".length);
 
-    if (maxProfileLen > 0) {
-      const profileHeaderLen = Math.max(maxProfileLen, "profiles".length);
-      await this.bufWrite("dvpm://list", [
-        sprintf(
-          `%-${maxLen + listSpace}s : %-7s : %-7s : %-7s : %-${profileHeaderLen}s`,
-          `url`,
-          `isLoad`,
-          `isCache`,
-          `isClone`,
-          `profiles`,
-        ),
-        `${"-".repeat(maxLen + listSpace)} : ------- : ------- : ------- : ${
-          "-".repeat(profileHeaderLen)
-        }`,
-        ...uniquePlug.map((p) =>
-          sprintf(
-            `%-${maxLen + listSpace}s : %-7s : %-7s : %-7s : %-${profileHeaderLen}s`,
-            p.plug.url,
-            `${p.info.isLoad}`,
-            `${p.info.isCache}`,
-            `${p.info.clone}`,
-            `${p.info.profiles?.join(",") || ""}`,
-          )
-        ),
-        `${"-".repeat(maxLen + listSpace)} : ------- : ------- : -------`,
-        sprintf(
-          `%-${maxLen + listSpace}s : %s`,
-          `Loaded count`,
-          `${uniquePlug.filter((p) => p.info.isLoad).length}`,
-        ),
-        sprintf(
-          `%-${maxLen + listSpace}s : %s`,
-          `Not loaded count`,
-          `${uniquePlug.filter((p) => !p.info.isLoad).length}`,
-        ),
-        `${"-".repeat(maxLen + listSpace)} : -------`,
-        sprintf(
-          `%-${maxLen + listSpace}s : %s`,
-          `Total plugin count`,
-          `${uniquePlug.length}`,
-        ),
-      ]);
-    } else {
-      await this.bufWrite("dvpm://list", [
-        sprintf(
-          `%-${maxLen + listSpace}s : %-7s : %-7s : %-7s`,
-          `url`,
-          `isLoad`,
-          `isCache`,
-          `isClone`,
-        ),
-        `${"-".repeat(maxLen + listSpace)} : ------- : ------- : -------`,
-        ...uniquePlug.map((p) =>
-          sprintf(
-            `%-${maxLen + listSpace}s : %-7s : %-7s : %-7s`,
-            p.plug.url,
-            `${p.info.isLoad}`,
-            `${p.info.isCache}`,
-            `${p.info.clone}`,
-          )
-        ),
-        `${"-".repeat(maxLen + listSpace)} : ------- : ------- : -------`,
-        sprintf(
-          `%-${maxLen + listSpace}s : %s`,
-          `Loaded count`,
-          `${uniquePlug.filter((p) => p.info.isLoad).length}`,
-        ),
-        sprintf(
-          `%-${maxLen + listSpace}s : %s`,
-          `Not loaded count`,
-          `${uniquePlug.filter((p) => !p.info.isLoad).length}`,
-        ),
-        `${"-".repeat(maxLen + listSpace)} : -------`,
-        sprintf(
-          `%-${maxLen + listSpace}s : %s`,
-          `Total plugin count`,
-          `${uniquePlug.length}`,
-        ),
-      ]);
+    const columns = [
+      { label: "url", width: maxLen + listSpace, get: (p: Plugin) => p.plug.url },
+      { label: "isLoad", width: 7, get: (p: Plugin) => `${p.info.isLoad}` },
+      { label: "isCache", width: 7, get: (p: Plugin) => `${p.info.isCache}` },
+      { label: "isClone", width: 7, get: (p: Plugin) => `${p.info.clone}` },
+    ];
+
+    if (hasProfiles) {
+      columns.push({
+        label: "profiles",
+        width: profileHeaderLen,
+        get: (p: Plugin) => p.info.profiles?.join(",") || "",
+      });
     }
+
+    const header = columns.map((c) => sprintf(`%-${c.width}s`, c.label)).join(" : ");
+    const separator = columns.map((c) => "-".repeat(c.width)).join(" : ");
+    const rows = uniquePlug.map((p) =>
+      columns.map((c) => sprintf(`%-${c.width}s`, c.get(p))).join(" : ")
+    );
+
+    const rowEndSeparator = columns.slice(0, 4).map((c) => "-".repeat(c.width)).join(" : ");
+
+    await this.bufWrite("dvpm://list", [
+      header,
+      separator,
+      ...rows,
+      rowEndSeparator,
+      sprintf(
+        `%-${maxLen + listSpace}s : %s`,
+        `Loaded count`,
+        `${uniquePlug.filter((p) => p.info.isLoad).length}`,
+      ),
+      sprintf(
+        `%-${maxLen + listSpace}s : %s`,
+        `Not loaded count`,
+        `${uniquePlug.filter((p) => !p.info.isLoad).length}`,
+      ),
+      `${"-".repeat(maxLen + listSpace)} : -------`,
+      sprintf(
+        `%-${maxLen + listSpace}s : %s`,
+        `Total plugin count`,
+        `${uniquePlug.length}`,
+      ),
+    ]);
   }
 
   public async uninstall(_url: string) {
@@ -466,21 +433,8 @@ export class Dvpm {
       const enabledPlugins = this.resolveDependencies(this.plugins);
       await this.install();
       logger().debug(`Enable plugins: ${enabledPlugins.map((p) => p.info.url).join(", ")}`);
-      for (const p of enabledPlugins) {
-        const added = await p.addRuntimepath();
-        await p.before();
-        if (added) {
-          await p.source();
-        }
-        await p.denopsPluginLoad();
-        await p.after();
-        if (p.initialClone) {
-          await p.build();
-        }
-      }
-      for (const p of enabledPlugins) {
-        await p.sourceAfter();
-      }
+      await this.loadPlugins(enabledPlugins);
+
       if (await fn.exists(this.denops, "denops_server_addr")) {
         await execute(
           this.denops,
@@ -499,37 +453,7 @@ export class Dvpm {
         });
       }
       if (this.option.cache) {
-        for (const p of this.updateCache(enabledPlugins)) {
-          this.#cacheScript.push(await p.cache());
-        }
-        logger().debug(`Cache: ${this.option.cache}`);
-        this.#cacheScript.unshift(`" This file is generated by dvpm.`);
-        const seen = new Set<string>();
-        if (
-          await cache(this.denops, {
-            script: this.#cacheScript.map((s) => s.split(/\r?\n/).map((l) => l.trim())).flat()
-              .filter(
-                (line) => {
-                  if (line.match(/^set runtimepath\+=|^source |^luafile /)) {
-                    if (seen.has(line)) {
-                      return false;
-                    } else {
-                      seen.add(line);
-                      return true;
-                    }
-                  } else if (line.match(/^\s*$/)) {
-                    return false;
-                  } else {
-                    return true;
-                  }
-                },
-              ).join("\n"),
-            path: this.option.cache,
-          })
-        ) {
-          logger().debug(`Cache updated: ${this.option.cache}`);
-          await autocmd.emit(this.denops, "User", "DvpmCacheUpdated");
-        }
+        await this.generateCache(enabledPlugins);
       }
       this.checkPluginUrlDuplicates(this.plugins);
     } catch (e) {
@@ -539,6 +463,58 @@ export class Dvpm {
       }
     } finally {
       logger().debug(`[end] Dvpm end end !`);
+    }
+  }
+
+  private async loadPlugins(plugins: Plugin[]) {
+    for (const p of plugins) {
+      const added = await p.addRuntimepath();
+      await p.before();
+      if (added) {
+        await p.source();
+      }
+      await p.denopsPluginLoad();
+      await p.after();
+      if (p.initialClone) {
+        await p.build();
+      }
+    }
+    for (const p of plugins) {
+      await p.sourceAfter();
+    }
+  }
+
+  private async generateCache(plugins: Plugin[]) {
+    for (const p of this.updateCache(plugins)) {
+      this.#cacheScript.push(await p.cache());
+    }
+    logger().debug(`Cache: ${this.option.cache}`);
+    this.#cacheScript.unshift(`" This file is generated by dvpm.`);
+    const seen = new Set<string>();
+    if (
+      await cache(this.denops, {
+        script: this.#cacheScript.map((s) => s.split(/\r?\n/).map((l) => l.trim())).flat()
+          .filter(
+            (line) => {
+              if (line.match(/^set runtimepath\+=|^source |^luafile /)) {
+                if (seen.has(line)) {
+                  return false;
+                } else {
+                  seen.add(line);
+                  return true;
+                }
+              } else if (line.match(/^\s*$/)) {
+                return false;
+              } else {
+                return true;
+              }
+            },
+          ).join("\n"),
+        path: type("string").assert(this.option.cache),
+      })
+    ) {
+      logger().debug(`Cache updated: ${this.option.cache}`);
+      await autocmd.emit(this.denops, "User", "DvpmCacheUpdated");
     }
   }
 

@@ -233,8 +233,7 @@ export class Plugin {
   public async source() {
     try {
       logger().debug(`[source] ${this.info.url} start !`);
-      await this.sourceVimPre();
-      await this.sourceLuaPre();
+      await this.sourcePre();
     } catch (e) {
       if (e instanceof Error) {
         logger().error(`[source] ${this.info.url} ${e.message}, ${e.stack}`);
@@ -250,8 +249,7 @@ export class Plugin {
   public async sourceAfter() {
     try {
       logger().debug(`[sourceAfter] ${this.info.url} start !`);
-      await this.sourceVimAfter();
-      await this.sourceLuaAfter();
+      await this.sourcePost();
     } catch (e) {
       if (e instanceof Error) {
         logger().error(`[sourceAfter] ${this.info.url} ${e.message}, ${e.stack}`);
@@ -292,33 +290,25 @@ export class Plugin {
     }
   }
 
-  private async sourceVim(target: string) {
+  private async sourceGlob(target: string) {
     for await (const file of expandGlob(target)) {
-      logger().debug(`[sourceVim] ${this.info.url} source ${file.path} !`);
-      await execute(this.denops, `source ${file.path}`);
+      logger().debug(`[sourceGlob] ${this.info.url} source ${file.path} !`);
+      await executeFile(this.denops, file.path);
     }
   }
-  private async sourceVimPre() {
-    await this.sourceVim(`${this.info.dst}/plugin/**/*.vim`);
-    await this.sourceVim(`${this.info.dst}/ftdetect/**/*.vim`);
+
+  private async sourcePre() {
+    await this.sourceGlob(`${this.info.dst}/plugin/**/*.vim`);
+    await this.sourceGlob(`${this.info.dst}/ftdetect/**/*.vim`);
+    await this.sourceGlob(`${this.info.dst}/plugin/**/*.lua`);
+    await this.sourceGlob(`${this.info.dst}/ftdetect/**/*.lua`);
   }
-  private async sourceVimAfter() {
-    await this.sourceVim(`${this.info.dst}/after/plugin/**/*.vim`);
-    await this.sourceVim(`${this.info.dst}/after/ftdetect/**/*.vim`);
-  }
-  private async sourceLua(target: string) {
-    for await (const file of expandGlob(target)) {
-      logger().debug(`[sourceLua] ${this.info.url} luafile ${file.path} !`);
-      await execute(this.denops, `luafile ${file.path}`);
-    }
-  }
-  private async sourceLuaPre() {
-    await this.sourceLua(`${this.info.dst}/plugin/**/*.lua`);
-    await this.sourceLua(`${this.info.dst}/ftdetect/**/*.lua`);
-  }
-  private async sourceLuaAfter() {
-    await this.sourceLua(`${this.info.dst}/after/plugin/**/*.lua`);
-    await this.sourceLua(`${this.info.dst}/after/ftdetect/**/*.lua`);
+
+  private async sourcePost() {
+    await this.sourceGlob(`${this.info.dst}/after/plugin/**/*.vim`);
+    await this.sourceGlob(`${this.info.dst}/after/ftdetect/**/*.vim`);
+    await this.sourceGlob(`${this.info.dst}/after/plugin/**/*.lua`);
+    await this.sourceGlob(`${this.info.dst}/after/ftdetect/**/*.lua`);
   }
 
   private async isHelptagsOld(docDir: string) {
