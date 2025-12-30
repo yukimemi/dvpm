@@ -18,9 +18,20 @@ import { exists, expandGlob } from "@std/fs";
 import { logger } from "./logger.ts";
 import { type } from "arktype";
 
+/**
+ * Plugin class represents a single Vim/Neovim plugin.
+ */
 export class Plugin {
   static mutex: Semaphore = new Semaphore(1);
+
+  /**
+   * Whether the plugin was cloned for the first time in the current session.
+   */
   public initialClone: boolean;
+
+  /**
+   * Detailed plugin information.
+   */
   public info: PlugInfo;
 
   constructor(
@@ -38,7 +49,12 @@ export class Plugin {
   }
 
   /**
-   * Creates a new Plugin instance
+   * Creates a new Plugin instance.
+   *
+   * @param denops - Denops instance.
+   * @param plug - Plugin definition.
+   * @param option - Plugin management options.
+   * @returns A new Plugin instance.
    */
   public static async create(
     denops: Denops,
@@ -113,7 +129,9 @@ export class Plugin {
   }
 
   /**
-   * Cache a plugin and plugin config
+   * Generates cache script for the plugin and its configurations.
+   *
+   * @returns Cache script string.
    */
   public async cache(): Promise<string> {
     if (!this.info.enabled || !this.info.cache.enabled) {
@@ -139,7 +157,9 @@ export class Plugin {
   }
 
   /**
-   * Add plugin to runtimepath
+   * Adds the plugin to Vim's runtimepath.
+   *
+   * @returns True if the plugin was added to runtimepath, false otherwise.
    */
   public async addRuntimepath(): Promise<boolean> {
     let added = false;
@@ -158,7 +178,7 @@ export class Plugin {
   }
 
   /**
-   * plugin config before adding to runtimepath
+   * Executes the `before` configuration.
    */
   public async before() {
     if (this.info.before) {
@@ -171,7 +191,7 @@ export class Plugin {
     }
   }
   /**
-   * plugin config after adding to runtimepath
+   * Executes the `after` configuration.
    */
   public async after() {
     if (this.info.after) {
@@ -184,7 +204,7 @@ export class Plugin {
     }
   }
   /**
-   * plugin build config
+   * Executes the `build` configuration.
    */
   public async build() {
     if (this.info.build) {
@@ -194,19 +214,19 @@ export class Plugin {
   }
 
   /**
-   * source plugin
+   * Sources the plugin's Vim and Lua scripts.
    */
   public async source() {
     await this.sourcePre();
   }
   /**
-   * source plugin config after adding to runtimepath
+   * Sources the plugin's configurations that should be executed after adding to runtimepath.
    */
   public async sourceAfter() {
     await this.sourcePost();
   }
   /**
-   * Load denops plugin
+   * Loads Denops plugins included in the plugin.
    */
   public async denopsPluginLoad() {
     const target = `${this.info.dst}/denops/*/main.ts`;
@@ -255,7 +275,7 @@ export class Plugin {
   }
 
   /**
-   * Generate helptags
+   * Generates Vim helptags for the plugin's documentation.
    */
   public async genHelptags() {
     const docDir = path.join(this.info.dst, "doc");
@@ -271,7 +291,9 @@ export class Plugin {
   }
 
   /**
-   * Install a plugin
+   * Clones the plugin repository if it doesn't exist.
+   *
+   * @returns Clone logs.
    */
   public async install(): Promise<string[]> {
     try {
@@ -324,7 +346,9 @@ export class Plugin {
   }
 
   /**
-   * Update a plugin
+   * Updates the plugin repository.
+   *
+   * @returns Update logs and diffs.
    */
   public async update(): Promise<string[]> {
     try {

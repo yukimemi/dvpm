@@ -13,7 +13,10 @@ import { logger } from "./logger.ts";
 import { type } from "arktype";
 
 /**
- * vim.notify function
+ * Displays a notification message using `vim.notify` (Neovim) or `echo` (Vim).
+ *
+ * @param denops - Denops instance.
+ * @param msg - Message to notify.
  */
 export async function notify(denops: Denops, msg: string): Promise<void> {
   try {
@@ -34,7 +37,11 @@ export async function notify(denops: Denops, msg: string): Promise<void> {
 }
 
 /**
- * Cache the script
+ * Caches the given script to a file.
+ *
+ * @param denops - Denops instance.
+ * @param arg - Script content and destination path.
+ * @returns True if the cache file was created or updated, false if it already exists with the same content.
  */
 export async function cache(
   denops: Denops,
@@ -58,7 +65,11 @@ export async function cache(
 }
 
 /**
- * Determine whether it is typescript, lua or vim and return the string to read
+ * Determines the Vim command to execute a file based on its extension (.lua or .vim).
+ *
+ * @param denops - Denops instance.
+ * @param path - File path.
+ * @returns A string containing the Vim command (e.g., "luafile ..." or "source ...").
  */
 export async function getExecuteStr(denops: Denops, path: string): Promise<string> {
   const p = type("string").assert(await fn.expand(denops, path));
@@ -74,7 +85,10 @@ export async function getExecuteStr(denops: Denops, path: string): Promise<strin
 }
 
 /**
- * execute `lua` or `vim` file
+ * Executes a Vim or Lua file.
+ *
+ * @param denops - Denops instance.
+ * @param path - File path.
  */
 export async function executeFile(denops: Denops, path: string): Promise<void> {
   const executeStr = await getExecuteStr(denops, path);
@@ -82,14 +96,20 @@ export async function executeFile(denops: Denops, path: string): Promise<void> {
 }
 
 /**
- * Convert command output to string
+ * Converts command output (Uint8Array) to an array of strings, split by line.
+ *
+ * @param cmdout - Command output buffer.
+ * @returns Array of strings.
  */
 export function cmdOutToString(cmdout: Uint8Array | undefined): string[] {
   return new TextDecoder().decode(cmdout).split("\n").map((l) => l.trim());
 }
 
 /**
- * Convert url
+ * Converts a repository shorthand or URL to a full HTTPS URL.
+ *
+ * @param url - Repository shorthand (e.g., "owner/repo") or full URL.
+ * @returns Full HTTPS URL.
  */
 export function convertUrl(url: string): string {
   const hasProtocol = /^(https?:\/\/|git:\/\/|ssh:\/\/|git@)/.test(url);
@@ -101,7 +121,10 @@ export function convertUrl(url: string): string {
 }
 
 /**
- * Parse url
+ * Parses a repository URL into its hostname and pathname components.
+ *
+ * @param url - Repository URL.
+ * @returns Object containing hostname and pathname.
  */
 export function parseUrl(url: string): { hostname: string; pathname: string } {
   if (url.startsWith("git@")) {

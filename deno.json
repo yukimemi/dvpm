@@ -1,6 +1,6 @@
 {
   "name": "@yukimemi/dvpm",
-  "version": "8.8.16",
+  "version": "8.9.0",
   "exports": "./mod.ts",
   "tasks": {
     "check": "deno check ./**/*.ts",

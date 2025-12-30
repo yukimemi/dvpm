@@ -21,20 +21,65 @@ export const ConfigSchema = type("Function") as Type<
   ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>
 >;
 
+/**
+ * Represents a plugin definition.
+ */
 export type Plug = {
+  /**
+   * Repository URL or shorthand (e.g., "owner/repo").
+   */
   url: string;
+  /**
+   * Destination directory path. If omitted, it's calculated from the URL.
+   */
   dst?: string;
+  /**
+   * Git revision (branch, tag, or commit hash).
+   */
   rev?: string;
+  /**
+   * Whether the plugin is enabled. Can be a boolean or a function.
+   */
   enabled?: Bool;
+  /**
+   * List of profiles this plugin belongs to.
+   */
   profiles?: string[];
+  /**
+   * Configuration to run before adding to runtimepath.
+   */
   before?: ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>;
+  /**
+   * Configuration to run after adding to runtimepath.
+   */
   after?: ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>;
+  /**
+   * Path to a Vim/Lua file to source before adding to runtimepath.
+   */
   beforeFile?: string;
+  /**
+   * Path to a Vim/Lua file to source after adding to runtimepath.
+   */
   afterFile?: string;
+  /**
+   * Build configuration to run after installation or update.
+   */
   build?: ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>;
+  /**
+   * Whether to clone the plugin repository.
+   */
   clone?: Bool;
+  /**
+   * Git clone depth.
+   */
   depth?: number;
+  /**
+   * List of dependency plugin URLs.
+   */
   dependencies?: string[];
+  /**
+   * Cache configuration.
+   */
   cache?: {
     enabled?: Bool;
     before?: string;
@@ -42,9 +87,21 @@ export type Plug = {
     beforeFile?: string;
     afterFile?: string;
   };
+  /**
+   * Internal flag: whether the plugin is loaded.
+   */
   isLoad?: boolean;
+  /**
+   * Internal flag: whether the plugin was updated.
+   */
   isUpdate?: boolean;
+  /**
+   * Internal flag: whether the plugin is cached.
+   */
   isCache?: boolean;
+  /**
+   * Internal flag: elapsed time for loading.
+   */
   elaps?: number;
 };
 
@@ -80,6 +137,9 @@ export const PlugSchema: Type<Plug> = _PlugSchema as unknown as Type<Plug>;
 const _PlugInfoSchema = type(_PlugSchema, "&", {
   dst: "string",
 });
+/**
+ * Detailed plugin information used internally and in callbacks.
+ */
 export type PlugInfo = {
   url: string;
   dst: string;
@@ -114,10 +174,25 @@ const _PlugOptionSchema = type({
   profiles: type("string[]").default(() => []),
   logarg: type("string[]").default(() => []),
 });
+/**
+ * Options for a single plugin.
+ */
 export type PlugOption = {
+  /**
+   * Base directory for plugins.
+   */
   base: string;
+  /**
+   * Whether to enable debug logging.
+   */
   debug: boolean;
+  /**
+   * Active profiles.
+   */
   profiles: string[];
+  /**
+   * Additional arguments for git log.
+   */
   logarg: string[];
 };
 export const PlugOptionSchema: Type<PlugOption> = _PlugOptionSchema as unknown as Type<PlugOption>;
@@ -133,12 +208,36 @@ const _DvpmOptionSchema = type({
 });
 export const DvpmOptionSchema: Type<DvpmOption> = _DvpmOptionSchema as unknown as Type<DvpmOption>;
 
+/**
+ * Global options for Dvpm.
+ */
 export type DvpmOption = {
+  /**
+   * Base directory where plugins will be installed.
+   */
   base: string;
+  /**
+   * File path for the generated cache script.
+   */
   cache?: string;
+  /**
+   * Whether to enable debug logging.
+   */
   debug?: boolean;
+  /**
+   * List of active profiles to load.
+   */
   profiles?: string[];
+  /**
+   * Maximum number of concurrent git operations.
+   */
   concurrency?: number;
+  /**
+   * Whether to use `vim.notify` for progress notifications.
+   */
   notify?: boolean;
+  /**
+   * Additional arguments for git log during updates.
+   */
   logarg?: string[];
 };

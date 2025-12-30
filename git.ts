@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : git.ts
 // Author      : yukimemi
-// Last Change : 2025/12/27 21:05:00.
+// Last Change : 2025/12/30 22:45:00.
 // =============================================================================
 
 import * as path from "@std/path";
@@ -10,25 +10,38 @@ import { TextLineStream } from "@std/streams";
 import { cmdOutToString } from "./util.ts";
 
 /**
- * Git
+ * Git class provides a wrapper around git commands.
  */
 export class Git {
-  /// Returns the path to the .git directory
+  /**
+   * The path to the .git directory.
+   */
   public gitDir: string;
 
-  /// Creates a new Git instance
+  /**
+   * Creates a new Git instance.
+   *
+   * @param base - Base directory of the git repository.
+   */
   constructor(public base: string) {
     this.gitDir = path.join(base, ".git");
   }
 
-  /// Executes a git command
+  /**
+   * Executes a git command.
+   *
+   * @param args - Arguments for the git command.
+   * @returns Command output.
+   */
   private async git(args: string[]): Promise<Deno.CommandOutput> {
     const cmd = new Deno.Command("git", { args: ["-C", this.base, ...args] });
     return await cmd.output();
   }
 
   /**
-   * Get the HEAD
+   * Gets the content of the HEAD file.
+   *
+   * @returns HEAD content.
    */
   public async getHead(): Promise<string> {
     const headFile = path.join(this.gitDir, "HEAD");
@@ -36,7 +49,9 @@ export class Git {
   }
 
   /**
-   * Get the revision from git
+   * Gets the current revision using `git rev-parse HEAD`.
+   *
+   * @returns Revision string.
    */
   public async getRevisionGit(): Promise<string> {
     const output = await this.git(["rev-parse", "HEAD"]);
@@ -44,7 +59,10 @@ export class Git {
   }
 
   /**
-   * Check if the given ref is a local branch.
+   * Checks if the given ref is a local branch.
+   *
+   * @param ref - Reference to check.
+   * @returns True if it's a branch, false otherwise.
    */
   private async isBranch(ref: string): Promise<boolean> {
     const args = ["show-ref", "--verify", `refs/heads/${ref}`];
@@ -53,14 +71,19 @@ export class Git {
   }
 
   /**
-   * Checkout a revision
+   * Checks out a specific revision.
+   *
+   * @param rev - Revision to checkout.
+   * @returns Command output.
    */
   public async checkout(rev: string): Promise<Deno.CommandOutput> {
     return await this.git(["checkout", rev]);
   }
 
   /**
-   * Get the default branch from git
+   * Gets the default branch name from the remote `origin`.
+   *
+   * @returns Default branch name.
    */
   public async getDefaultBranchGit(): Promise<string> {
     const output = await this.git(["symbolic-ref", "--short", "refs/remotes/origin/HEAD"]);
@@ -74,7 +97,10 @@ export class Git {
   }
 
   /**
-   * Get the revision
+   * Gets the current revision, attempting to read from files directly for performance.
+   * Falls back to `git rev-parse HEAD` if necessary.
+   *
+   * @returns Revision string.
    */
   public async getRevision(): Promise<string> {
     const head = await this.getHead();
@@ -99,8 +125,9 @@ export class Git {
   }
 
   /**
-   * Get the current branch
-   * Returns undefined if in detached HEAD state.
+   * Gets the current branch name.
+   *
+   * @returns Branch name or undefined if in detached HEAD state.
    */
   public async getBranch(): Promise<string | undefined> {
     const head = await this.getHead();
@@ -115,7 +142,12 @@ export class Git {
   }
 
   /**
-   * Get the git log
+   * Gets the git log between two revisions.
+   *
+   * @param from - Start revision.
+   * @param to - End revision.
+   * @param argOption - Additional git log arguments.
+   * @returns Command output.
    */
   public async getLog(
     from: string,
@@ -126,7 +158,11 @@ export class Git {
   }
 
   /**
-   * Get the git diff
+   * Gets the git diff between two revisions for specific documentation files.
+   *
+   * @param from - Start revision.
+   * @param to - End revision.
+   * @returns Command output.
    */
   public async getDiff(
     from: string,
@@ -143,7 +179,11 @@ export class Git {
   }
 
   /**
-   * Get the git diff stat
+   * Gets the git diff statistics between two revisions.
+   *
+   * @param from - Start revision.
+   * @param to - End revision.
+   * @returns Command output.
    */
   public async getDiffStat(
     from: string,
@@ -153,7 +193,13 @@ export class Git {
   }
 
   /**
-   * Clone a git repository
+   * Clones a git repository.
+   *
+   * @param url - Repository URL.
+   * @param dst - Destination directory.
+   * @param rev - Optional revision to checkout.
+   * @param depth - Optional clone depth.
+   * @returns Command output.
    */
   public static async clone(
     url: string,
@@ -174,8 +220,10 @@ export class Git {
   }
 
   /**
-   * Pull a git repository
-   * Returns CommandOutput if pull was performed, undefined if skipped (e.g. for tags).
+   * Pulls the latest changes from the remote repository.
+   *
+   * @param refToPull - Optional reference to pull. Defaults to the default branch.
+   * @returns Command output.
    */
   public async pull(refToPull?: string): Promise<Deno.CommandOutput> {
     const currentRef = await this.getBranch();

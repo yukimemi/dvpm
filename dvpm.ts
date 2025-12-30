@@ -23,23 +23,35 @@ const LIST_SPACE = 3;
 const SEP = " : ";
 const COL_WIDTH_BOOL = 7;
 
+/**
+ * Dvpm class is the main manager for Vim/Neovim plugins.
+ */
 export class Dvpm {
   #semaphore: Semaphore;
   #cacheScript: string[] = [];
   #installLogs: string[] = [];
   #updateLogs: string[] = [];
 
-  /// Is install or update
+  /**
+   * Whether a plugin was installed or updated during the current session.
+   */
   public isInstallOrUpdate = false;
 
-  /// List of plugins
+  /**
+   * List of managed plugins.
+   */
   public plugins: Plugin[] = [];
 
-  /// Total elaps
+  /**
+   * Total elapsed time for processing in milliseconds.
+   */
   public totalElaps = 0;
 
   /**
-   * Creates a new Dvpm instance
+   * Creates a new Dvpm instance.
+   *
+   * @param denops - Denops instance.
+   * @param option - Dvpm options.
    */
   constructor(
     public denops: Denops,
@@ -51,7 +63,12 @@ export class Dvpm {
   }
 
   /**
-   * Creates a new Dvpm instance with the given options
+   * Creates a new Dvpm instance and starts the plugin management process.
+   * This also sets up the necessary Denops dispatcher and Vim commands.
+   *
+   * @param denops - Denops instance.
+   * @param option - Dvpm options.
+   * @returns A new Dvpm instance.
    */
   public static async begin(
     denops: Denops,
@@ -273,7 +290,9 @@ export class Dvpm {
   }
 
   /**
-   * Install plugins
+   * Install managed plugins.
+   *
+   * @param url - If specified, only the plugin with this URL will be installed.
    */
   public async install(url?: string) {
     if (url) {
@@ -286,7 +305,9 @@ export class Dvpm {
   }
 
   /**
-   * Update plugins
+   * Update managed plugins.
+   *
+   * @param url - If specified, only the plugin with this URL will be updated.
    */
   public async update(url?: string) {
     if (this.option.notify) {
@@ -319,14 +340,16 @@ export class Dvpm {
   }
 
   /**
-   * List plugins
+   * Returns a list of unique plugins, filtered by their load status.
+   *
+   * @returns List of Plugin instances.
    */
   public list(): Plugin[] {
     return this.uniqueUrlByIsLoad();
   }
 
   /**
-   * List plugins to buffer
+   * Writes the list of plugins to a special Vim buffer (`dvpm://list`).
    */
   public async bufWriteList() {
     const maxLen = this.maxUrlLen(this.plugins);
@@ -408,7 +431,9 @@ export class Dvpm {
   }
 
   /**
-   * Add a plugin to dvpm list
+   * Add a plugin to the management list.
+   *
+   * @param plug - Plugin definition.
    */
   public async add(plug: Plug) {
     try {
@@ -432,7 +457,9 @@ export class Dvpm {
   }
 
   /**
-   * dvpm end function
+   * Finalizes the plugin management process.
+   * This includes resolving dependencies, installing missing plugins,
+   * adding to runtimepath, sourcing configurations, and generating cache.
    */
   public async end() {
     try {
@@ -553,7 +580,10 @@ export class Dvpm {
   }
 
   /**
-   * Cache the script
+   * Manually update the cache script.
+   *
+   * @param arg - Cache script and file path.
+   * @returns True if cache was updated, false otherwise.
    */
   public async cache(arg: { script: string; path: string }): Promise<boolean> {
     return await cache(this.denops, { script: arg.script, path: arg.path });
