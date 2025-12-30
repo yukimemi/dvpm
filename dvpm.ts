@@ -91,6 +91,16 @@ export class Dvpm {
       async bufWriteList(): Promise<void> {
         await dvpm.bufWriteList();
       },
+
+      async load(url: unknown, loadType: unknown, arg: unknown): Promise<void> {
+        if (url) {
+          await dvpm.load(
+            type("string").assert(url),
+            type("string").assert(loadType),
+            type("string").assert(arg),
+          );
+        }
+      },
     };
 
     await execute(
@@ -378,6 +388,12 @@ export class Dvpm {
         get: (p: Plugin) => `${p.info.isCache}`,
       },
       {
+        label: "lazy",
+        width: COL_WIDTH_BOOL,
+        get: (p: Plugin) =>
+          `${p.info.lazy || p.info.cmd || p.info.event || p.info.ft || p.info.keys ? true : false}`,
+      },
+      {
         label: "isClone",
         width: COL_WIDTH_BOOL,
         get: (p: Plugin) => `${p.info.clone}`,
@@ -465,8 +481,42 @@ export class Dvpm {
       logger().debug(`[end] Dvpm end start !`);
       const enabledPlugins = this.resolveDependencies(this.plugins);
       await this.install();
-      logger().debug(`[end] Enable plugins: ${enabledPlugins.map((p) => p.info.url).join(", ")}`);
-      await this.loadPlugins(enabledPlugins);
+
+      const isLazy = (p: Plugin) =>
+        p.info.lazy || p.info.cmd || p.info.event || p.info.ft || p.info.keys;
+      const eagerPluginsSet = new Set<Plugin>();
+      const lazyPluginsSet = new Set<Plugin>();
+
+      for (const p of enabledPlugins) {
+        if (isLazy(p)) {
+          lazyPluginsSet.add(p);
+        } else {
+          eagerPluginsSet.add(p);
+        }
+      }
+
+      let changed = true;
+      while (changed) {
+        changed = false;
+        for (const p of lazyPluginsSet) {
+          const dependent = Array.from(eagerPluginsSet).find((ep) =>
+            ep.info.dependencies.includes(p.info.url)
+          );
+          if (dependent) {
+            lazyPluginsSet.delete(p);
+            eagerPluginsSet.add(p);
+            changed = true;
+          }
+        }
+      }
+
+      const eagerPlugins = enabledPlugins.filter((p) => eagerPluginsSet.has(p));
+      const lazyPlugins = enabledPlugins.filter((p) => lazyPluginsSet.has(p));
+
+      logger().debug(`[end] Enable plugins: ${eagerPlugins.map((p) => p.info.url).join(", ")}`);
+      logger().debug(`[end] Lazy plugins: ${lazyPlugins.map((p) => p.info.url).join(", ")}`);
+      await this.loadPlugins(eagerPlugins);
+      await this._fire(lazyPlugins);
 
       if (await fn.exists(this.denops, "denops_server_addr")) {
         await execute(
@@ -497,6 +547,92 @@ export class Dvpm {
       this.totalElaps = performance.now() - this.totalElaps;
       logger().debug(`[end] Dvpm end end ! ${this.totalElaps}`);
     }
+  }
+
+  public async load(url: string, type: string, arg: string) {
+    const p = this.findPlugin(url);
+    if (!p) return;
+    if (p.info.isLoad) return;
+
+    if (type === "cmd") {
+      await this.denops.cmd(`delcommand ${arg}`);
+    }
+    if (type === "keys") {
+      await this.denops.cmd(`nunmap ${arg}`);
+    }
+
+    const pluginsToLoad: Plugin[] = [];
+    const collectDependencies = (plugin: Plugin) => {
+      if (plugin.info.isLoad) return;
+      if (plugin.info.dependencies) {
+        for (const depUrl of plugin.info.dependencies) {
+          const dep = this.findPlugin(depUrl);
+          if (dep && !dep.info.isLoad) {
+            collectDependencies(dep);
+          }
+        }
+      }
+      if (!pluginsToLoad.includes(plugin)) {
+        pluginsToLoad.push(plugin);
+      }
+    };
+    collectDependencies(p);
+
+    await this.loadPlugins(pluginsToLoad);
+
+    if (type === "cmd") {
+      await this.denops.cmd(`if exists(':${arg}') | exe '${arg}' | endif`);
+    }
+    if (type === "keys") {
+      await this.denops.call("feedkeys", arg, "t");
+    }
+  }
+
+  private async _fire(plugins: Plugin[]) {
+    await batch(this.denops, async (denops) => {
+      for (const p of plugins) {
+        if (p.info.cmd) {
+          const cmds = Array.isArray(p.info.cmd) ? p.info.cmd : [p.info.cmd];
+          for (const cmd of cmds) {
+            await denops.cmd(
+              `command! -nargs=* -range -bang -complete=file ${cmd} call denops#request('${denops.name}', 'load', ['${p.info.url}', 'cmd', '${cmd}'])`,
+            );
+          }
+        }
+        if (p.info.event) {
+          const events = Array.isArray(p.info.event) ? p.info.event : [p.info.event];
+          for (const event of events) {
+            await autocmd.define(
+              denops,
+              event,
+              "*",
+              `call denops#request('${denops.name}', 'load', ['${p.info.url}', 'event', '${event}'])`,
+              { once: true },
+            );
+          }
+        }
+        if (p.info.ft) {
+          const fts = Array.isArray(p.info.ft) ? p.info.ft : [p.info.ft];
+          for (const ft of fts) {
+            await autocmd.define(
+              denops,
+              "FileType",
+              ft,
+              `call denops#request('${denops.name}', 'load', ['${p.info.url}', 'ft', '${ft}'])`,
+              { once: true },
+            );
+          }
+        }
+        if (p.info.keys) {
+          const keys = Array.isArray(p.info.keys) ? p.info.keys : [p.info.keys];
+          for (const key of keys) {
+            await denops.cmd(
+              `nnoremap <silent> ${key} :call denops#request('${denops.name}', 'load', ['${p.info.url}', 'keys', '${key}'])<CR>`,
+            );
+          }
+        }
+      }
+    });
   }
 
   private async loadPlugins(plugins: Plugin[]) {

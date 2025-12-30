@@ -88,6 +88,26 @@ export type Plug = {
     afterFile?: string;
   };
   /**
+   * Whether to load the plugin lazily.
+   */
+  lazy?: boolean;
+  /**
+   * Load the plugin when the command is executed.
+   */
+  cmd?: string | string[];
+  /**
+   * Load the plugin when the event is triggered.
+   */
+  event?: string | string[];
+  /**
+   * Load the plugin when the filetype is detected.
+   */
+  ft?: string | string[];
+  /**
+   * Load the plugin when the key is pressed.
+   */
+  keys?: string | string[];
+  /**
    * Internal flag: whether the plugin is loaded.
    */
   isLoad?: boolean;
@@ -126,6 +146,11 @@ const _PlugSchema = type({
     "beforeFile?": "string",
     "afterFile?": "string",
   }).default(() => ({ enabled: false })),
+  "lazy?": "boolean",
+  "cmd?": "string | string[]",
+  "event?": "string | string[]",
+  "ft?": "string | string[]",
+  "keys?": "string | string[]",
   isLoad: "boolean = false",
   isUpdate: "boolean = false",
   isCache: "boolean = false",
@@ -161,6 +186,11 @@ export type PlugInfo = {
     beforeFile?: string;
     afterFile?: string;
   };
+  lazy?: boolean;
+  cmd?: string | string[];
+  event?: string | string[];
+  ft?: string | string[];
+  keys?: string | string[];
   isLoad: boolean;
   isUpdate: boolean;
   isCache: boolean;

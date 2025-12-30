@@ -296,6 +296,16 @@ export type Plug = {
   clone?: Bool;
   // Dependencies. (Optional)
   dependencies?: string[];
+  // Lazy load. (Optional)
+  lazy?: boolean;
+  // Load the plugin when the command is executed. (Optional)
+  cmd?: string | string[];
+  // Load the plugin when the event is triggered. (Optional)
+  event?: string | string[];
+  // Load the plugin when the filetype is detected. (Optional)
+  ft?: string | string[];
+  // Load the plugin when the key is pressed. (Optional)
+  keys?: string | string[];
 };
 ```
 
@@ -466,6 +476,44 @@ stages = "slide",
 })
 vim.notify = require("notify")
 EOB
+```
+
+## Lazy Loading
+
+You can use `lazy`, `cmd`, `event`, `ft`, and `keys` to load plugins lazily.
+
+e.g.
+
+```typescript
+  // Lazy load.
+  await dvpm.add({
+    url: "yukimemi/hitori.vim",
+    lazy: true,
+  });
+
+  // Load on command.
+  await dvpm.add({
+    url: "yukimemi/hitori.vim",
+    cmd: "Hitori",
+  });
+
+  // Load on event.
+  await dvpm.add({
+    url: "yukimemi/hitori.vim",
+    event: "BufRead",
+  });
+
+  // Load on filetype.
+  await dvpm.add({
+    url: "yukimemi/hitori.vim",
+    ft: "typescript",
+  });
+
+  // Load on keys.
+  await dvpm.add({
+    url: "yukimemi/hitori.vim",
+    keys: "<leader>h",
+  });
 ```
 
 ## Autocmd
