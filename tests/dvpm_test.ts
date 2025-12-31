@@ -9,7 +9,7 @@ import { test } from "@denops/test";
 import { Dvpm } from "../dvpm.ts";
 
 test({
-  mode: "nvim",
+  mode: "all",
   name: "Dvpm.bufWriteList includes profiles",
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
@@ -41,7 +41,7 @@ test({
 });
 
 test({
-  mode: "nvim",
+  mode: "all",
   name: "Dvpm.bufWriteList hides profiles column when no profiles exist",
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
@@ -73,7 +73,7 @@ test({
 });
 
 test({
-  mode: "nvim",
+  mode: "all",
   name: "Dvpm.add adds a plugin to the list",
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
@@ -91,7 +91,7 @@ test({
 });
 
 test({
-  mode: "nvim",
+  mode: "all",
   name: "Dvpm.list returns unique plugins",
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
@@ -110,7 +110,7 @@ test({
 });
 
 test({
-  mode: "nvim",
+  mode: "all",
   name: "Dvpm.end runs without error",
   fn: async (denops) => {
     const base = await Deno.makeTempDir();

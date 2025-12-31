@@ -36,6 +36,7 @@ async function main() {
   // Set environment variable
   Deno.env.set("DENOPS_TEST_DENOPS_PATH", denopsPath);
   Deno.env.set("DENOPS_TEST_VERBOSE", "1"); // Optional: for detailed output
+  Deno.env.set("DENOPS_TEST_CONNECT_TIMEOUT", "60000"); // 60 sec timeout
 
   // Run deno test
   const args = Deno.args.length > 0 ? Deno.args : ["tests/"];

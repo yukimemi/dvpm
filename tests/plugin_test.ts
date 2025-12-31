@@ -10,7 +10,7 @@ import { Plugin } from "../plugin.ts";
 import { assertEquals } from "@std/assert";
 
 test({
-  mode: "nvim",
+  mode: "all",
   name: "Plugin URL conversion test",
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
