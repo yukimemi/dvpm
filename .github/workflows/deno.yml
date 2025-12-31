@@ -37,8 +37,14 @@ jobs:
           private-key: ${{ secrets.PRIVATE_KEY }}
 
       - uses: actions/checkout@v4
+      - uses: rhysd/action-setup-vim@v1
+        if: matrix.os == 'ubuntu-latest'
+        id: vim-rhysd
+        with:
+          version: v9.1.0400
       - uses: thinca/action-setup-vim@v1
-        id: vim
+        if: matrix.os != 'ubuntu-latest'
+        id: vim-thinca
         with:
           vim_type: "Vim"
           vim_version: "v9.1.0"
@@ -50,7 +56,7 @@ jobs:
       - uses: denoland/setup-deno@v2
       - run: deno task ci
         env:
-          DENOPS_TEST_VIM_EXECUTABLE: ${{ steps.vim.outputs.executable }}
+          DENOPS_TEST_VIM_EXECUTABLE: ${{ steps.vim-rhysd.outputs.executable || steps.vim-thinca.outputs.executable }}
           DENOPS_TEST_NVIM_EXECUTABLE: ${{ steps.nvim.outputs.executable }}
       - run: deno outdated --update --latest --recursive
         if: matrix.os == 'ubuntu-latest'

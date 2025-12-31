@@ -18,11 +18,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: thinca/action-setup-vim@v1
+      - uses: rhysd/action-setup-vim@v1
         id: vim
         with:
-          vim_type: "Vim"
-          vim_version: "v9.1.0"
+          version: v9.1.0400
       - uses: rhysd/action-setup-vim@v1
         id: nvim
         with:
