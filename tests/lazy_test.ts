@@ -35,7 +35,7 @@ Deno.test({
     // deno-lint-ignore no-explicit-any
     const loadPluginsStub = stub(dvpm as any, "loadPlugins", () => Promise.resolve());
     // deno-lint-ignore no-explicit-any
-    const fireStub = stub(dvpm as any, "_fire", () => Promise.resolve());
+    const fireStub = stub(dvpm as any, "fire", () => Promise.resolve());
     // deno-lint-ignore no-explicit-any
     stub(dvpm as any, "install", () => Promise.resolve());
 
@@ -72,7 +72,7 @@ Deno.test({
     // deno-lint-ignore no-explicit-any
     const loadPluginsStub = stub(dvpm as any, "loadPlugins", () => Promise.resolve());
     // deno-lint-ignore no-explicit-any
-    const fireStub = stub(dvpm as any, "_fire", () => Promise.resolve());
+    const fireStub = stub(dvpm as any, "fire", () => Promise.resolve());
     // deno-lint-ignore no-explicit-any
     stub(dvpm as any, "install", () => Promise.resolve());
 

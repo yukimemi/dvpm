@@ -517,7 +517,7 @@ export class Dvpm {
       logger().debug(`[end] Enable plugins: ${eagerPlugins.map((p) => p.info.url).join(", ")}`);
       logger().debug(`[end] Lazy plugins: ${lazyPlugins.map((p) => p.info.url).join(", ")}`);
       await this.loadPlugins(eagerPlugins);
-      await this._fire(lazyPlugins);
+      await this.fire(lazyPlugins);
 
       if (await fn.exists(this.denops, "denops_server_addr")) {
         await execute(
@@ -589,7 +589,7 @@ export class Dvpm {
     }
   }
 
-  private async _fire(plugins: Plugin[]) {
+  private async fire(plugins: Plugin[]) {
     await batch(this.denops, async (denops) => {
       for (const p of plugins) {
         if (p.info.cmd) {
