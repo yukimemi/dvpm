@@ -3,10 +3,10 @@
   "version": "9.0.0-alpha.3",
   "exports": "./mod.ts",
   "tasks": {
-    "check": "deno check ./**/*.ts",
+    "check": "deno check dvpm.ts git.ts logger.ts mod.ts plugin.ts types.ts util.ts scripts/ tests/",
     "fmt": "deno fmt",
     "lint": "deno lint",
-    "test": "deno test -A",
+    "test": "deno run -A scripts/test_runner.ts",
     "ci": "deno task check && deno task lint && deno task fmt --check && deno task test",
     "hooks:install": "deno run --allow-read=deno.json,.git/hooks/ --allow-write=.git/hooks/ jsr:@hongminhee/deno-task-hooks",
     "hooks:pre-commit": "deno task ci",
@@ -20,6 +20,9 @@
     "exclude": ["README.md"]
   },
   "lock": false,
+  "exclude": [
+    ".test_cache"
+  ],
   "imports": {
     "@core/asyncutil": "jsr:@core/asyncutil@^1.2.0",
     "@denops/std": "jsr:@denops/std@^8.2.0",

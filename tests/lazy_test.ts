@@ -1,33 +1,21 @@
 // =============================================================================
 // File        : lazy_test.ts
 // Author      : yukimemi
-// Last Change : 2025/12/31 00:00:00.
+// Last Change : 2025/12/31 21:47:01.
 // =============================================================================
 
 import { assertEquals } from "@std/assert";
 import { assertSpyCall, stub } from "@std/testing/mock";
-import { DenopsStub } from "@denops/test";
+import { test } from "@denops/test";
 import { Dvpm } from "../dvpm.ts";
 import type { Plugin } from "../plugin.ts";
 
-const createDenops = () => (
-  new DenopsStub({
-    call: (fn, ...args) => {
-      return Promise.resolve([fn, ...args]);
-    },
-    cmd: (_cmd, ..._args) => {
-      return Promise.resolve();
-    },
-  })
-);
-
-Deno.test({
+test({
+  mode: "nvim",
   name: "Lazy Loading: eager plugins are loaded at end()",
-  sanitizeOps: false,
-  sanitizeResources: false,
-  fn: async () => {
-    const denops = createDenops();
-    const dvpm = new Dvpm(denops, { base: "/tmp/dvpm" });
+  fn: async (denops) => {
+    const base = await Deno.makeTempDir();
+    const dvpm = new Dvpm(denops, { base });
 
     await dvpm.add({ url: "eager/plugin" });
     await dvpm.add({ url: "lazy/plugin", lazy: true });
@@ -37,7 +25,7 @@ Deno.test({
     // deno-lint-ignore no-explicit-any
     const fireStub = stub(dvpm as any, "fire", () => Promise.resolve());
     // deno-lint-ignore no-explicit-any
-    stub(dvpm as any, "install", () => Promise.resolve());
+    const installStub = stub(dvpm as any, "install", () => Promise.resolve());
 
     try {
       await dvpm.end();
@@ -53,17 +41,17 @@ Deno.test({
     } finally {
       loadPluginsStub.restore();
       fireStub.restore();
+      installStub.restore();
     }
   },
 });
 
-Deno.test({
+test({
+  mode: "nvim",
   name: "Lazy Loading: lazy plugins are promoted to eager if depended on by eager plugins",
-  sanitizeOps: false,
-  sanitizeResources: false,
-  fn: async () => {
-    const denops = createDenops();
-    const dvpm = new Dvpm(denops, { base: "/tmp/dvpm" });
+  fn: async (denops) => {
+    const base = await Deno.makeTempDir();
+    const dvpm = new Dvpm(denops, { base });
 
     // eager depends on lazy
     await dvpm.add({ url: "eager/plugin", dependencies: ["lazy/plugin"] });
@@ -74,7 +62,7 @@ Deno.test({
     // deno-lint-ignore no-explicit-any
     const fireStub = stub(dvpm as any, "fire", () => Promise.resolve());
     // deno-lint-ignore no-explicit-any
-    stub(dvpm as any, "install", () => Promise.resolve());
+    const installStub = stub(dvpm as any, "install", () => Promise.resolve());
 
     try {
       await dvpm.end();
@@ -99,17 +87,17 @@ Deno.test({
     } finally {
       loadPluginsStub.restore();
       fireStub.restore();
+      installStub.restore();
     }
   },
 });
 
-Deno.test({
+test({
+  mode: "nvim",
   name: "Lazy Loading: load() recursively loads dependencies",
-  sanitizeOps: false,
-  sanitizeResources: false,
-  fn: async () => {
-    const denops = createDenops();
-    const dvpm = new Dvpm(denops, { base: "/tmp/dvpm" });
+  fn: async (denops) => {
+    const base = await Deno.makeTempDir();
+    const dvpm = new Dvpm(denops, { base });
 
     // lazy1 depends on lazy2
     await dvpm.add({ url: "lazy1", lazy: true, dependencies: ["lazy2"] });

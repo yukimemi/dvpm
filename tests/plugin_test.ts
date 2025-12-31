@@ -1,30 +1,21 @@
 // =============================================================================
 // File        : plugin_test.ts
 // Author      : yukimemi
-// Last Change : 2025/09/21 19:50:58.
+// Last Change : 2025/12/31 21:47:04.
 // =============================================================================
 
 import * as path from "@std/path";
-import { DenopsStub } from "@denops/test";
+import { test } from "@denops/test";
 import { Plugin } from "../plugin.ts";
 import { assertEquals } from "@std/assert";
 
-const createDenops = () => (
-  new DenopsStub({
-    call: (fn, ...args) => {
-      return Promise.resolve([fn, ...args]);
-    },
-  })
-);
-
-Deno.test({
+test({
+  mode: "nvim",
   name: "Plugin URL conversion test",
-  sanitizeOps: false,
-  sanitizeResources: false,
-  fn: async () => {
-    const denops = createDenops();
+  fn: async (denops) => {
+    const base = await Deno.makeTempDir();
     const option = {
-      base: "/tmp",
+      base,
       profiles: [],
       profile: false,
       logarg: [],
@@ -35,49 +26,49 @@ Deno.test({
         name: "Shorthand github owner URL",
         inputUrl: "github/copilot.vim",
         expectedUrl: "https://github.com/github/copilot.vim",
-        expectedDst: path.join("/tmp", "github.com", "github", "copilot.vim"),
+        expectedPath: ["github.com", "github", "copilot.vim"],
       },
       {
         name: "https:// URL",
         inputUrl: "https://github.com/owner/repo",
         expectedUrl: "https://github.com/owner/repo",
-        expectedDst: path.join("/tmp", "github.com", "owner", "repo"),
+        expectedPath: ["github.com", "owner", "repo"],
       },
       {
         name: "git:// URL",
         inputUrl: "git://github.com/owner/repo",
         expectedUrl: "git://github.com/owner/repo",
-        expectedDst: path.join("/tmp", "github.com", "owner", "repo"),
+        expectedPath: ["github.com", "owner", "repo"],
       },
       {
         name: "ssh:// URL",
         inputUrl: "ssh://github.com/owner/repo",
         expectedUrl: "ssh://github.com/owner/repo",
-        expectedDst: path.join("/tmp", "github.com", "owner", "repo"),
+        expectedPath: ["github.com", "owner", "repo"],
       },
       {
         name: "git@ URL",
         inputUrl: "git@github.com:owner/repo",
         expectedUrl: "git@github.com:owner/repo",
-        expectedDst: path.join("/tmp", "github.com", "owner", "repo"),
+        expectedPath: ["github.com", "owner", "repo"],
       },
       {
         name: "http:// URL",
         inputUrl: "http://github.com/owner/repo",
         expectedUrl: "http://github.com/owner/repo",
-        expectedDst: path.join("/tmp", "github.com", "owner", "repo"),
+        expectedPath: ["github.com", "owner", "repo"],
       },
       {
         name: "https:// URL with .git suffix",
         inputUrl: "https://github.com/owner/repo.git",
         expectedUrl: "https://github.com/owner/repo.git",
-        expectedDst: path.join("/tmp", "github.com", "owner", "repo"),
+        expectedPath: ["github.com", "owner", "repo"],
       },
       {
         name: "git@ URL with .git suffix",
         inputUrl: "git@github.com:owner/repo.git",
         expectedUrl: "git@github.com:owner/repo.git",
-        expectedDst: path.join("/tmp", "github.com", "owner", "repo"),
+        expectedPath: ["github.com", "owner", "repo"],
       },
     ];
 
@@ -93,7 +84,7 @@ Deno.test({
       );
       assertEquals(
         plugin.info.dst,
-        testCase.expectedDst,
+        path.join(base, ...testCase.expectedPath),
         `Test Case: ${testCase.name} - dst`,
       );
     }
