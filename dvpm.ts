@@ -292,13 +292,6 @@ export class Dvpm {
     });
   }
 
-  private async _install(p: Plugin) {
-    await this.runPluginTask(p, "install", () => p.install(), this.#installLogs);
-  }
-  private async _update(p: Plugin) {
-    await this.runPluginTask(p, "update", () => p.update(), this.#updateLogs);
-  }
-
   /**
    * Install managed plugins.
    *
@@ -308,9 +301,13 @@ export class Dvpm {
     if (url) {
       const p = this.findPlugin(url);
       if (p == undefined) return;
-      await this._install(p);
+      await this.runPluginTask(p, "install", () => p.install(), this.#installLogs);
     } else {
-      await Promise.all(this.plugins.map((p) => this._install(p)));
+      await Promise.all(
+        this.plugins.map((p) =>
+          this.runPluginTask(p, "install", () => p.install(), this.#installLogs)
+        ),
+      );
     }
   }
 
@@ -328,9 +325,13 @@ export class Dvpm {
     if (url) {
       const p = this.findPlugin(url);
       if (p == undefined) return;
-      await this._update(p);
+      await this.runPluginTask(p, "update", () => p.update(), this.#updateLogs);
     } else {
-      await Promise.all(this.plugins.map((p) => this._update(p)));
+      await Promise.all(
+        this.plugins.map((p) =>
+          this.runPluginTask(p, "update", () => p.update(), this.#updateLogs)
+        ),
+      );
     }
 
     if (this.#updateLogs.length > 0) {
