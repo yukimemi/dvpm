@@ -18,8 +18,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: rhysd/action-setup-vim@v1
+        id: vim
+        with:
+          version: v9.1.0400
+      - uses: rhysd/action-setup-vim@v1
+        id: nvim
+        with:
+          neovim: true
+          version: v0.10.0
       - uses: denoland/setup-deno@v1
       - run: deno task ci
+        env:
+          DENOPS_TEST_VIM_EXECUTABLE: ${{ steps.vim.outputs.executable }}
+          DENOPS_TEST_NVIM_EXECUTABLE: ${{ steps.nvim.outputs.executable }}
       - uses: "pascalgn/automerge-action@v0.16.3"
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
