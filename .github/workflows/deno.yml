@@ -22,11 +22,16 @@ jobs:
   update:
     name: Update
     permissions: write-all
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
       - uses: actions/create-github-app-token@v1
         id: app-token
+        if: matrix.os == 'ubuntu-latest'
         with:
           app-id: ${{ vars.APP_ID }}
           private-key: ${{ secrets.PRIVATE_KEY }}
@@ -47,11 +52,11 @@ jobs:
           DENOPS_TEST_VIM_EXECUTABLE: ${{ steps.vim.outputs.executable }}
           DENOPS_TEST_NVIM_EXECUTABLE: ${{ steps.nvim.outputs.executable }}
       - run: deno outdated --update --latest --recursive
+        if: matrix.os == 'ubuntu-latest'
       - run: deno task ci
-        env:
-          DENOPS_TEST_VIM_EXECUTABLE: ${{ steps.vim.outputs.executable }}
-          DENOPS_TEST_NVIM_EXECUTABLE: ${{ steps.nvim.outputs.executable }}
+        if: matrix.os == 'ubuntu-latest'
       - uses: peter-evans/create-pull-request@v7
+        if: matrix.os == 'ubuntu-latest'
         with:
           token: ${{ steps.app-token.outputs.token }}
           labels: automerge
