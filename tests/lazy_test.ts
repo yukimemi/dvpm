@@ -11,7 +11,7 @@ import { Dvpm } from "../dvpm.ts";
 import type { Plugin } from "../plugin.ts";
 
 test({
-  mode: "nvim",
+  mode: "all",
   name: "Lazy Loading: eager plugins are loaded at end()",
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
@@ -47,7 +47,7 @@ test({
 });
 
 test({
-  mode: "nvim",
+  mode: "all",
   name: "Lazy Loading: lazy plugins are promoted to eager if depended on by eager plugins",
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
@@ -93,7 +93,7 @@ test({
 });
 
 test({
-  mode: "nvim",
+  mode: "all",
   name: "Lazy Loading: load() recursively loads dependencies",
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
