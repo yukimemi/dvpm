@@ -602,27 +602,27 @@ export class Dvpm {
         }
         if (p.info.event) {
           const events = Array.isArray(p.info.event) ? p.info.event : [p.info.event];
-          for (const event of events) {
-            await autocmd.define(
-              denops,
-              event,
-              "*",
-              `call denops#request('${denops.name}', 'load', ['${p.info.url}', 'event', '${event}'])`,
-              { once: true },
-            );
-          }
+          await autocmd.define(
+            denops,
+            events,
+            "*",
+            `call denops#request('${denops.name}', 'load', ['${p.info.url}', 'event', '${
+              events.join(",")
+            }'])`,
+            { once: true },
+          );
         }
         if (p.info.ft) {
           const fts = Array.isArray(p.info.ft) ? p.info.ft : [p.info.ft];
-          for (const ft of fts) {
-            await autocmd.define(
-              denops,
-              "FileType",
-              ft,
-              `call denops#request('${denops.name}', 'load', ['${p.info.url}', 'ft', '${ft}'])`,
-              { once: true },
-            );
-          }
+          await autocmd.define(
+            denops,
+            "FileType",
+            fts,
+            `call denops#request('${denops.name}', 'load', ['${p.info.url}', 'ft', '${
+              fts.join(",")
+            }'])`,
+            { once: true },
+          );
         }
         if (p.info.keys) {
           const keys = Array.isArray(p.info.keys) ? p.info.keys : [p.info.keys];
