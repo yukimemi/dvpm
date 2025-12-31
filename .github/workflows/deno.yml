@@ -41,18 +41,18 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         id: vim-rhysd
         with:
-          version: "stable"
+          version: "v9.1.0400"
       - uses: thinca/action-setup-vim@v1
         if: matrix.os != 'ubuntu-latest'
         id: vim-thinca
         with:
           vim_type: "Vim"
-          vim_version: "stable"
+          vim_version: "v9.1.0"
       - uses: rhysd/action-setup-vim@v1
         id: nvim
         with:
           neovim: true
-          version: "stable"
+          version: "v0.10.0"
       - uses: denoland/setup-deno@v2
       - run: deno task ci
         env:
