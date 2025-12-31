@@ -37,15 +37,16 @@ jobs:
           private-key: ${{ secrets.PRIVATE_KEY }}
 
       - uses: actions/checkout@v4
-      - uses: rhysd/action-setup-vim@v1
+      - uses: thinca/action-setup-vim@v1
         id: vim
         with:
-          version: stable
-      - uses: rhysd/action-setup-vim@v1
+          vim_type: 'Vim'
+          vim_version: 'v9.1.0'
+      - uses: thinca/action-setup-vim@v1
         id: nvim
         with:
-          neovim: true
-          version: v0.10.0
+          vim_type: 'Neovim'
+          vim_version: 'v0.10.0'
       - uses: denoland/setup-deno@v2
       - run: deno task ci
         env:
