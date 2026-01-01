@@ -15,7 +15,7 @@ import { Semaphore } from "@core/asyncutil";
 import { batch } from "@denops/std/batch";
 import { cache, convertUrl, notify } from "./util.ts";
 import { echo, execute } from "@denops/std/helper";
-import { rawString } from "@denops/std/eval/string";
+import { expr } from "@denops/std/eval/expression";
 import { logger } from "./logger.ts";
 import { sprintf } from "@std/fmt/printf";
 import {
@@ -623,6 +623,12 @@ export class Dvpm {
       });
       const keyMapChecked = KeyMapSchema(keyMap);
 
+      const escapedArg = args.arg.replace(/\\/g, "\\\\").replace(/"/g, '"').replace(
+        /</g,
+        "\\<",
+      );
+      const feedArg = expr`"${escapedArg}"`;
+
       if (!(keyMapChecked instanceof type.errors)) {
         const km = keyMapChecked as KeyMap;
         const modes = Array.isArray(km.mode)
@@ -642,10 +648,8 @@ export class Dvpm {
             },
           );
         }
-        const feedArg = rawString`\<${args.arg}>`;
         await this.denops.call("feedkeys", feedArg, "mt");
       } else {
-        const feedArg = rawString`\<${args.arg}>`;
         await this.denops.call("feedkeys", feedArg, "t");
       }
     }
