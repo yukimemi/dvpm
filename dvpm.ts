@@ -622,14 +622,14 @@ export class Dvpm {
         }
         const feedArg = await this.denops.call(
           "eval",
-          `"\<${km.rhs.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/</g, "\\<")}>"`,
+          `"${km.rhs.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/</g, "\\<")}"`,
         );
         await this.denops.call("feedkeys", feedArg, "m");
       } else {
         await mapping.unmap(this.denops, args.arg, { mode: "n" });
         const feedArg = await this.denops.call(
           "eval",
-          `"\<${args.arg.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/</g, "\\<")}>"`,
+          `"${args.arg.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/</g, "\\<")}"`,
         );
         await this.denops.call("feedkeys", feedArg, "m");
       }

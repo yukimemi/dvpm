@@ -162,6 +162,12 @@ test({
       "Mapping should be updated to RHS for <space>b",
     );
 
+    // After re-mapping, the RHS should be executed (via feedkeys in load())
+    // Wait a bit for feedkeys to be processed
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    const rhsResult = await denops.eval("g:dvpm_test_keys_space");
+    assertEquals(rhsResult, 1, "RHS <cmd>...<cr> should be executed after load()");
+
     // Verify buffer content: should NOT contain garbage like "ce>b>"
     const lines = (await denops.call("getbufline", "%", 1, "$")) as string[];
     const garbageFound = lines.some((l) => l.includes("ce>b") || l.includes('>"'));
@@ -170,5 +176,40 @@ test({
       false,
       `Buffer contains garbage: ${JSON.stringify(lines)}`,
     );
+  },
+});
+
+test({
+  mode: "all",
+  name: "keys with <cmd>...<cr> RHS executes correctly on first press",
+  fn: async (denops) => {
+    const base = await Deno.makeTempDir();
+    const dvpm = new Dvpm(denops, { base });
+
+    const lhs = "gC";
+    const rhs = "<cmd>let g:dvpm_test_keys_cmd = 1<cr>";
+    await denops.cmd("let g:dvpm_test_keys_cmd = 0");
+
+    await dvpm.add({
+      url: "lazy/keys_cmd",
+      keys: { lhs, rhs, mode: "n" },
+    });
+
+    const plugin = dvpm.plugins[0];
+    plugin.install = () => Promise.resolve([]);
+    plugin.update = () => Promise.resolve([]);
+    plugin.build = () => Promise.resolve();
+    await Deno.mkdir(plugin.info.dst, { recursive: true });
+
+    await dvpm.end();
+
+    // Trigger load
+    await dvpm.load(plugin.info.url, "keys", lhs);
+
+    // Wait for feedkeys
+    await new Promise((resolve) => setTimeout(resolve, 200));
+
+    const result = await denops.eval("g:dvpm_test_keys_cmd");
+    assertEquals(result, 1, "RHS <cmd>...<cr> should be executed immediately");
   },
 });
