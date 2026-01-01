@@ -7,6 +7,7 @@
 import { assertEquals } from "@std/assert";
 import { test } from "@denops/test";
 import { Dvpm } from "../dvpm.ts";
+import * as path from "@std/path";
 
 test({
   mode: "all",
@@ -122,5 +123,34 @@ test({
 
     const fired = await denops.eval("g:dvpm_test_custom_name_fired");
     assertEquals(fired, 1, `User autocmd '${postLoadEvent}' should be fired with custom name`);
+  },
+});
+
+test({
+  mode: "all",
+  name: "Dvpm triggers User autocmd 'Dvpm:CacheUpdated:all' when cache is updated",
+  fn: async (denops) => {
+    const base = await Deno.makeTempDir();
+    const cache = path.join(base, "cache.vim");
+    const dvpm = new Dvpm(denops, { base, cache });
+
+    await dvpm.add({
+      url: "https://github.com/yukimemi/dvpm",
+      cache: { enabled: true },
+    });
+
+    const plugin = dvpm.plugins[0];
+    plugin.install = () => Promise.resolve([]);
+    plugin.update = () => Promise.resolve([]);
+    plugin.build = () => Promise.resolve();
+    await Deno.mkdir(plugin.info.dst, { recursive: true });
+
+    await denops.cmd("let g:dvpm_test_cache_updated = 0");
+    await denops.cmd("autocmd User Dvpm:CacheUpdated:all let g:dvpm_test_cache_updated = 1");
+
+    await dvpm.end();
+
+    const fired = await denops.eval("g:dvpm_test_cache_updated");
+    assertEquals(fired, 1, "User autocmd 'Dvpm:CacheUpdated:all' should be fired");
   },
 });

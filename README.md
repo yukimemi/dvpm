@@ -545,7 +545,7 @@ e.g.
 
 ## Autocmd
 
-- DvpmCacheUpdated
+- Dvpm:CacheUpdated:all
 
 Fires after updating the cache.
 
@@ -566,7 +566,7 @@ import * as autocmd from "@denops/std/autocmd";
 
 ~~~
 
-await autocmd.define(denops, "User", "DvpmCacheUpdated", "echo 'dvpm cache updated !'");
+await autocmd.define(denops, "User", "Dvpm:CacheUpdated:all", "echo 'dvpm cache updated !'");
 
 // Use wildcard to hook all plugins
 await autocmd.define(

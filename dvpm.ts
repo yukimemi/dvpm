@@ -771,7 +771,7 @@ export class Dvpm {
       })
     ) {
       logger().debug(`[generateCache] Cache updated: ${this.option.cache}`);
-      await autocmd.emit(this.denops, "User", "DvpmCacheUpdated");
+      await autocmd.emit(this.denops, "User", "Dvpm:CacheUpdated:all");
     }
   }
 
