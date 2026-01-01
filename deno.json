@@ -34,7 +34,7 @@
     "@std/path": "jsr:@std/path@^1.1.4",
     "@std/streams": "jsr:@std/streams@^1.0.16",
     "@std/testing": "jsr:@std/testing@^1.0.16",
-    "@octokit/rest": "npm:@octokit/rest@^21.0.0",
+    "@octokit/rest": "npm:@octokit/rest@^22.0.1",
     "arktype": "npm:arktype@^2.1.29"
   }
 }
