@@ -17,7 +17,14 @@ import { cache, convertUrl, notify } from "./util.ts";
 import { echo, execute } from "@denops/std/helper";
 import { logger } from "./logger.ts";
 import { sprintf } from "@std/fmt/printf";
-import { type DvpmOption, DvpmOptionSchema, type Plug } from "./types.ts";
+import {
+  type DvpmOption,
+  DvpmOptionSchema,
+  type KeyMap,
+  KeyMapSchema,
+  LoadArgsSchema,
+  type Plug,
+} from "./types.ts";
 import { type } from "arktype";
 
 const LIST_SPACE = 3;
@@ -94,13 +101,7 @@ export class Dvpm {
       },
 
       async load(url: unknown, loadType: unknown, arg: unknown): Promise<void> {
-        if (url) {
-          await dvpm.load(
-            type("string").assert(url),
-            type("string").assert(loadType),
-            type("string").assert(arg),
-          );
-        }
+        await dvpm.load(url, loadType, arg);
       },
     };
 
@@ -555,19 +556,25 @@ export class Dvpm {
     }
   }
 
-  public async load(url: string, type: string, arg: string) {
-    const p = this.findPlugin(url);
+  public async load(url: unknown, loadType: unknown, arg: unknown) {
+    const args = LoadArgsSchema.assert({ url, loadType, arg });
+    const p = this.findPlugin(args.url);
     if (!p) return;
     if (p.info.isLoad) return;
 
-    if (type === "cmd") {
-      await this.denops.cmd(`if exists(':${arg}') == 2 | exe 'delcommand ${arg}' | endif`);
+    if (args.loadType === "cmd") {
+      await this.denops.cmd(
+        `if exists(':${args.arg}') == 2 | exe 'delcommand ${args.arg}' | endif`,
+      );
     }
-    if (type === "keys") {
+    if (args.loadType === "keys") {
       const keys = Array.isArray(p.info.keys) ? p.info.keys : [p.info.keys];
-      const keyMap = keys.find((k) => typeof k === "object" ? k.lhs === arg : k === arg);
+      const keyMap = keys.find((k) => {
+        const out = KeyMapSchema(k);
+        return out instanceof type.errors ? k === args.arg : (out as KeyMap).lhs === args.arg;
+      });
       if (typeof keyMap === "string") {
-        await this.denops.cmd(`nunmap ${arg}`);
+        await this.denops.cmd(`nunmap ${args.arg}`);
       }
     }
 
@@ -590,39 +597,44 @@ export class Dvpm {
 
     await this.loadPlugins(pluginsToLoad);
 
-    if (type === "cmd") {
-      await this.denops.cmd(`if exists(':${arg}') | exe '${arg}' | endif`);
+    if (args.loadType === "cmd") {
+      await this.denops.cmd(`if exists(':${args.arg}') | exe '${args.arg}' | endif`);
     }
-    if (type === "keys") {
+    if (args.loadType === "keys") {
       const keys = Array.isArray(p.info.keys) ? p.info.keys : [p.info.keys];
-      const keyMap = keys.find((k) => typeof k === "object" ? k.lhs === arg : k === arg);
-      if (typeof keyMap === "object") {
-        const modes = Array.isArray(keyMap.mode)
-          ? keyMap.mode as mapping.Mode[]
-          : [keyMap.mode ?? "n"] as mapping.Mode[];
+      const keyMap = keys.find((k) => {
+        const out = KeyMapSchema(k);
+        return out instanceof type.errors ? k === args.arg : (out as KeyMap).lhs === args.arg;
+      });
+      const keyMapChecked = KeyMapSchema(keyMap);
+      if (!(keyMapChecked instanceof type.errors)) {
+        const km = keyMapChecked as KeyMap;
+        const modes = Array.isArray(km.mode)
+          ? km.mode as mapping.Mode[]
+          : [km.mode ?? "n"] as mapping.Mode[];
         for (const mode of modes) {
           await mapping.map(
             this.denops,
-            keyMap.lhs,
-            keyMap.rhs,
+            km.lhs,
+            km.rhs,
             {
               mode,
-              noremap: keyMap.noremap ?? true,
-              silent: keyMap.silent ?? true,
-              nowait: keyMap.nowait,
-              expr: keyMap.expr,
+              noremap: km.noremap ?? true,
+              silent: km.silent ?? true,
+              nowait: km.nowait,
+              expr: km.expr,
             },
           );
         }
         await this.denops.call(
           "feedkeys",
-          await fn.substitute(this.denops, arg, "<", "<lt>", "g"),
+          await fn.substitute(this.denops, args.arg, "<", "<lt>", "g"),
           "mt",
         );
       } else {
         await this.denops.call(
           "feedkeys",
-          await fn.substitute(this.denops, arg, "<", "<lt>", "g"),
+          await fn.substitute(this.denops, args.arg, "<", "<lt>", "g"),
           "t",
         );
       }

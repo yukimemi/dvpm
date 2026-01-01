@@ -68,6 +68,28 @@ const _KeyMapSchema = type({
 export const KeyMapSchema: Type<KeyMap> = _KeyMapSchema as unknown as Type<KeyMap>;
 
 /**
+ * Represents the type of load trigger.
+ */
+export type LoadType = "cmd" | "keys" | "ft" | "event";
+
+/**
+ * Schema for the arguments of the load method.
+ */
+export type LoadArgs = {
+  url: string;
+  loadType: LoadType;
+  arg: string;
+};
+
+const _LoadArgsSchema = type({
+  url: "string",
+  loadType: "'cmd' | 'keys' | 'ft' | 'event'",
+  arg: "string",
+});
+
+export const LoadArgsSchema: Type<LoadArgs> = _LoadArgsSchema as unknown as Type<LoadArgs>;
+
+/**
  * Represents a plugin definition.
  */
 export type Plug = {
