@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : types.ts
 // Author      : yukimemi
-// Last Change : 2025/12/21 15:35:27.
+// Last Change : 2026/01/01 21:26:06.
 // =============================================================================
 
 import type { Denops } from "@denops/std";
@@ -20,6 +20,50 @@ export const BoolSchema = type("boolean | Function") as Type<Bool>;
 export const ConfigSchema = type("Function") as Type<
   ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>
 >;
+
+/**
+ * Represents a key mapping definition.
+ */
+export type KeyMap = {
+  /**
+   * Left-hand side of the mapping.
+   */
+  lhs: string;
+  /**
+   * Right-hand side of the mapping.
+   */
+  rhs: string;
+  /**
+   * Mode(s) for the mapping. Default is "n".
+   */
+  mode?: string | string[];
+  /**
+   * Whether the mapping is non-recursive. Default is true.
+   */
+  noremap?: boolean;
+  /**
+   * Whether the mapping is silent. Default is true.
+   */
+  silent?: boolean;
+  /**
+   * Whether the mapping is nowait. Default is false.
+   */
+  nowait?: boolean;
+  /**
+   * Whether the mapping is an expression. Default is false.
+   */
+  expr?: boolean;
+};
+
+export const KeyMapSchema = type({
+  lhs: "string",
+  rhs: "string",
+  "mode?": "string | string[]",
+  "noremap?": "boolean",
+  "silent?": "boolean",
+  "nowait?": "boolean",
+  "expr?": "boolean",
+});
 
 /**
  * Represents a plugin definition.
@@ -50,6 +94,10 @@ export type Plug = {
    */
   profiles?: string[];
   /**
+   * Configuration to run at startup.
+   */
+  add?: ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>;
+  /**
    * Configuration to run before adding to runtimepath.
    */
   before?: ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>;
@@ -57,6 +105,10 @@ export type Plug = {
    * Configuration to run after adding to runtimepath.
    */
   after?: ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>;
+  /**
+   * Path to a Vim/Lua file to source at startup.
+   */
+  addFile?: string;
   /**
    * Path to a Vim/Lua file to source before adding to runtimepath.
    */
@@ -110,7 +162,7 @@ export type Plug = {
   /**
    * Load the plugin when the key is pressed.
    */
-  keys?: string | string[];
+  keys?: string | string[] | KeyMap | KeyMap[];
   /**
    * Internal flag: whether the plugin is loaded.
    */
@@ -136,8 +188,10 @@ const _PlugSchema = type({
   "rev?": "string",
   enabled: BoolSchema.default(true),
   profiles: type("string[]").default(() => []),
+  "add?": ConfigSchema,
   "before?": ConfigSchema,
   "after?": ConfigSchema,
+  "addFile?": "string",
   "beforeFile?": "string",
   "afterFile?": "string",
   "build?": ConfigSchema,
@@ -155,7 +209,7 @@ const _PlugSchema = type({
   "cmd?": "string | string[]",
   "event?": "string | string[]",
   "ft?": "string | string[]",
-  "keys?": "string | string[]",
+  "keys?": type(KeyMapSchema, "|", "string").array().or(KeyMapSchema, "|", "string"),
   isLoad: "boolean = false",
   isUpdate: "boolean = false",
   isCache: "boolean = false",
@@ -190,8 +244,10 @@ export type PlugInfo = {
   rev?: string;
   enabled: Bool;
   profiles: string[];
+  add?: ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>;
   before?: ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>;
   after?: ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>;
+  addFile?: string;
   beforeFile?: string;
   afterFile?: string;
   build?: ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>;
@@ -209,7 +265,7 @@ export type PlugInfo = {
   cmd?: string | string[];
   event?: string | string[];
   ft?: string | string[];
-  keys?: string | string[];
+  keys?: string | string[] | KeyMap | KeyMap[];
   isLoad: boolean;
   isUpdate: boolean;
   isCache: boolean;

@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : plugin.ts
 // Author      : yukimemi
-// Last Change : 2025/12/27 23:00:00.
+// Last Change : 2026/01/01 21:26:20.
 // =============================================================================
 
 import * as fn from "@denops/std/function";
@@ -177,6 +177,20 @@ export class Plugin {
     });
     this.info.isLoad = true;
     return added;
+  }
+
+  /**
+   * Executes the `add` configuration.
+   */
+  public async add() {
+    if (this.info.add) {
+      logger().debug(`[add] ${this.info.url} execute add !`);
+      await this.info.add({ denops: this.denops, info: this.info });
+    }
+    if (this.info.addFile) {
+      logger().debug(`[add] ${this.info.url} execute addFile !`);
+      await executeFile(this.denops, this.info.addFile);
+    }
   }
 
   /**

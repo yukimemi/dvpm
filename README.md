@@ -102,6 +102,18 @@ export const main: Entrypoint = async (denops: Denops) => {
   await dvpm.add({ url: "https://notgithub.com/some/other/plugin" });
   // With branch.
   // await dvpm.add({ url: "neoclide/coc.nvim", rev: "release" });
+
+  // hook_add (dein.vim) equivalent.
+  // Execute at startup regardless of whether the plugin is lazy-loaded.
+  await dvpm.add({
+    url: "yukimemi/hitori.vim",
+    lazy: true,
+    add: async ({ denops }) => {
+      // Set global variables before plugin is loaded.
+      await vars.g.set(denops, "hitori_debug", 1);
+    },
+  });
+
   // build option. Execute after install or update.
   await dvpm.add({
     url: "neoclide/coc.nvim",
@@ -253,38 +265,37 @@ export type Plug = {
   depth?: number;
   // Enable or disable. Default is true.
   enabled?: Bool;
-  // If profiles are specified in DvpmOption, the plugin will be enabled only if the profiles specified here are included in the profiles of DvpmOption.
-  profiles: string[];
-  // Processing to be performed before sourcing plugin/*.vim and plugin/*.lua. (Optional)
-  before?: ({
-    denops,
-    info,
-  }: {
-    denops: Denops;
-    info: PlugInfo;
-  }) => Promise<void>;
-  // Processing to be performed after sourcing plugin/*.vim and plugin/*.lua. (Optional)
-  after?: ({
-    denops,
-    info,
-  }: {
-    denops: Denops;
-    info: PlugInfo;
-  }) => Promise<void>;
-  // File path of processing to be performed before sourcing plugin/*.vim and plugin/*.lua. (Optional)
+  /**
+   * List of profiles this plugin belongs to.
+   */
+  profiles?: string[];
+  /**
+   * Configuration to run at startup. (Regardless of lazy)
+   */
+  add?: ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>;
+  /**
+   * Configuration to run before adding to runtimepath.
+   */
+  before?: ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>;
+  /**
+   * Configuration to run after adding to runtimepath.
+   */
+  after?: ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>;
+  /**
+   * Path to a Vim/Lua file to source at startup. (Regardless of lazy)
+   */
+  addFile?: string;
+  /**
+   * Path to a Vim/Lua file to source before adding to runtimepath.
+   */
   beforeFile?: string;
-  // File path of processing to be performed after sourcing plugin/*.vim and plugin/*.lua. (Optional)
+  /**
+   * Path to a Vim/Lua file to source after adding to runtimepath.
+   */
   afterFile?: string;
-  // Build option. Execute after install or update. (Optional)
-  // Executed even if there are no changes in the update.
-  // Therefore, conditionally branch on `info.isLoad` and `info.isUpdate` as necessary.
-  build?: ({
-    denops,
-    info,
-  }: {
-    denops: Denops;
-    info: PlugInfo;
-  }) => Promise<void>;
+  /**
+   * Build configuration to run after installation or update.
+   */
   // Cache settings. See `Cache setting`.
   cache?: {
     enabled?: Bool;
@@ -516,7 +527,21 @@ e.g.
     url: "yukimemi/hitori.vim",
     keys: "<leader>h",
   });
+
+  // Load on keys with object (lazy.nvim equivalent).
+  // It will NOT unmap after loading, but remap to `rhs`.
+  await dvpm.add({
+    url: "yukimemi/hitori.vim",
+    keys: { lhs: "<leader>h", rhs: "<cmd>Hitori<cr>", mode: "n" },
+  });
 ```
+
+### Hook execution order
+
+1. `add` / `addFile`: Always executed at startup (`Dvpm.end()`).
+2. `before` / `beforeFile`: Executed just before adding to `runtimepath`. (Delayed if `lazy`)
+3. `after` / `afterFile`: Executed just after adding to `runtimepath` and sourcing `plugin/*.vim`. (Delayed if `lazy`)
+4. `build`: Executed after install or update.
 
 ## Autocmd
 

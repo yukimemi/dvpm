@@ -1,12 +1,13 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2025/12/30 23:12:49.
+// Last Change : 2026/01/01 21:26:13.
 // =============================================================================
 
 import * as autocmd from "@denops/std/autocmd";
 import * as buffer from "@denops/std/buffer";
 import * as fn from "@denops/std/function";
+import * as mapping from "@denops/std/mapping";
 import type { Denops } from "@denops/std";
 import type { OpenOptions } from "@denops/std/buffer";
 import { Plugin } from "./plugin.ts";
@@ -514,6 +515,10 @@ export class Dvpm {
       const eagerPlugins = enabledPlugins.filter((p) => eagerPluginsSet.has(p));
       const lazyPlugins = enabledPlugins.filter((p) => lazyPluginsSet.has(p));
 
+      for (const p of enabledPlugins) {
+        await p.add();
+      }
+
       logger().debug(`[end] Enable plugins: ${eagerPlugins.map((p) => p.info.url).join(", ")}`);
       logger().debug(`[end] Lazy plugins: ${lazyPlugins.map((p) => p.info.url).join(", ")}`);
       await this.loadPlugins(eagerPlugins);
@@ -556,10 +561,14 @@ export class Dvpm {
     if (p.info.isLoad) return;
 
     if (type === "cmd") {
-      await this.denops.cmd(`delcommand ${arg}`);
+      await this.denops.cmd(`if exists(':${arg}') == 2 | exe 'delcommand ${arg}' | endif`);
     }
     if (type === "keys") {
-      await this.denops.cmd(`nunmap ${arg}`);
+      const keys = Array.isArray(p.info.keys) ? p.info.keys : [p.info.keys];
+      const keyMap = keys.find((k) => typeof k === "object" ? k.lhs === arg : k === arg);
+      if (typeof keyMap === "string") {
+        await this.denops.cmd(`nunmap ${arg}`);
+      }
     }
 
     const pluginsToLoad: Plugin[] = [];
@@ -585,7 +594,38 @@ export class Dvpm {
       await this.denops.cmd(`if exists(':${arg}') | exe '${arg}' | endif`);
     }
     if (type === "keys") {
-      await this.denops.call("feedkeys", arg, "t");
+      const keys = Array.isArray(p.info.keys) ? p.info.keys : [p.info.keys];
+      const keyMap = keys.find((k) => typeof k === "object" ? k.lhs === arg : k === arg);
+      if (typeof keyMap === "object") {
+        const modes = Array.isArray(keyMap.mode)
+          ? keyMap.mode as mapping.Mode[]
+          : [keyMap.mode ?? "n"] as mapping.Mode[];
+        for (const mode of modes) {
+          await mapping.map(
+            this.denops,
+            keyMap.lhs,
+            keyMap.rhs,
+            {
+              mode,
+              noremap: keyMap.noremap ?? true,
+              silent: keyMap.silent ?? true,
+              nowait: keyMap.nowait,
+              expr: keyMap.expr,
+            },
+          );
+        }
+        await this.denops.call(
+          "feedkeys",
+          await fn.substitute(this.denops, arg, "<", "<lt>", "g"),
+          "mt",
+        );
+      } else {
+        await this.denops.call(
+          "feedkeys",
+          await fn.substitute(this.denops, arg, "<", "<lt>", "g"),
+          "t",
+        );
+      }
     }
   }
 
@@ -627,9 +667,26 @@ export class Dvpm {
         if (p.info.keys) {
           const keys = Array.isArray(p.info.keys) ? p.info.keys : [p.info.keys];
           for (const key of keys) {
-            await denops.cmd(
-              `nnoremap <silent> ${key} :call denops#request('${denops.name}', 'load', ['${p.info.url}', 'keys', '${key}'])<CR>`,
-            );
+            if (typeof key === "string") {
+              await mapping.map(
+                denops,
+                key,
+                `<cmd>call denops#request('${denops.name}', 'load', ['${p.info.url}', 'keys', '${key}'])<CR>`,
+                { mode: "n" },
+              );
+            } else {
+              const modes = Array.isArray(key.mode)
+                ? key.mode as mapping.Mode[]
+                : [key.mode ?? "n"] as mapping.Mode[];
+              for (const mode of modes) {
+                await mapping.map(
+                  denops,
+                  key.lhs,
+                  `<cmd>call denops#request('${denops.name}', 'load', ['${p.info.url}', 'keys', '${key.lhs}'])<CR>`,
+                  { mode },
+                );
+              }
+            }
           }
         }
       }
