@@ -30,6 +30,10 @@ export type Plug = {
    */
   url: string;
   /**
+   * Plugin name. If omitted, it's calculated from the URL or dst.
+   */
+  name?: string;
+  /**
    * Destination directory path. If omitted, it's calculated from the URL.
    */
   dst?: string;
@@ -127,6 +131,7 @@ export type Plug = {
 
 const _PlugSchema = type({
   url: "string",
+  "name?": "string",
   "dst?": "string",
   "rev?": "string",
   enabled: BoolSchema.default(true),

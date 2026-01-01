@@ -68,7 +68,7 @@ export class Plugin {
     logger().debug(`[create] url ${p.info.url}`);
 
     await p.initDst();
-    p.info.name = path.basename(p.info.dst);
+    p.info.name = p.plug.name ?? path.basename(p.info.dst);
     await p.initEnabled();
     await p.initClone();
     await p.initCache();

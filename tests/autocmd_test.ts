@@ -95,3 +95,32 @@ test({
     assertEquals(postFired, 1, "PostLoad SHOULD be fired after loading");
   },
 });
+
+test({
+  mode: "all",
+  name: "Dvpm uses custom name for User autocmd",
+  fn: async (denops) => {
+    const base = await Deno.makeTempDir();
+    const dvpm = new Dvpm(denops, { base });
+
+    const pluginUrl = "https://github.com/yukimemi/dvpm";
+    const customName = "custom-dvpm-name";
+    const postLoadEvent = `Dvpm:PostLoad:${customName}`;
+
+    await dvpm.add({ url: pluginUrl, name: customName });
+
+    const plugin = dvpm.plugins[0];
+    plugin.install = () => Promise.resolve([]);
+    plugin.update = () => Promise.resolve([]);
+    plugin.build = () => Promise.resolve();
+    await Deno.mkdir(plugin.info.dst, { recursive: true });
+
+    await denops.cmd(`let g:dvpm_test_custom_name_fired = 0`);
+    await denops.cmd(`autocmd User ${postLoadEvent} let g:dvpm_test_custom_name_fired = 1`);
+
+    await dvpm.end();
+
+    const fired = await denops.eval("g:dvpm_test_custom_name_fired");
+    assertEquals(fired, 1, `User autocmd '${postLoadEvent}' should be fired with custom name`);
+  },
+});
