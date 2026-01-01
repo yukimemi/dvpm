@@ -539,12 +539,13 @@ import * as autocmd from "@denops/std/autocmd";
 
 await autocmd.define(denops, "User", "DvpmCacheUpdated", "echo 'dvpm cache updated !'");
 
-// Use wildcard to hook all plugins (Vim script example)
-await execute(denops, `
-  autocmd User Dvpm:PostLoad:*
-      \\ let s:name = substitute(expand("<amatch>"), "^Dvpm:PostLoad:", "", "") |
-      \\ echom "Loaded plugin: " . s:name
-`);
+// Use wildcard to hook all plugins
+await autocmd.define(
+  denops,
+  "User",
+  "Dvpm:PostLoad:*",
+  `echom "Loaded plugin: " . substitute(expand("<amatch>"), "^Dvpm:PostLoad:", "", "")`,
+);
 ```
 
 ## Profile setting
