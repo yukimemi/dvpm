@@ -7,6 +7,7 @@
 import * as autocmd from "@denops/std/autocmd";
 import * as buffer from "@denops/std/buffer";
 import * as fn from "@denops/std/function";
+import * as path from "@std/path";
 import type { Denops } from "@denops/std";
 import type { OpenOptions } from "@denops/std/buffer";
 import { Plugin } from "./plugin.ts";
@@ -639,6 +640,8 @@ export class Dvpm {
   private async loadPlugins(plugins: Plugin[]) {
     for (const p of plugins) {
       try {
+        const name = path.basename(p.info.dst);
+        await autocmd.emit(this.denops, "User", `Dvpm:PreLoad:${name}`);
         logger().debug(`[loadPlugins] ${p.info.url} start !`);
         const added = await p.addRuntimepath();
         await p.before();
@@ -650,6 +653,7 @@ export class Dvpm {
         if (p.initialClone) {
           await p.build();
         }
+        await autocmd.emit(this.denops, "User", `Dvpm:PostLoad:${name}`);
       } catch (e) {
         if (e instanceof Error) {
           logger().error(`[loadPlugins] ${p.info.url} ${e.message}, ${e.stack}`);
