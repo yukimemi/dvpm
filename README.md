@@ -243,6 +243,8 @@ public async add(plug: Plug): Promise<void>
 export type Plug = {
   // GitHub `username/repository` or URL that can be cloned with git.
   url: string;
+  // Plugin name. If omitted, it's calculated from the URL or dst. (Optional)
+  name?: string;
   // The path to git clone. (Optional)
   dst?: string;
   // Git branch or revision name. (Optional)
@@ -322,7 +324,7 @@ export type Bool =
 ```
 
 `PlugInfo` type is almost same as `Plug`.
-Contains the calculated results for each variable, such as `enabled` and `name` (the basename of `dst`).
+Contains the calculated or defined results for each variable, such as `enabled` and `name`.
 
 ### Dvpm.cache
 
