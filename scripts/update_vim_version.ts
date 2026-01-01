@@ -45,17 +45,17 @@ async function updateWorkflowFile(
   // Ideally, we should target specific steps, but regex global replace is simple.
   // However, Neovim version is also v0.x.x.
   // The above regex v\d+\.\d+\.\d+ matches both v9.1.2022 and v0.11.5.
-  
+
   // So we need to be more specific.
-  
+
   // Vim update: look for specific context or update logic.
   // Actually, simpler approach:
   // Update rhysd/action-setup-vim for Vim (Ubuntu)
   // Update thinca/action-setup-vim for Vim (Windows/Mac)
   // Update rhysd/action-setup-vim for Neovim
-  
+
   // Let's reload and do it properly.
-  
+
   // Reset content
   newContent = content;
 
