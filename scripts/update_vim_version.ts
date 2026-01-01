@@ -5,7 +5,6 @@ const octokit = new Octokit({
 });
 
 async function getLatestVimVersion(): Promise<string> {
-  // Use vim-win32-installer releases as the source of truth for stable versions available on Windows
   const { data } = await octokit.repos.getLatestRelease({
     owner: "vim",
     repo: "vim-win32-installer",
@@ -21,57 +20,40 @@ async function getLatestNeovimVersion(): Promise<string> {
   return data.tag_name;
 }
 
+type UpdateResult = {
+  vim: { old?: string; new: string };
+  neovim: { old?: string; new: string };
+};
+
 async function updateWorkflowFile(
   filePath: string,
   vimVersion: string,
   neovimVersion: string,
-) {
+): Promise<UpdateResult> {
   const content = await Deno.readTextFile(filePath);
   let newContent = content;
+  const result: UpdateResult = {
+    vim: { new: vimVersion },
+    neovim: { new: neovimVersion },
+  };
 
-  // Update Vim version
-  // Match: version: "v9.1.xxxx" or vim_version: "v9.1.xxxx"
-  newContent = newContent.replace(
-    /(version:\s+")v\d+\.\d+\.\d+(")/g,
-    `$1${vimVersion}$2`,
-  );
-  newContent = newContent.replace(
-    /(vim_version:\s+")v\d+\.\d+\.\d+(")/g,
-    `$1${vimVersion}$2`,
-  );
+  // Vim
+  const vimRegex = /((?:vim_)?version:\s+")(v9\.\d+\.\d+)(")/g;
+  newContent = newContent.replace(vimRegex, (_match, p1, oldVer, p3) => {
+    if (oldVer !== vimVersion) {
+      result.vim.old = oldVer;
+    }
+    return `${p1}${vimVersion}${p3}`;
+  });
 
-  // Update Neovim version
-  // This might overlap with Vim version replacement if not careful.
-  // Ideally, we should target specific steps, but regex global replace is simple.
-  // However, Neovim version is also v0.x.x.
-  // The above regex v\d+\.\d+\.\d+ matches both v9.1.2022 and v0.11.5.
-
-  // So we need to be more specific.
-
-  // Vim update: look for specific context or update logic.
-  // Actually, simpler approach:
-  // Update rhysd/action-setup-vim for Vim (Ubuntu)
-  // Update thinca/action-setup-vim for Vim (Windows/Mac)
-  // Update rhysd/action-setup-vim for Neovim
-
-  // Let's reload and do it properly.
-
-  // Reset content
-  newContent = content;
-
-  // Ubuntu Vim (rhysd) & Windows/Mac Vim (thinca)
-  // We can assume Vim version starts with v9.
-  newContent = newContent.replace(
-    /((?:vim_)?version:\s+")v9\.\d+\.\d+(")/g,
-    `$1${vimVersion}$2`,
-  );
-
-  // Neovim (rhysd/thinca)
-  // Assume Neovim version starts with v0.
-  newContent = newContent.replace(
-    /((?:vim_)?version:\s+")v0\.\d+\.\d+(")/g,
-    `$1${neovimVersion}$2`,
-  );
+  // Neovim
+  const neovimRegex = /((?:vim_)?version:\s+")(v0\.\d+\.\d+)(")/g;
+  newContent = newContent.replace(neovimRegex, (_match, p1, oldVer, p3) => {
+    if (oldVer !== neovimVersion) {
+      result.neovim.old = oldVer;
+    }
+    return `${p1}${neovimVersion}${p3}`;
+  });
 
   if (content !== newContent) {
     console.log(`Updating ${filePath}...`);
@@ -79,6 +61,8 @@ async function updateWorkflowFile(
   } else {
     console.log(`${filePath} is up to date.`);
   }
+
+  return result;
 }
 
 async function main() {
@@ -90,16 +74,53 @@ async function main() {
     console.log(`Latest Vim: ${vimVersion}`);
     console.log(`Latest Neovim: ${neovimVersion}`);
 
-    await updateWorkflowFile(
+    const result1 = await updateWorkflowFile(
       ".github/workflows/deno.yml",
       vimVersion,
       neovimVersion,
     );
-    await updateWorkflowFile(
+    const result2 = await updateWorkflowFile(
       ".github/workflows/automerge.yml",
       vimVersion,
       neovimVersion,
     );
+
+    // Merge results (assuming changes are consistent across files)
+    const vimOld = result1.vim.old || result2.vim.old;
+    const neovimOld = result1.neovim.old || result2.neovim.old;
+
+    // Write to GITHUB_OUTPUT
+    const githubOutput = Deno.env.get("GITHUB_OUTPUT");
+    if (githubOutput) {
+      const messages: string[] = [];
+      if (vimOld) {
+        messages.push(`- Vim: 
+${vimOld}
+ -> 
+${vimVersion}`);
+      }
+      if (neovimOld) {
+        messages.push(`- Neovim: 
+${neovimOld}
+ -> 
+${neovimVersion}`);
+      }
+
+      if (messages.length > 0) {
+        const body = messages.join("\n");
+        await Deno.writeTextFile(
+          githubOutput,
+          `body=${body}
+`,
+          {
+            append: true,
+          },
+        );
+        console.log(`Output body to GITHUB_OUTPUT: ${body}`);
+      } else {
+        console.log("No version changes detected.");
+      }
+    }
   } catch (error) {
     console.error(error);
     Deno.exit(1);
