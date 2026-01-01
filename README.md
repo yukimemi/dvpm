@@ -522,6 +522,14 @@ e.g.
 
 Fires after updating the cache.
 
+- Dvpm:PreLoad:{pluginName}
+
+Fires before loading a plugin (after `before` and `beforeFile` processing).
+
+- Dvpm:PostLoad:{pluginName}
+
+Fires after loading a plugin (after `after`, `afterFile`, and `build` processing).
+
 e.g.
 
 ```typescript
@@ -530,6 +538,13 @@ import * as autocmd from "@denops/std/autocmd";
 ~~~
 
 await autocmd.define(denops, "User", "DvpmCacheUpdated", "echo 'dvpm cache updated !'");
+
+// Use wildcard to hook all plugins (Vim script example)
+await execute(denops, `
+  autocmd User Dvpm:PostLoad:*
+      \\ let s:name = substitute(expand("<amatch>"), "^Dvpm:PostLoad:", "", "") |
+      \\ echom "Loaded plugin: " . s:name
+`);
 ```
 
 ## Profile setting
