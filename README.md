@@ -265,37 +265,42 @@ export type Plug = {
   depth?: number;
   // Enable or disable. Default is true.
   enabled?: Bool;
-  /**
-   * List of profiles this plugin belongs to.
-   */
+  // If profiles are specified in DvpmOption, the plugin will be enabled only if the profiles specified here are included in the profiles of DvpmOption.
   profiles?: string[];
-  /**
-   * Configuration to run at startup. (Regardless of lazy)
-   */
+  // Configuration to run at startup. (Regardless of lazy) (Optional)
   add?: ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>;
-  /**
-   * Configuration to run before adding to runtimepath.
-   */
-  before?: ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>;
-  /**
-   * Configuration to run after adding to runtimepath.
-   */
-  after?: ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>;
-  /**
-   * Path to a Vim/Lua file to source at startup. (Regardless of lazy)
-   */
+  // Processing to be performed before sourcing plugin/*.vim and plugin/*.lua. (Optional)
+  before?: ({
+    denops,
+    info,
+  }: {
+    denops: Denops;
+    info: PlugInfo;
+  }) => Promise<void>;
+  // Processing to be performed after sourcing plugin/*.vim and plugin/*.lua. (Optional)
+  after?: ({
+    denops,
+    info,
+  }: {
+    denops: Denops;
+    info: PlugInfo;
+  }) => Promise<void>;
+  // Path to a Vim/Lua file to source at startup. (Regardless of lazy) (Optional)
   addFile?: string;
-  /**
-   * Path to a Vim/Lua file to source before adding to runtimepath.
-   */
+  // File path of processing to be performed before sourcing plugin/*.vim and plugin/*.lua. (Optional)
   beforeFile?: string;
-  /**
-   * Path to a Vim/Lua file to source after adding to runtimepath.
-   */
+  // File path of processing to be performed after sourcing plugin/*.vim and plugin/*.lua. (Optional)
   afterFile?: string;
-  /**
-   * Build configuration to run after installation or update.
-   */
+  // Build option. Execute after install or update. (Optional)
+  // Executed even if there are no changes in the update.
+  // Therefore, conditionally branch on `info.isLoad` and `info.isUpdate` as necessary.
+  build?: ({
+    denops,
+    info,
+  }: {
+    denops: Denops;
+    info: PlugInfo;
+  }) => Promise<void>;
   // Cache settings. See `Cache setting`.
   cache?: {
     enabled?: Bool;
@@ -318,7 +323,24 @@ export type Plug = {
   // Load the plugin when the filetype is detected. (Optional)
   ft?: string | string[];
   // Load the plugin when the key is pressed. (Optional)
-  keys?: string | string[];
+  keys?: string | string[] | KeyMap | KeyMap[];
+};
+
+export type KeyMap = {
+  // Left-hand side of the mapping.
+  lhs: string;
+  // Right-hand side of the mapping.
+  rhs: string;
+  // Mode(s) for the mapping. Default is "n".
+  mode?: string | string[];
+  // Whether the mapping is non-recursive. Default is true.
+  noremap?: boolean;
+  // Whether the mapping is silent. Default is true.
+  silent?: boolean;
+  // Whether the mapping is nowait. Default is false.
+  nowait?: boolean;
+  // Whether the mapping is an expression. Default is false.
+  expr?: boolean;
 };
 ```
 
