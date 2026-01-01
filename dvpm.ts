@@ -652,6 +652,7 @@ export class Dvpm {
   }
 
   private async fire(plugins: Plugin[]) {
+    const toVimLiteral = (s: string) => `'${s.replace(/'/g, "''").replace(/</g, "<lt>")}'`;
     await batch(this.denops, async (denops) => {
       for (const p of plugins) {
         if (p.info.cmd) {
@@ -690,23 +691,25 @@ export class Dvpm {
           const keys = Array.isArray(p.info.keys) ? p.info.keys : [p.info.keys];
           for (const key of keys) {
             if (typeof key === "string") {
-              const escapedKey = await denops.call("string", key);
               await mapping.map(
                 denops,
                 key,
-                `<cmd>call denops#request('${denops.name}', 'load', ['${p.info.url}', 'keys', ${escapedKey}])<CR>`,
+                `<cmd>call denops#request('${denops.name}', 'load', ['${p.info.url}', 'keys', ${
+                  toVimLiteral(key)
+                }])<CR>`,
                 { mode: "n" },
               );
             } else {
               const modes = Array.isArray(key.mode)
                 ? key.mode as mapping.Mode[]
                 : [key.mode ?? "n"] as mapping.Mode[];
-              const escapedLhs = await denops.call("string", key.lhs);
               for (const mode of modes) {
                 await mapping.map(
                   denops,
                   key.lhs,
-                  `<cmd>call denops#request('${denops.name}', 'load', ['${p.info.url}', 'keys', ${escapedLhs}])<CR>`,
+                  `<cmd>call denops#request('${denops.name}', 'load', ['${p.info.url}', 'keys', ${
+                    toVimLiteral(key.lhs)
+                  }])<CR>`,
                   { mode },
                 );
               }

@@ -1,6 +1,6 @@
 {
   "name": "@yukimemi/dvpm",
-  "version": "9.0.0-alpha.14",
+  "version": "9.0.0-alpha.15",
   "exports": "./mod.ts",
   "tasks": {
     "check": "deno check dvpm.ts git.ts logger.ts mod.ts plugin.ts types.ts util.ts scripts/ tests/",
