@@ -15,6 +15,7 @@ import { Semaphore } from "@core/asyncutil";
 import { batch } from "@denops/std/batch";
 import { cache, convertUrl, notify } from "./util.ts";
 import { echo, execute } from "@denops/std/helper";
+import { rawString } from "@denops/std/eval/string";
 import { logger } from "./logger.ts";
 import { sprintf } from "@std/fmt/printf";
 import {
@@ -567,14 +568,28 @@ export class Dvpm {
         `if exists(':${args.arg}') == 2 | exe 'delcommand ${args.arg}' | endif`,
       );
     }
-    if (args.loadType === "keys") {
+    if (loadType === "keys") {
       const keys = Array.isArray(p.info.keys) ? p.info.keys : [p.info.keys];
       const keyMap = keys.find((k) => {
         const out = KeyMapSchema(k);
         return out instanceof type.errors ? k === args.arg : (out as KeyMap).lhs === args.arg;
       });
-      if (typeof keyMap === "string") {
-        await this.denops.cmd(`nunmap ${args.arg}`);
+      const keyMapChecked = KeyMapSchema(keyMap);
+      if (!(keyMapChecked instanceof type.errors)) {
+        const km = keyMapChecked as KeyMap;
+        const modes = Array.isArray(km.mode)
+          ? km.mode as mapping.Mode[]
+          : [km.mode ?? "n"] as mapping.Mode[];
+        for (const mode of modes) {
+          try {
+            await mapping.unmap(this.denops, km.lhs, { mode });
+          } catch (e) {
+            // Ignore if mapping doesn't exist
+            logger().debug(`[load] unmap failed for ${km.lhs} in mode ${mode}: ${e}`);
+          }
+        }
+      } else if (typeof keyMap === "string") {
+        await mapping.unmap(this.denops, args.arg, { mode: "n" });
       }
     }
 
@@ -597,16 +612,17 @@ export class Dvpm {
 
     await this.loadPlugins(pluginsToLoad);
 
-    if (args.loadType === "cmd") {
+    if (loadType === "cmd") {
       await this.denops.cmd(`if exists(':${args.arg}') | exe '${args.arg}' | endif`);
     }
-    if (args.loadType === "keys") {
+    if (loadType === "keys") {
       const keys = Array.isArray(p.info.keys) ? p.info.keys : [p.info.keys];
       const keyMap = keys.find((k) => {
         const out = KeyMapSchema(k);
         return out instanceof type.errors ? k === args.arg : (out as KeyMap).lhs === args.arg;
       });
       const keyMapChecked = KeyMapSchema(keyMap);
+
       if (!(keyMapChecked instanceof type.errors)) {
         const km = keyMapChecked as KeyMap;
         const modes = Array.isArray(km.mode)
@@ -626,17 +642,11 @@ export class Dvpm {
             },
           );
         }
-        await this.denops.call(
-          "feedkeys",
-          await fn.substitute(this.denops, args.arg, "<", "<lt>", "g"),
-          "mt",
-        );
+        const feedArg = rawString`\<${args.arg}>`;
+        await this.denops.call("feedkeys", feedArg, "mt");
       } else {
-        await this.denops.call(
-          "feedkeys",
-          await fn.substitute(this.denops, args.arg, "<", "<lt>", "g"),
-          "t",
-        );
+        const feedArg = rawString`\<${args.arg}>`;
+        await this.denops.call("feedkeys", feedArg, "t");
       }
     }
   }
@@ -680,21 +690,23 @@ export class Dvpm {
           const keys = Array.isArray(p.info.keys) ? p.info.keys : [p.info.keys];
           for (const key of keys) {
             if (typeof key === "string") {
+              const escapedKey = await denops.call("string", key);
               await mapping.map(
                 denops,
                 key,
-                `<cmd>call denops#request('${denops.name}', 'load', ['${p.info.url}', 'keys', '${key}'])<CR>`,
+                `<cmd>call denops#request('${denops.name}', 'load', ['${p.info.url}', 'keys', ${escapedKey}])<CR>`,
                 { mode: "n" },
               );
             } else {
               const modes = Array.isArray(key.mode)
                 ? key.mode as mapping.Mode[]
                 : [key.mode ?? "n"] as mapping.Mode[];
+              const escapedLhs = await denops.call("string", key.lhs);
               for (const mode of modes) {
                 await mapping.map(
                   denops,
                   key.lhs,
-                  `<cmd>call denops#request('${denops.name}', 'load', ['${p.info.url}', 'keys', '${key.lhs}'])<CR>`,
+                  `<cmd>call denops#request('${denops.name}', 'load', ['${p.info.url}', 'keys', ${escapedLhs}])<CR>`,
                   { mode },
                 );
               }

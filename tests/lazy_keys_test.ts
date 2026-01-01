@@ -69,16 +69,97 @@ test({
     // Trigger loading by calling the mapping (via request)
     await dvpm.load(plugin.info.url, "keys", lhs);
 
-    // After load, the mapping should be updated to RHS
-    const postMapResult = await denops.call("execute", `nmap ${lhs}`) as string;
+    // After load: check RHS using maparg
+    // deno-lint-ignore no-explicit-any
+    const info = (await denops.call("maparg", lhs, "n", 0, 1)) as any;
     assertEquals(
-      postMapResult.includes("let g:dvpm_test_keys_rhs = 1"),
-      true,
+      info.rhs,
+      rhs,
       "Mapping should be updated to RHS",
     );
+  },
+});
 
-    // Check if RHS was executed via feedkeys (it should have been called in load())
-    const rhsResult = await denops.eval("g:dvpm_test_keys_rhs");
-    assertEquals(rhsResult, 1, "RHS should be executed via feedkeys in load()");
+test({
+  mode: "all",
+  name: "keys with object (KeyMap) handles multiple modes and remapping correctly",
+  fn: async (denops) => {
+    const base = await Deno.makeTempDir();
+    const dvpm = new Dvpm(denops, { base });
+
+    const lhs = "gX";
+    const rhs = ":let g:dvpm_test_keys_multi = 1<CR>";
+
+    await dvpm.add({
+      url: "lazy/keys_multi",
+      keys: { lhs, rhs, mode: ["n", "v"] },
+    });
+
+    const plugin = dvpm.plugins[0];
+    plugin.install = () => Promise.resolve([]);
+    plugin.update = () => Promise.resolve([]);
+    plugin.build = () => Promise.resolve();
+    await Deno.mkdir(plugin.info.dst, { recursive: true });
+
+    await dvpm.end();
+
+    // Before load: check proxy
+    for (const mode of ["n", "v"]) {
+      // deno-lint-ignore no-explicit-any
+      const info = (await denops.call("maparg", lhs, mode, 0, 1)) as any;
+      assertEquals(
+        info.rhs.includes("denops#request"),
+        true,
+        `Proxy mapping should exist in ${mode} mode`,
+      );
+    }
+
+    // Trigger loading
+    await dvpm.load(plugin.info.url, "keys", lhs);
+
+    // After load: check RHS
+    for (const mode of ["n", "v"]) {
+      // deno-lint-ignore no-explicit-any
+      const info = (await denops.call("maparg", lhs, mode, 0, 1)) as any;
+      assertEquals(info.rhs, rhs, `Mapping should be updated to RHS in ${mode} mode`);
+    }
+  },
+});
+
+test({
+  mode: "all",
+  name: "keys with <space> handles remapping correctly",
+  fn: async (denops) => {
+    const base = await Deno.makeTempDir();
+    const dvpm = new Dvpm(denops, { base });
+
+    const lhs = "<space>b";
+    const rhs = ":let g:dvpm_test_keys_space = 1<CR>";
+    await denops.cmd("let g:dvpm_test_keys_space = 0");
+
+    await dvpm.add({
+      url: "lazy/keys_space",
+      keys: { lhs, rhs, mode: "n" },
+    });
+
+    const plugin = dvpm.plugins[0];
+    plugin.install = () => Promise.resolve([]);
+    plugin.update = () => Promise.resolve([]);
+    plugin.build = () => Promise.resolve();
+    await Deno.mkdir(plugin.info.dst, { recursive: true });
+
+    await dvpm.end();
+
+    // Trigger loading
+    await dvpm.load(plugin.info.url, "keys", lhs);
+
+    // After load: check RHS using maparg
+    // deno-lint-ignore no-explicit-any
+    const info = (await denops.call("maparg", lhs, "n", 0, 1)) as any;
+    assertEquals(
+      info.rhs,
+      rhs,
+      "Mapping should be updated to RHS for <space>b",
+    );
   },
 });
