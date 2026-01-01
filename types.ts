@@ -209,7 +209,7 @@ const _PlugSchema = type({
   "cmd?": "string | string[]",
   "event?": "string | string[]",
   "ft?": "string | string[]",
-  "keys?": type(KeyMapSchema, "|", "string").array().or(KeyMapSchema, "|", "string"),
+  "keys?": type(KeyMapSchema, "|", "string").array().or(KeyMapSchema).or("string"),
   isLoad: "boolean = false",
   isUpdate: "boolean = false",
   isCache: "boolean = false",
