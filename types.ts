@@ -161,13 +161,27 @@ export const PlugSchema: Type<Plug> = _PlugSchema as unknown as Type<Plug>;
 
 const _PlugInfoSchema = type(_PlugSchema, "&", {
   dst: "string",
+  name: "string",
 });
 /**
  * Detailed plugin information used internally and in callbacks.
  */
 export type PlugInfo = {
+  /**
+   * Repository URL.
+   */
   url: string;
+  /**
+   * Destination directory path.
+   */
   dst: string;
+  /**
+   * Plugin name (basename of dst).
+   */
+  name: string;
+  /**
+   * Git revision.
+   */
   rev?: string;
   enabled: Bool;
   profiles: string[];

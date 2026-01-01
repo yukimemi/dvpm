@@ -43,6 +43,7 @@ export class Plugin {
     this.option = PlugOptionSchema.assert(this.option);
     this.info = PlugInfoSchema.assert({
       dst: "",
+      name: "",
       ...this.plug,
     });
     this.initialClone = false;
@@ -67,6 +68,7 @@ export class Plugin {
     logger().debug(`[create] url ${p.info.url}`);
 
     await p.initDst();
+    p.info.name = path.basename(p.info.dst);
     await p.initEnabled();
     await p.initClone();
     await p.initCache();

@@ -7,7 +7,6 @@
 import * as autocmd from "@denops/std/autocmd";
 import * as buffer from "@denops/std/buffer";
 import * as fn from "@denops/std/function";
-import * as path from "@std/path";
 import type { Denops } from "@denops/std";
 import type { OpenOptions } from "@denops/std/buffer";
 import { Plugin } from "./plugin.ts";
@@ -640,7 +639,7 @@ export class Dvpm {
   private async loadPlugins(plugins: Plugin[]) {
     for (const p of plugins) {
       try {
-        const name = path.basename(p.info.dst);
+        const name = p.info.name;
         logger().debug(`[loadPlugins] ${p.info.url} start !`);
         await p.before();
         await autocmd.emit(this.denops, "User", `Dvpm:PreLoad:${name}`);

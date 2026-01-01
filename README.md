@@ -322,7 +322,7 @@ export type Bool =
 ```
 
 `PlugInfo` type is almost same as `Plug`.
-Contains the calculated results for each variable, such as `enabled`.
+Contains the calculated results for each variable, such as `enabled` and `name` (the basename of `dst`).
 
 ### Dvpm.cache
 
@@ -525,10 +525,12 @@ Fires after updating the cache.
 - Dvpm:PreLoad:{pluginName}
 
 Fires before loading a plugin (after `before` and `beforeFile` processing).
+`{pluginName}` is the `name` property of `PlugInfo`.
 
 - Dvpm:PostLoad:{pluginName}
 
 Fires after loading a plugin (after `after`, `afterFile`, and `build` processing).
+`{pluginName}` is the `name` property of `PlugInfo`.
 
 e.g.
 
