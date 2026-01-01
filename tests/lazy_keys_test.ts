@@ -71,8 +71,12 @@ test({
 
     // After load, the mapping should be updated to RHS
     const postMapResult = await denops.call("execute", `nmap ${lhs}`) as string;
-    assertEquals(postMapResult.includes("let g:dvpm_test_keys_rhs = 1"), true, "Mapping should be updated to RHS");
-    
+    assertEquals(
+      postMapResult.includes("let g:dvpm_test_keys_rhs = 1"),
+      true,
+      "Mapping should be updated to RHS",
+    );
+
     // Check if RHS was executed via feedkeys (it should have been called in load())
     const rhsResult = await denops.eval("g:dvpm_test_keys_rhs");
     assertEquals(rhsResult, 1, "RHS should be executed via feedkeys in load()");

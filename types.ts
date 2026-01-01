@@ -55,7 +55,7 @@ export type KeyMap = {
   expr?: boolean;
 };
 
-export const KeyMapSchema = type({
+const _KeyMapSchema = type({
   lhs: "string",
   rhs: "string",
   "mode?": "string | string[]",
@@ -64,6 +64,8 @@ export const KeyMapSchema = type({
   "nowait?": "boolean",
   "expr?": "boolean",
 });
+
+export const KeyMapSchema: Type<KeyMap> = _KeyMapSchema as unknown as Type<KeyMap>;
 
 /**
  * Represents a plugin definition.
