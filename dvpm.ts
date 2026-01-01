@@ -641,10 +641,10 @@ export class Dvpm {
     for (const p of plugins) {
       try {
         const name = path.basename(p.info.dst);
-        await autocmd.emit(this.denops, "User", `Dvpm:PreLoad:${name}`);
         logger().debug(`[loadPlugins] ${p.info.url} start !`);
-        const added = await p.addRuntimepath();
         await p.before();
+        await autocmd.emit(this.denops, "User", `Dvpm:PreLoad:${name}`);
+        const added = await p.addRuntimepath();
         if (added) {
           await p.source();
         }
