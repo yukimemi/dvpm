@@ -568,28 +568,7 @@ export class Dvpm {
       );
     }
     if (loadType === "keys") {
-      const keys = Array.isArray(p.info.keys) ? p.info.keys : [p.info.keys];
-      const keyMap = keys.find((k) => {
-        const out = KeyMapSchema(k);
-        return out instanceof type.errors ? k === args.arg : (out as KeyMap).lhs === args.arg;
-      });
-      const keyMapChecked = KeyMapSchema(keyMap);
-      if (!(keyMapChecked instanceof type.errors)) {
-        const km = keyMapChecked as KeyMap;
-        const modes = Array.isArray(km.mode)
-          ? km.mode as mapping.Mode[]
-          : [km.mode ?? "n"] as mapping.Mode[];
-        for (const mode of modes) {
-          try {
-            await mapping.unmap(this.denops, km.lhs, { mode });
-          } catch (e) {
-            // Ignore if mapping doesn't exist
-            logger().debug(`[load] unmap failed for ${km.lhs} in mode ${mode}: ${e}`);
-          }
-        }
-      } else if (typeof keyMap === "string") {
-        await mapping.unmap(this.denops, args.arg, { mode: "n" });
-      }
+      // No unmap here to avoid potential timing issues
     }
 
     const pluginsToLoad: Plugin[] = [];
@@ -622,9 +601,6 @@ export class Dvpm {
       });
       const keyMapChecked = KeyMapSchema(keyMap);
 
-      const escaped = args.arg.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/</g, "\\<");
-      const feedArg = await this.denops.call("eval", `"\<${escaped}>"`);
-
       if (!(keyMapChecked instanceof type.errors)) {
         const km = keyMapChecked as KeyMap;
         const modes = Array.isArray(km.mode)
@@ -644,9 +620,18 @@ export class Dvpm {
             },
           );
         }
-        await this.denops.call("feedkeys", feedArg, "mt");
+        const feedArg = await this.denops.call(
+          "eval",
+          `"\<${km.rhs.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/</g, "\\<")}>"`,
+        );
+        await this.denops.call("feedkeys", feedArg, "m");
       } else {
-        await this.denops.call("feedkeys", feedArg, "t");
+        await mapping.unmap(this.denops, args.arg, { mode: "n" });
+        const feedArg = await this.denops.call(
+          "eval",
+          `"\<${args.arg.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/</g, "\\<")}>"`,
+        );
+        await this.denops.call("feedkeys", feedArg, "m");
       }
     }
   }
