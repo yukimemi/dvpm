@@ -21,12 +21,12 @@ jobs:
       - uses: rhysd/action-setup-vim@v1
         id: vim
         with:
-          version: "v9.1.0400"
+          version: "v9.1.2022"
       - uses: rhysd/action-setup-vim@v1
         id: nvim
         with:
           neovim: true
-          version: "v0.10.0"
+          version: "v0.11.5"
       - uses: denoland/setup-deno@v1
       - run: deno task ci
         env:
