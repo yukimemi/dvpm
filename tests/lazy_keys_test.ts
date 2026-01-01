@@ -161,5 +161,14 @@ test({
       rhs,
       "Mapping should be updated to RHS for <space>b",
     );
+
+    // Verify buffer content: should NOT contain garbage like "ce>b>"
+    const lines = (await denops.call("getbufline", "%", 1, "$")) as string[];
+    const garbageFound = lines.some((l) => l.includes("ce>b") || l.includes('>"'));
+    assertEquals(
+      garbageFound,
+      false,
+      `Buffer contains garbage: ${JSON.stringify(lines)}`,
+    );
   },
 });

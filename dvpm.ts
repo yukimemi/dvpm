@@ -15,7 +15,6 @@ import { Semaphore } from "@core/asyncutil";
 import { batch } from "@denops/std/batch";
 import { cache, convertUrl, notify } from "./util.ts";
 import { echo, execute } from "@denops/std/helper";
-import { expr } from "@denops/std/eval/expression";
 import { logger } from "./logger.ts";
 import { sprintf } from "@std/fmt/printf";
 import {
@@ -623,11 +622,8 @@ export class Dvpm {
       });
       const keyMapChecked = KeyMapSchema(keyMap);
 
-      const escapedArg = args.arg.replace(/\\/g, "\\\\").replace(/"/g, '"').replace(
-        /</g,
-        "\\<",
-      );
-      const feedArg = expr`"${escapedArg}"`;
+      const escaped = args.arg.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/</g, "\\<");
+      const feedArg = await this.denops.call("eval", `"\<${escaped}>"`);
 
       if (!(keyMapChecked instanceof type.errors)) {
         const km = keyMapChecked as KeyMap;
