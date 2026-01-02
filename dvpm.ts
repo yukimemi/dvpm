@@ -19,12 +19,14 @@ import { send } from "@denops/std/helper/keymap";
 import { logger } from "./logger.ts";
 import { sprintf } from "@std/fmt/printf";
 import {
+  type CmdParams,
   CommandSchema,
   type DvpmOption,
   DvpmOptionSchema,
   type KeyMap,
   KeyMapSchema,
   LoadArgsSchema,
+  type LoadType,
   type Plug,
 } from "./types.ts";
 import { type } from "arktype";
@@ -103,7 +105,8 @@ export class Dvpm {
       },
 
       async load(url: unknown, loadType: unknown, arg: unknown, params?: unknown): Promise<void> {
-        await dvpm.load(url, loadType, arg, params);
+        const args = LoadArgsSchema.assert({ url, loadType, arg, params });
+        await dvpm.load(args.url, args.loadType, args.arg, args.params);
       },
     };
 
@@ -558,19 +561,14 @@ export class Dvpm {
     }
   }
 
-  public async load(url: unknown, loadType: unknown, arg: unknown, params?: unknown) {
-    const loadArgs: Record<string, unknown> = { url, loadType, arg };
-    if (params) {
-      loadArgs.params = params;
-    }
-    const args = LoadArgsSchema.assert(loadArgs);
-    const p = this.findPlugin(args.url);
+  public async load(url: string, loadType: LoadType, arg: string, params?: CmdParams) {
+    const p = this.findPlugin(url);
     if (!p) return;
     if (p.info.isLoad) return;
 
-    if (args.loadType === "cmd") {
+    if (loadType === "cmd") {
       await this.denops.cmd(
-        `if exists(':${args.arg}') == 2 | exe 'delcommand ${args.arg}' | endif`,
+        `if exists(':${arg}') == 2 | exe 'delcommand ${arg}' | endif`,
       );
     }
     if (loadType === "keys") {
@@ -597,8 +595,8 @@ export class Dvpm {
     await this.loadPlugins(pluginsToLoad);
 
     if (loadType === "cmd") {
-      const p = args.params;
-      let cmd = args.arg;
+      const p = params;
+      let cmd = arg;
       if (p) {
         // Construct command with params
         if (p.range && p.range > 0) {
@@ -617,13 +615,13 @@ export class Dvpm {
           cmd += ` ${p.args}`;
         }
       }
-      await this.denops.cmd(`if exists(':${args.arg}') | exe '${cmd}' | endif`);
+      await this.denops.cmd(`if exists(':${arg}') | exe '${cmd}' | endif`);
     }
     if (loadType === "keys") {
       const keys = Array.isArray(p.info.keys) ? p.info.keys : [p.info.keys];
       const keyMap = keys.find((k) => {
         const out = KeyMapSchema(k);
-        return out instanceof type.errors ? k === args.arg : (out as KeyMap).lhs === args.arg;
+        return out instanceof type.errors ? k === arg : (out as KeyMap).lhs === arg;
       });
       const keyMapChecked = KeyMapSchema(keyMap);
 
@@ -652,10 +650,10 @@ export class Dvpm {
         ) as string;
         await send(this.denops, { keys: feedArg, remap: true });
       } else {
-        await mapping.unmap(this.denops, args.arg, { mode: "n" });
+        await mapping.unmap(this.denops, arg, { mode: "n" });
         const feedArg = await this.denops.call(
           "eval",
-          `"${args.arg.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/</g, "\\<")}"`,
+          `"${arg.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/</g, "\\<")}"`,
         ) as string;
         await send(this.denops, { keys: feedArg, remap: true });
       }

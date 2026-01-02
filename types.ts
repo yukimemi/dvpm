@@ -119,7 +119,7 @@ const _LoadArgsSchema = type({
   url: "string",
   loadType: "'cmd' | 'keys' | 'ft' | 'event'",
   arg: "string",
-  "params?": _CmdParamsSchema,
+  "params?": _CmdParamsSchema.or("undefined"),
 });
 
 export const LoadArgsSchema: Type<LoadArgs> = _LoadArgsSchema as unknown as Type<LoadArgs>;
