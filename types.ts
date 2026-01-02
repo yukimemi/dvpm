@@ -22,6 +22,21 @@ export const ConfigSchema = type("Function") as Type<
 >;
 
 /**
+ * Represents a command definition.
+ */
+export type Command = {
+  name: string;
+  complete?: string;
+};
+
+const _CommandSchema = type({
+  name: "string",
+  "complete?": "string",
+});
+
+export const CommandSchema: Type<Command> = _CommandSchema as unknown as Type<Command>;
+
+/**
  * Represents a key mapping definition.
  */
 export type KeyMap = {
@@ -174,7 +189,7 @@ export type Plug = {
   /**
    * Load the plugin when the command is executed.
    */
-  cmd?: string | string[];
+  cmd?: string | Command | (string | Command)[];
   /**
    * Load the plugin when the event is triggered.
    */
@@ -230,7 +245,7 @@ const _PlugSchema = type({
     "afterFile?": "string",
   }).default(() => ({ enabled: false })),
   "lazy?": "boolean",
-  "cmd?": "string | string[]",
+  "cmd?": type(CommandSchema, "|", "string").array().or(CommandSchema).or("string"),
   "event?": "string | string[]",
   "ft?": "string | string[]",
   "keys?": type(KeyMapSchema, "|", "string").array().or(KeyMapSchema).or("string"),
@@ -286,7 +301,7 @@ export type PlugInfo = {
     afterFile?: string;
   };
   lazy?: boolean;
-  cmd?: string | string[];
+  cmd?: string | Command | (string | Command)[];
   event?: string | string[];
   ft?: string | string[];
   keys?: string | string[] | KeyMap | KeyMap[];

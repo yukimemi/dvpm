@@ -317,13 +317,20 @@ export type Plug = {
   // Lazy load. (Optional)
   lazy?: boolean;
   // Load the plugin when the command is executed. (Optional)
-  cmd?: string | string[];
+  cmd?: string | string[] | Command | Command[];
   // Load the plugin when the event is triggered. (Optional)
   event?: string | string[];
   // Load the plugin when the filetype is detected. (Optional)
   ft?: string | string[];
   // Load the plugin when the key is pressed. (Optional)
   keys?: string | string[] | KeyMap | KeyMap[];
+};
+
+export type Command = {
+  // Command name.
+  name: string;
+  // Command completion. Default is "file".
+  complete?: string;
 };
 
 export type KeyMap = {
@@ -530,6 +537,13 @@ e.g.
   await dvpm.add({
     url: "yukimemi/hitori.vim",
     cmd: "Hitori",
+  });
+
+  // Load on command with object.
+  // You can specify completion (default is "file").
+  await dvpm.add({
+    url: "yukimemi/hitori.vim",
+    cmd: [{ name: "Hitori", complete: "customlist,hitori#complete" }],
   });
 
   // Load on event.

@@ -19,6 +19,7 @@ import { send } from "@denops/std/helper/keymap";
 import { logger } from "./logger.ts";
 import { sprintf } from "@std/fmt/printf";
 import {
+  CommandSchema,
   type DvpmOption,
   DvpmOptionSchema,
   type KeyMap,
@@ -644,8 +645,17 @@ export class Dvpm {
         if (p.info.cmd) {
           const cmds = Array.isArray(p.info.cmd) ? p.info.cmd : [p.info.cmd];
           for (const cmd of cmds) {
+            let name: string;
+            let complete = "file";
+            if (typeof cmd === "string") {
+              name = cmd;
+            } else {
+              const c = CommandSchema.assert(cmd);
+              name = c.name;
+              complete = c.complete ?? "file";
+            }
             await denops.cmd(
-              `command! -nargs=* -range -bang -complete=file ${cmd} call denops#notify('${denops.name}', 'load', ['${p.info.url}', 'cmd', '${cmd}'])`,
+              `command! -nargs=* -range -bang -complete=${complete} ${name} call denops#notify('${denops.name}', 'load', ['${p.info.url}', 'cmd', '${name}'])`,
             );
           }
         }
