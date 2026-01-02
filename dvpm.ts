@@ -102,8 +102,8 @@ export class Dvpm {
         await dvpm.bufWriteList();
       },
 
-      async load(url: unknown, loadType: unknown, arg: unknown): Promise<void> {
-        await dvpm.load(url, loadType, arg);
+      async load(url: unknown, loadType: unknown, arg: unknown, params?: unknown): Promise<void> {
+        await dvpm.load(url, loadType, arg, params);
       },
     };
 
@@ -558,8 +558,8 @@ export class Dvpm {
     }
   }
 
-  public async load(url: unknown, loadType: unknown, arg: unknown) {
-    const args = LoadArgsSchema.assert({ url, loadType, arg });
+  public async load(url: unknown, loadType: unknown, arg: unknown, params?: unknown) {
+    const args = LoadArgsSchema.assert({ url, loadType, arg, params });
     const p = this.findPlugin(args.url);
     if (!p) return;
     if (p.info.isLoad) return;
@@ -593,7 +593,27 @@ export class Dvpm {
     await this.loadPlugins(pluginsToLoad);
 
     if (loadType === "cmd") {
-      await this.denops.cmd(`if exists(':${args.arg}') | exe '${args.arg}' | endif`);
+      const p = args.params;
+      let cmd = args.arg;
+      if (p) {
+        // Construct command with params
+        if (p.range && p.range > 0) {
+          if (p.line1 && p.line2 && p.line1 !== p.line2) {
+            cmd = `${p.line1},${p.line2}${cmd}`;
+          } else if (p.line1) {
+            cmd = `${p.line1}${cmd}`;
+          } else if (p.count && p.count > 0) {
+            cmd = `${p.count}${cmd}`;
+          }
+        }
+        if (p.bang) {
+          cmd += "!";
+        }
+        if (p.args) {
+          cmd += ` ${p.args}`;
+        }
+      }
+      await this.denops.cmd(`if exists(':${args.arg}') | exe '${cmd}' | endif`);
     }
     if (loadType === "keys") {
       const keys = Array.isArray(p.info.keys) ? p.info.keys : [p.info.keys];
@@ -655,7 +675,7 @@ export class Dvpm {
               complete = c.complete ?? "file";
             }
             await denops.cmd(
-              `command! -nargs=* -range -bang -complete=${complete} ${name} call denops#notify('${denops.name}', 'load', ['${p.info.url}', 'cmd', '${name}'])`,
+              `command! -nargs=* -range -bang -complete=${complete} ${name} call denops#notify('${denops.name}', 'load', ['${p.info.url}', 'cmd', '${name}', {'args': <q-args>, 'bang': <q-bang>, 'line1': <line1>, 'line2': <line2>, 'range': <range>, 'count': <count>}])`,
             );
           }
         }

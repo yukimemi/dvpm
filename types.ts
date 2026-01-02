@@ -94,12 +94,32 @@ export type LoadArgs = {
   url: string;
   loadType: LoadType;
   arg: string;
+  params?: CmdParams;
 };
+
+export type CmdParams = {
+  args?: string;
+  bang?: string;
+  line1?: number;
+  line2?: number;
+  range?: number;
+  count?: number;
+};
+
+const _CmdParamsSchema = type({
+  "args?": "string",
+  "bang?": "string",
+  "line1?": "number",
+  "line2?": "number",
+  "range?": "number",
+  "count?": "number",
+});
 
 const _LoadArgsSchema = type({
   url: "string",
   loadType: "'cmd' | 'keys' | 'ft' | 'event'",
   arg: "string",
+  "params?": _CmdParamsSchema,
 });
 
 export const LoadArgsSchema: Type<LoadArgs> = _LoadArgsSchema as unknown as Type<LoadArgs>;
