@@ -18,7 +18,9 @@ test({
     await denops.cmd("let g:dvpm_test_add_hook = 0");
     await dvpm.add({
       url: "lazy/plugin",
-      lazy: true,
+      lazy: {
+        enabled: true,
+      },
       add: async ({ denops }) => {
         await denops.cmd("let g:dvpm_test_add_hook = 1");
       },
@@ -50,7 +52,9 @@ test({
 
     await dvpm.add({
       url: "lazy/keys",
-      keys: { lhs, rhs, mode: "n" },
+      lazy: {
+        keys: { lhs, rhs, mode: "n" },
+      },
     });
 
     const plugin = dvpm.plugins[0];
@@ -92,7 +96,9 @@ test({
 
     await dvpm.add({
       url: "lazy/keys_multi",
-      keys: { lhs, rhs, mode: ["n", "v"] },
+      lazy: {
+        keys: { lhs, rhs, mode: ["n", "v"] },
+      },
     });
 
     const plugin = dvpm.plugins[0];
@@ -139,7 +145,9 @@ test({
 
     await dvpm.add({
       url: "lazy/keys_space",
-      keys: { lhs, rhs, mode: "n" },
+      lazy: {
+        keys: { lhs, rhs, mode: "n" },
+      },
     });
 
     const plugin = dvpm.plugins[0];
@@ -192,7 +200,9 @@ test({
 
     await dvpm.add({
       url: "lazy/keys_cmd",
-      keys: { lhs, rhs, mode: "n" },
+      lazy: {
+        keys: { lhs, rhs, mode: "n" },
+      },
     });
 
     const plugin = dvpm.plugins[0];
@@ -227,7 +237,9 @@ test({
 
     await dvpm.add({
       url: "lazy/keys_desc",
-      keys: { lhs, rhs, mode: "n", desc },
+      lazy: {
+        keys: { lhs, rhs, mode: "n", desc },
+      },
     });
 
     const plugin = dvpm.plugins[0];

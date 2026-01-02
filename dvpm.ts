@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : dvpm.ts
 // Author      : yukimemi
-// Last Change : 2026/01/01 21:26:13.
+// Last Change : 2026/01/03 00:28:33.
 // =============================================================================
 
 import * as autocmd from "@denops/std/autocmd";
@@ -398,8 +398,7 @@ export class Dvpm {
       {
         label: "lazy",
         width: COL_WIDTH_BOOL,
-        get: (p: Plugin) =>
-          `${p.info.lazy || p.info.cmd || p.info.event || p.info.ft || p.info.keys ? true : false}`,
+        get: (p: Plugin) => `${p.info.lazy.enabled}`,
       },
       {
         label: "isClone",
@@ -490,8 +489,7 @@ export class Dvpm {
       const enabledPlugins = this.resolveDependencies(this.plugins);
       await this.install();
 
-      const isLazy = (p: Plugin) =>
-        p.info.lazy || p.info.cmd || p.info.event || p.info.ft || p.info.keys;
+      const isLazy = (p: Plugin) => p.info.lazy.enabled;
       const eagerPluginsSet = new Set<Plugin>();
       const lazyPluginsSet = new Set<Plugin>();
 
@@ -571,9 +569,6 @@ export class Dvpm {
         `if exists(':${arg}') == 2 | exe 'delcommand ${arg}' | endif`,
       );
     }
-    if (loadType === "keys") {
-      // No unmap here to avoid potential timing issues
-    }
 
     const pluginsToLoad: Plugin[] = [];
     const collectDependencies = (plugin: Plugin) => {
@@ -618,7 +613,10 @@ export class Dvpm {
       await this.denops.cmd(`if exists(':${arg}') | exe '${cmd}' | endif`);
     }
     if (loadType === "keys") {
-      const keys = Array.isArray(p.info.keys) ? p.info.keys : [p.info.keys];
+      const lazy = p.info.lazy;
+      const keys = (Array.isArray(lazy.keys) ? lazy.keys : [lazy.keys]).filter((k) =>
+        k !== undefined
+      ) as (string | KeyMap)[];
       const keyMap = keys.find((k) => {
         const out = KeyMapSchema(k);
         return out instanceof type.errors ? k === arg : (out as KeyMap).lhs === arg;
@@ -664,8 +662,9 @@ export class Dvpm {
     const toVimLiteral = (s: string) => `'${s.replace(/'/g, "''").replace(/</g, "<lt>")}'`;
     await batch(this.denops, async (denops) => {
       for (const p of plugins) {
-        if (p.info.cmd) {
-          const cmds = Array.isArray(p.info.cmd) ? p.info.cmd : [p.info.cmd];
+        const lazy = p.info.lazy;
+        if (lazy.cmd) {
+          const cmds = Array.isArray(lazy.cmd) ? lazy.cmd : [lazy.cmd];
           for (const cmd of cmds) {
             let name: string;
             let complete = "file";
@@ -681,8 +680,8 @@ export class Dvpm {
             );
           }
         }
-        if (p.info.event) {
-          const events = Array.isArray(p.info.event) ? p.info.event : [p.info.event];
+        if (lazy.event) {
+          const events = Array.isArray(lazy.event) ? lazy.event : [lazy.event];
           await autocmd.define(
             denops,
             events,
@@ -693,8 +692,8 @@ export class Dvpm {
             { once: true },
           );
         }
-        if (p.info.ft) {
-          const fts = Array.isArray(p.info.ft) ? p.info.ft : [p.info.ft];
+        if (lazy.ft) {
+          const fts = Array.isArray(lazy.ft) ? lazy.ft : [lazy.ft];
           await autocmd.define(
             denops,
             "FileType",
@@ -705,8 +704,8 @@ export class Dvpm {
             { once: true },
           );
         }
-        if (p.info.keys) {
-          const keys = Array.isArray(p.info.keys) ? p.info.keys : [p.info.keys];
+        if (lazy.keys) {
+          const keys = Array.isArray(lazy.keys) ? lazy.keys : [lazy.keys];
           for (const key of keys) {
             if (typeof key === "string") {
               await this.map(
@@ -838,7 +837,7 @@ export class Dvpm {
   ) {
     if (this.denops.meta.host === "nvim") {
       const mode = opts.mode || "n";
-      const keysOpts: any = {
+      const keysOpts: Record<string, unknown> = {
         remap: !opts.noremap,
         silent: !!opts.silent,
         nowait: !!opts.nowait,

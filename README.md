@@ -309,15 +309,20 @@ export type Plug = {
     beforeFile?: string;
     afterFile?: string;
   };
+  // Lazy load configuration. See `Lazy Loading`.
+  lazy?: boolean | Lazy;
   // Whether to git clone and update. Default is true. (Optional)
   // If this option is set to false, then `enabled` is also set to false.
   clone?: Bool;
   // Dependencies. (Optional)
   dependencies?: string[];
-  // Lazy load. (Optional)
-  lazy?: boolean;
+};
+
+export type Lazy = {
+  // Enable or disable. Default is false.
+  enabled?: Bool;
   // Load the plugin when the command is executed. (Optional)
-  cmd?: string | string[] | Command | Command[];
+  cmd?: string | Command | (string | Command)[];
   // Load the plugin when the event is triggered. (Optional)
   event?: string | string[];
   // Load the plugin when the filetype is detected. (Optional)
@@ -524,7 +529,7 @@ EOB
 
 ## Lazy Loading
 
-You can use `lazy`, `cmd`, `event`, `ft`, and `keys` to load plugins lazily.
+You can use `lazy` property to load plugins lazily.
 
 e.g.
 
@@ -538,39 +543,51 @@ e.g.
   // Load on command.
   await dvpm.add({
     url: "yukimemi/hitori.vim",
-    cmd: "Hitori",
+    lazy: {
+      cmd: "Hitori",
+    },
   });
 
   // Load on command with object.
   // You can specify completion (default is "file").
   await dvpm.add({
     url: "yukimemi/hitori.vim",
-    cmd: [{ name: "Hitori", complete: "customlist,hitori#complete" }],
+    lazy: {
+      cmd: [{ name: "Hitori", complete: "customlist,hitori#complete" }],
+    },
   });
 
   // Load on event.
   await dvpm.add({
     url: "yukimemi/hitori.vim",
-    event: "BufRead",
+    lazy: {
+      event: "BufRead",
+    },
   });
 
   // Load on filetype.
   await dvpm.add({
     url: "yukimemi/hitori.vim",
-    ft: "typescript",
+    lazy: {
+      ft: "typescript",
+    },
   });
 
   // Load on keys.
   await dvpm.add({
     url: "yukimemi/hitori.vim",
-    keys: "<leader>h",
+    lazy: {
+      keys: "<leader>h",
+    },
   });
 
   // Load on keys with object (lazy.nvim equivalent).
   // It will NOT unmap after loading, but remap to `rhs`.
   await dvpm.add({
     url: "yukimemi/hitori.vim",
-    keys: { lhs: "<leader>h", rhs: "<cmd>Hitori<cr>", mode: "n" },
+    lazy: {
+      keys: { lhs: "<leader>h", rhs: "<cmd>Hitori<cr>", mode: "n", desc: "Hitori" },
+    },
   });
 ```
 

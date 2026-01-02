@@ -88,6 +88,27 @@ const _KeyMapSchema = type({
 export const KeyMapSchema: Type<KeyMap> = _KeyMapSchema as unknown as Type<KeyMap>;
 
 /**
+ * Represents lazy loading parameters.
+ */
+export type LazyParams = {
+  enabled?: Bool;
+  cmd?: string | Command | (string | Command)[];
+  event?: string | string[];
+  ft?: string | string[];
+  keys?: string | string[] | KeyMap | KeyMap[];
+};
+
+const _LazyParamsSchema = type({
+  "enabled?": BoolSchema,
+  "cmd?": type(CommandSchema, "|", "string").array().or(CommandSchema).or("string"),
+  "event?": "string | string[]",
+  "ft?": "string | string[]",
+  "keys?": type(KeyMapSchema, "|", "string").array().or(KeyMapSchema).or("string"),
+});
+
+export const LazyParamsSchema: Type<LazyParams> = _LazyParamsSchema as unknown as Type<LazyParams>;
+
+/**
  * Represents the type of load trigger.
  */
 export type LoadType = "cmd" | "keys" | "ft" | "event";
@@ -208,25 +229,9 @@ export type Plug = {
     afterFile?: string;
   };
   /**
-   * Whether to load the plugin lazily.
+   * Lazy loading configuration.
    */
-  lazy?: boolean;
-  /**
-   * Load the plugin when the command is executed.
-   */
-  cmd?: string | Command | (string | Command)[];
-  /**
-   * Load the plugin when the event is triggered.
-   */
-  event?: string | string[];
-  /**
-   * Load the plugin when the filetype is detected.
-   */
-  ft?: string | string[];
-  /**
-   * Load the plugin when the key is pressed.
-   */
-  keys?: string | string[] | KeyMap | KeyMap[];
+  lazy?: boolean | LazyParams;
   /**
    * Internal flag: whether the plugin is loaded.
    */
@@ -269,11 +274,7 @@ const _PlugSchema = type({
     "beforeFile?": "string",
     "afterFile?": "string",
   }).default(() => ({ enabled: false })),
-  "lazy?": "boolean",
-  "cmd?": type(CommandSchema, "|", "string").array().or(CommandSchema).or("string"),
-  "event?": "string | string[]",
-  "ft?": "string | string[]",
-  "keys?": type(KeyMapSchema, "|", "string").array().or(KeyMapSchema).or("string"),
+  "lazy?": type(_LazyParamsSchema, "|", "boolean"),
   isLoad: "boolean = false",
   isUpdate: "boolean = false",
   isCache: "boolean = false",
@@ -285,6 +286,7 @@ export const PlugSchema: Type<Plug> = _PlugSchema as unknown as Type<Plug>;
 const _PlugInfoSchema = type(_PlugSchema, "&", {
   dst: "string",
   name: "string",
+  lazy: _LazyParamsSchema,
 });
 /**
  * Detailed plugin information used internally and in callbacks.
@@ -325,11 +327,7 @@ export type PlugInfo = {
     beforeFile?: string;
     afterFile?: string;
   };
-  lazy?: boolean;
-  cmd?: string | Command | (string | Command)[];
-  event?: string | string[];
-  ft?: string | string[];
-  keys?: string | string[] | KeyMap | KeyMap[];
+  lazy: LazyParams;
   isLoad: boolean;
   isUpdate: boolean;
   isCache: boolean;

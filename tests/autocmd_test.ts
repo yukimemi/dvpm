@@ -65,7 +65,12 @@ test({
     const postLoadEvent = "Dvpm:PostLoad:dvpm_lazy";
 
     // Add a lazy plugin (cmd option implies lazy)
-    await dvpm.add({ url: pluginUrl, cmd: "TestLazyCmd" });
+    await dvpm.add({
+      url: pluginUrl,
+      lazy: {
+        cmd: "TestLazyCmd",
+      },
+    });
 
     const plugin = dvpm.plugins[0];
     plugin.install = () => Promise.resolve([]);

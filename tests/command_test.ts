@@ -17,7 +17,9 @@ test({
 
     await dvpm.add({
       url: "https://example.com/plugin1",
-      cmd: "TestCmd1",
+      lazy: {
+        cmd: "TestCmd1",
+      },
     });
 
     // Mocking install/update/build to avoid network/git operations
@@ -44,7 +46,9 @@ test({
 
     await dvpm.add({
       url: "https://example.com/plugin2",
-      cmd: { name: "TestCmd2" },
+      lazy: {
+        cmd: { name: "TestCmd2" },
+      },
     });
 
     const plugin = dvpm.plugins[0];
@@ -68,7 +72,9 @@ test({
 
     await dvpm.add({
       url: "https://example.com/plugin3",
-      cmd: { name: "TestCmd3", complete: "custom,ListFunc" },
+      lazy: {
+        cmd: { name: "TestCmd3", complete: "custom,ListFunc" },
+      },
     });
 
     const plugin = dvpm.plugins[0];
@@ -95,7 +101,9 @@ test({
 
     await dvpm.add({
       url: "https://example.com/plugin4",
-      cmd: ["TestCmd4", { name: "TestCmd5", complete: "dir" }],
+      lazy: {
+        cmd: ["TestCmd4", { name: "TestCmd5", complete: "dir" }],
+      },
     });
 
     const plugin = dvpm.plugins[0];

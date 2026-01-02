@@ -45,6 +45,9 @@ export class Plugin {
       dst: "",
       name: "",
       ...this.plug,
+      lazy: typeof this.plug.lazy === "boolean"
+        ? { enabled: this.plug.lazy }
+        : this.plug.lazy ?? { enabled: false },
     });
     this.initialClone = false;
   }
@@ -72,6 +75,7 @@ export class Plugin {
     await p.initEnabled();
     await p.initClone();
     await p.initCache();
+    await p.initLazy();
     p.initDependencies();
 
     return p;
@@ -110,6 +114,18 @@ export class Plugin {
       this.info.cache?.afterFile
     ) {
       this.info.cache.enabled = true;
+    }
+  }
+
+  private async initLazy() {
+    const lazy = this.info.lazy;
+    if (typeof lazy === "boolean") {
+      // Do nothing, already handled by type definition or schema default
+    } else {
+      if (lazy.cmd || lazy.event || lazy.ft || lazy.keys) {
+        lazy.enabled = true;
+      }
+      lazy.enabled = await this.is(lazy.enabled as Bool);
     }
   }
 
