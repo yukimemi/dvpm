@@ -348,6 +348,8 @@ export type KeyMap = {
   nowait?: boolean;
   // Whether the mapping is an expression. Default is false.
   expr?: boolean;
+  // Description of the mapping.
+  desc?: string;
 };
 ```
 

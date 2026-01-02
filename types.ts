@@ -68,6 +68,10 @@ export type KeyMap = {
    * Whether the mapping is an expression. Default is false.
    */
   expr?: boolean;
+  /**
+   * Description of the mapping.
+   */
+  desc?: string;
 };
 
 const _KeyMapSchema = type({
@@ -78,6 +82,7 @@ const _KeyMapSchema = type({
   "silent?": "boolean",
   "nowait?": "boolean",
   "expr?": "boolean",
+  "desc?": "string",
 });
 
 export const KeyMapSchema: Type<KeyMap> = _KeyMapSchema as unknown as Type<KeyMap>;

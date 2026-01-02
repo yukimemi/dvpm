@@ -213,3 +213,59 @@ test({
     assertEquals(result, 1, "RHS <cmd>...<cr> should be executed immediately");
   },
 });
+
+test({
+  mode: "all",
+  name: "keys with desc property handles correctly",
+  fn: async (denops) => {
+    const base = await Deno.makeTempDir();
+    const dvpm = new Dvpm(denops, { base });
+
+    const lhs = "gD";
+    const rhs = ":let g:dvpm_test_keys_desc = 1<CR>";
+    const desc = "Test description";
+
+    await dvpm.add({
+      url: "lazy/keys_desc",
+      keys: { lhs, rhs, mode: "n", desc },
+    });
+
+    const plugin = dvpm.plugins[0];
+    plugin.install = () => Promise.resolve([]);
+    plugin.update = () => Promise.resolve([]);
+    plugin.build = () => Promise.resolve();
+    await Deno.mkdir(plugin.info.dst, { recursive: true });
+
+    await dvpm.end();
+
+    if (await denops.call("has", "nvim")) {
+      // deno-lint-ignore no-explicit-any
+      const maps = (await denops.call("nvim_get_keymap", "n")) as any[];
+      const info = maps.find((m) => m.lhs === lhs);
+      assertEquals(info?.desc, desc, "Proxy mapping should have description in Neovim");
+    } else {
+      // Vim: check mapping exists but desc does not
+      // deno-lint-ignore no-explicit-any
+      const info = (await denops.call("maparg", lhs, "n", 0, 1)) as any;
+      assertEquals(!!info, true, "Proxy mapping should be created in Vim");
+      assertEquals(info.desc, undefined, "Mapping should NOT have description in Vim");
+    }
+
+    // Trigger loading
+    await dvpm.load(plugin.info.url, "keys", lhs);
+
+    if (await denops.call("has", "nvim")) {
+      // After load: check RHS and desc
+      // deno-lint-ignore no-explicit-any
+      const info = (await denops.call("maparg", lhs, "n", 0, 1)) as any;
+      assertEquals(info.rhs, rhs, "Mapping should be updated to RHS");
+      assertEquals(info.desc, desc, "Updated mapping should still have description in Neovim");
+    } else {
+      // After load: check RHS in Vim
+      // deno-lint-ignore no-explicit-any
+      const info = (await denops.call("maparg", lhs, "n", 0, 1)) as any;
+      assertEquals(info.rhs, rhs, "Mapping should be updated to RHS in Vim");
+      assertEquals(info.desc, undefined, "Updated mapping should NOT have description in Vim");
+    }
+  },
+});

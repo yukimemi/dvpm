@@ -631,8 +631,7 @@ export class Dvpm {
           ? km.mode as mapping.Mode[]
           : [km.mode ?? "n"] as mapping.Mode[];
         for (const mode of modes) {
-          await mapping.map(
-            this.denops,
+          await this.map(
             km.lhs,
             km.rhs,
             {
@@ -641,6 +640,7 @@ export class Dvpm {
               silent: km.silent ?? true,
               nowait: km.nowait,
               expr: km.expr,
+              desc: km.desc,
             },
           );
         }
@@ -709,8 +709,7 @@ export class Dvpm {
           const keys = Array.isArray(p.info.keys) ? p.info.keys : [p.info.keys];
           for (const key of keys) {
             if (typeof key === "string") {
-              await mapping.map(
-                denops,
+              await this.map(
                 key,
                 `<cmd>call denops#notify('${denops.name}', 'load', ['${p.info.url}', 'keys', ${
                   toVimLiteral(key)
@@ -722,13 +721,15 @@ export class Dvpm {
                 ? key.mode as mapping.Mode[]
                 : [key.mode ?? "n"] as mapping.Mode[];
               for (const mode of modes) {
-                await mapping.map(
-                  denops,
+                await this.map(
                   key.lhs,
                   `<cmd>call denops#notify('${denops.name}', 'load', ['${p.info.url}', 'keys', ${
                     toVimLiteral(key.lhs)
                   }])<CR>`,
-                  { mode },
+                  {
+                    mode,
+                    desc: key.desc,
+                  },
                 );
               }
             }
@@ -828,5 +829,33 @@ export class Dvpm {
    */
   public async cache(arg: { script: string; path: string }): Promise<boolean> {
     return await cache(this.denops, { script: arg.script, path: arg.path });
+  }
+
+  private async map(
+    lhs: string,
+    rhs: string,
+    opts: mapping.MapOptions & { desc?: string },
+  ) {
+    if (this.denops.meta.host === "nvim") {
+      const mode = opts.mode || "n";
+      const nvimOpts: any = {
+        noremap: !!opts.noremap,
+        silent: !!opts.silent,
+        nowait: !!opts.nowait,
+        expr: !!opts.expr,
+      };
+      if (opts.desc) {
+        nvimOpts.desc = opts.desc;
+      }
+      if (Array.isArray(mode)) {
+        for (const m of mode) {
+          await this.denops.call("nvim_set_keymap", m, lhs, rhs, nvimOpts);
+        }
+      } else {
+        await this.denops.call("nvim_set_keymap", mode, lhs, rhs, nvimOpts);
+      }
+    } else {
+      await mapping.map(this.denops, lhs, rhs, opts);
+    }
   }
 }
