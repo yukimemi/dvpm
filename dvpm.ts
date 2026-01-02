@@ -559,7 +559,11 @@ export class Dvpm {
   }
 
   public async load(url: unknown, loadType: unknown, arg: unknown, params?: unknown) {
-    const args = LoadArgsSchema.assert({ url, loadType, arg, params });
+    const loadArgs: Record<string, unknown> = { url, loadType, arg };
+    if (params) {
+      loadArgs.params = params;
+    }
+    const args = LoadArgsSchema.assert(loadArgs);
     const p = this.findPlugin(args.url);
     if (!p) return;
     if (p.info.isLoad) return;
