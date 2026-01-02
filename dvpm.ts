@@ -15,6 +15,7 @@ import { Semaphore } from "@core/asyncutil";
 import { batch } from "@denops/std/batch";
 import { cache, convertUrl, notify } from "./util.ts";
 import { echo, execute } from "@denops/std/helper";
+import { send } from "@denops/std/helper/keymap";
 import { logger } from "./logger.ts";
 import { sprintf } from "@std/fmt/printf";
 import {
@@ -622,16 +623,16 @@ export class Dvpm {
         }
         const feedArg = await this.denops.call(
           "eval",
-          `"\<${km.lhs.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/</g, "\\<")}>"`,
-        );
-        await this.denops.call("feedkeys", feedArg, "mi");
+          `"${km.lhs.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/</g, "\\<")}"`,
+        ) as string;
+        await send(this.denops, { keys: feedArg, remap: true });
       } else {
         await mapping.unmap(this.denops, args.arg, { mode: "n" });
         const feedArg = await this.denops.call(
           "eval",
-          `"\<${args.arg.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/</g, "\\<")}>"`,
-        );
-        await this.denops.call("feedkeys", feedArg, "mi");
+          `"${args.arg.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/</g, "\\<")}"`,
+        ) as string;
+        await send(this.denops, { keys: feedArg, remap: true });
       }
     }
   }
@@ -644,7 +645,7 @@ export class Dvpm {
           const cmds = Array.isArray(p.info.cmd) ? p.info.cmd : [p.info.cmd];
           for (const cmd of cmds) {
             await denops.cmd(
-              `command! -nargs=* -range -bang -complete=file ${cmd} call denops#request('${denops.name}', 'load', ['${p.info.url}', 'cmd', '${cmd}'])`,
+              `command! -nargs=* -range -bang -complete=file ${cmd} call denops#notify('${denops.name}', 'load', ['${p.info.url}', 'cmd', '${cmd}'])`,
             );
           }
         }
@@ -654,7 +655,7 @@ export class Dvpm {
             denops,
             events,
             "*",
-            `call denops#request('${denops.name}', 'load', ['${p.info.url}', 'event', '${
+            `call denops#notify('${denops.name}', 'load', ['${p.info.url}', 'event', '${
               events.join(",")
             }'])`,
             { once: true },
@@ -666,7 +667,7 @@ export class Dvpm {
             denops,
             "FileType",
             fts,
-            `call denops#request('${denops.name}', 'load', ['${p.info.url}', 'ft', '${
+            `call denops#notify('${denops.name}', 'load', ['${p.info.url}', 'ft', '${
               fts.join(",")
             }'])`,
             { once: true },
@@ -679,7 +680,7 @@ export class Dvpm {
               await mapping.map(
                 denops,
                 key,
-                `<cmd>call denops#request('${denops.name}', 'load', ['${p.info.url}', 'keys', ${
+                `<cmd>call denops#notify('${denops.name}', 'load', ['${p.info.url}', 'keys', ${
                   toVimLiteral(key)
                 }])<CR>`,
                 { mode: "n" },
@@ -692,7 +693,7 @@ export class Dvpm {
                 await mapping.map(
                   denops,
                   key.lhs,
-                  `<cmd>call denops#request('${denops.name}', 'load', ['${p.info.url}', 'keys', ${
+                  `<cmd>call denops#notify('${denops.name}', 'load', ['${p.info.url}', 'keys', ${
                     toVimLiteral(key.lhs)
                   }])<CR>`,
                   { mode },

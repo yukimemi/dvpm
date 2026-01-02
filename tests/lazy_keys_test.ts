@@ -64,7 +64,7 @@ test({
 
     // Check if proxy mapping is created
     const mapResult = await denops.call("execute", `nmap ${lhs}`) as string;
-    assertEquals(mapResult.includes("denops#request"), true, "Proxy mapping should be created");
+    assertEquals(mapResult.includes("denops#notify"), true, "Proxy mapping should be created");
 
     // Trigger loading by calling the mapping (via request)
     await dvpm.load(plugin.info.url, "keys", lhs);
@@ -108,7 +108,7 @@ test({
       // deno-lint-ignore no-explicit-any
       const info = (await denops.call("maparg", lhs, mode, 0, 1)) as any;
       assertEquals(
-        info.rhs.includes("denops#request"),
+        info.rhs.includes("denops#notify"),
         true,
         `Proxy mapping should exist in ${mode} mode`,
       );
