@@ -838,22 +838,20 @@ export class Dvpm {
   ) {
     if (this.denops.meta.host === "nvim") {
       const mode = opts.mode || "n";
-      const nvimOpts: any = {
-        noremap: !!opts.noremap,
+      const keysOpts: any = {
+        remap: !opts.noremap,
         silent: !!opts.silent,
         nowait: !!opts.nowait,
         expr: !!opts.expr,
       };
       if (opts.desc) {
-        nvimOpts.desc = opts.desc;
+        keysOpts.desc = opts.desc;
       }
-      if (Array.isArray(mode)) {
-        for (const m of mode) {
-          await this.denops.call("nvim_set_keymap", m, lhs, rhs, nvimOpts);
-        }
-      } else {
-        await this.denops.call("nvim_set_keymap", mode, lhs, rhs, nvimOpts);
-      }
+      await this.denops.call(
+        "luaeval",
+        `vim.keymap.set(_A[1], _A[2], _A[3], _A[4])`,
+        [mode, lhs, rhs, keysOpts],
+      );
     } else {
       await mapping.map(this.denops, lhs, rhs, opts);
     }
