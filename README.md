@@ -106,11 +106,13 @@ export const main: Entrypoint = async (denops: Denops) => {
   // hook_add (dein.vim) equivalent.
   // Execute at startup regardless of whether the plugin is lazy-loaded.
   await dvpm.add({
-    url: "yukimemi/hitori.vim",
-    lazy: { enabled: true },
+    url: "thinca/vim-quickrun",
+    lazy: {
+      keys: { lhs: "<leader>r", rhs: "<cmd>QuickRun<cr>" },
+    },
     add: async ({ denops }) => {
       // Set global variables before plugin is loaded.
-      await vars.g.set(denops, "hitori_debug", 1);
+      await vars.g.set(denops, "quickrun_no_default_key_mappings", 1);
     },
   });
 
@@ -536,56 +538,58 @@ e.g.
 ```typescript
   // Load on command.
   await dvpm.add({
-    url: "yukimemi/hitori.vim",
+    url: "lambdalisue/gin.vim",
     lazy: {
-      cmd: "Hitori",
+      cmd: "Gin",
     },
   });
 
   // Load on event.
   await dvpm.add({
-    url: "yukimemi/hitori.vim",
+    url: "tweekmonster/startuptime.vim",
     lazy: {
-      event: "BufRead",
+      event: "VimEnter",
     },
   });
 
   // Load on filetype.
   await dvpm.add({
-    url: "yukimemi/hitori.vim",
+    url: "othree/html5.vim",
     lazy: {
-      ft: "typescript",
+      ft: "html",
     },
   });
 
   // Load on keys.
   await dvpm.add({
-    url: "yukimemi/hitori.vim",
+    url: "mbbill/undotree",
     lazy: {
-      keys: "<leader>h",
+      keys: { lhs: "<leader>u", rhs: "<cmd>UndotreeToggle<cr>" },
     },
   });
 
   // Library plugin (lazy loaded when depended upon)
   await dvpm.add({
-    url: "vim-denops/denops.vim",
+    url: "nvim-lua/plenary.nvim",
     lazy: { enabled: true },
   });
 
   // Plugin that depends on the library
   await dvpm.add({
-    url: "yukimemi/some-plugin",
-    dependencies: ["vim-denops/denops.vim"],
+    url: "nvim-telescope/telescope.nvim",
+    // Loaded when command is executed, and plenary.nvim is also loaded automatically
+    lazy: { cmd: "Telescope" },
+    dependencies: ["nvim-lua/plenary.nvim"],
   });
 
   // Load manually in add hook
   await dvpm.add({
-    url: "yukimemi/hitori.vim",
+    url: "junegunn/fzf.vim",
     lazy: { enabled: true },
     add: async ({ denops }) => {
       // For example, load if some environment variable is set
-      if (Deno.env.get("MY_VIM_DEBUG")) {
-        await denops.dispatch(denops.name, "load", "yukimemi/hitori.vim", "cmd", "dummy");
+      if (Deno.env.get("ENABLE_FZF")) {
+        await dvpm.load("junegunn/fzf.vim");
       }
     },
   });
