@@ -11,7 +11,8 @@ import * as path from "@std/path";
 
 test({
   mode: "all",
-  name: "Dvpm triggers User autocmd 'DvpmPluginLoadPre:pluginname' and 'DvpmPluginLoadPost:pluginname'",
+  name:
+    "Dvpm triggers User autocmd 'DvpmPluginLoadPre:pluginname' and 'DvpmPluginLoadPost:pluginname'",
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
     const dvpm = new Dvpm(denops, { base });
@@ -165,7 +166,7 @@ test({
   name: "Dvpm triggers life cycle User autocmds",
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
-    
+
     await denops.cmd("let g:dvpm_test_lifecycle = []");
     await denops.cmd("autocmd User DvpmBeginPre call add(g:dvpm_test_lifecycle, 'BeginPre')");
     await denops.cmd("autocmd User DvpmBeginPost call add(g:dvpm_test_lifecycle, 'BeginPost')");
@@ -205,7 +206,9 @@ test({
 
     await denops.cmd(`let g:dvpm_test_install_events = []`);
     await denops.cmd(`autocmd User ${preInstallEvent} call add(g:dvpm_test_install_events, 'pre')`);
-    await denops.cmd(`autocmd User ${postInstallEvent} call add(g:dvpm_test_install_events, 'post')`);
+    await denops.cmd(
+      `autocmd User ${postInstallEvent} call add(g:dvpm_test_install_events, 'post')`,
+    );
 
     await dvpm.end();
 
