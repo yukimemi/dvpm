@@ -740,7 +740,14 @@ export class Dvpm {
           ) as (string | KeyMap)[];
           for (const key of keys) {
             if (typeof key === "string") {
-              await mapping.unmap(this.denops, key, { mode: "n" });
+              try {
+                const m = await mapping.read(this.denops, key, { mode: "n" });
+                if (m.rhs.includes(`denops#notify('${this.denops.name}', 'load',`)) {
+                  await mapping.unmap(this.denops, key, { mode: "n" });
+                }
+              } catch {
+                // Ignore
+              }
             } else {
               const modes = Array.isArray(key.mode)
                 ? key.mode as mapping.Mode[]

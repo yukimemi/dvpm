@@ -281,3 +281,50 @@ test({
     }
   },
 });
+
+test({
+  mode: "all",
+  name: "keys with string (plugin defined) handles correctly",
+  fn: async (denops) => {
+    const base = await Deno.makeTempDir();
+    const dvpm = new Dvpm(denops, { base });
+
+    const lhs = "gP";
+    const pluginRhs = ":let g:dvpm_test_keys_plugin = 1<CR>";
+
+    await dvpm.add({
+      url: "lazy/keys_plugin_defined",
+      lazy: {
+        keys: lhs,
+      },
+      before: async ({ denops }) => {
+        // Simulate plugin defining the mapping
+        await denops.cmd(`nnoremap ${lhs} ${pluginRhs}`);
+      },
+    });
+
+    const plugin = dvpm.plugins[0];
+    plugin.install = () => Promise.resolve([]);
+    plugin.update = () => Promise.resolve([]);
+    plugin.build = () => Promise.resolve();
+    await Deno.mkdir(plugin.info.dst, { recursive: true });
+
+    await dvpm.end();
+
+    // Check proxy mapping
+    const mapResult = await denops.call("execute", `nmap ${lhs}`) as string;
+    assertEquals(mapResult.includes("denops#notify"), true, "Proxy mapping should be created");
+
+    // Trigger loading
+    await dvpm.load(plugin.info.url, "keys", lhs);
+
+    // After load: check RHS using maparg
+    // deno-lint-ignore no-explicit-any
+    const info = (await denops.call("maparg", lhs, "n", 0, 1)) as any;
+    assertEquals(
+      info.rhs,
+      pluginRhs,
+      "Mapping should be preserved as plugin defined",
+    );
+  },
+});
