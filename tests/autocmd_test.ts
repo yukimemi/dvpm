@@ -11,14 +11,14 @@ import * as path from "@std/path";
 
 test({
   mode: "all",
-  name: "Dvpm triggers User autocmd 'Dvpm:PreLoad:pluginname' and 'Dvpm:PostLoad:pluginname'",
+  name: "Dvpm triggers User autocmd 'DvpmPluginLoadPre:pluginname' and 'DvpmPluginLoadPost:pluginname'",
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
     const dvpm = new Dvpm(denops, { base });
 
     const pluginUrl = "https://github.com/yukimemi/dvpm";
-    const preLoadEvent = "Dvpm:PreLoad:dvpm";
-    const postLoadEvent = "Dvpm:PostLoad:dvpm";
+    const preLoadEvent = "DvpmPluginLoadPre:dvpm";
+    const postLoadEvent = "DvpmPluginLoadPost:dvpm";
 
     await dvpm.add({ url: pluginUrl });
 
@@ -61,8 +61,8 @@ test({
     const dvpm = new Dvpm(denops, { base });
 
     const pluginUrl = "https://github.com/yukimemi/dvpm_lazy";
-    const preLoadEvent = "Dvpm:PreLoad:dvpm_lazy";
-    const postLoadEvent = "Dvpm:PostLoad:dvpm_lazy";
+    const preLoadEvent = "DvpmPluginLoadPre:dvpm_lazy";
+    const postLoadEvent = "DvpmPluginLoadPost:dvpm_lazy";
 
     // Add a lazy plugin (cmd option implies lazy)
     await dvpm.add({
@@ -111,7 +111,7 @@ test({
 
     const pluginUrl = "https://github.com/yukimemi/dvpm";
     const customName = "custom-dvpm-name";
-    const postLoadEvent = `Dvpm:PostLoad:${customName}`;
+    const postLoadEvent = `DvpmPluginLoadPost:${customName}`;
 
     await dvpm.add({ url: pluginUrl, name: customName });
 
@@ -133,7 +133,7 @@ test({
 
 test({
   mode: "all",
-  name: "Dvpm triggers User autocmd 'Dvpm:CacheUpdated:all' when cache is updated",
+  name: "Dvpm triggers User autocmd 'DvpmCacheUpdated' when cache is updated",
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
     const cache = path.join(base, "cache.vim");
@@ -151,11 +151,65 @@ test({
     await Deno.mkdir(plugin.info.dst, { recursive: true });
 
     await denops.cmd("let g:dvpm_test_cache_updated = 0");
-    await denops.cmd("autocmd User Dvpm:CacheUpdated:all let g:dvpm_test_cache_updated = 1");
+    await denops.cmd("autocmd User DvpmCacheUpdated let g:dvpm_test_cache_updated = 1");
 
     await dvpm.end();
 
     const fired = await denops.eval("g:dvpm_test_cache_updated");
-    assertEquals(fired, 1, "User autocmd 'Dvpm:CacheUpdated:all' should be fired");
+    assertEquals(fired, 1, "User autocmd 'DvpmCacheUpdated' should be fired");
+  },
+});
+
+test({
+  mode: "all",
+  name: "Dvpm triggers life cycle User autocmds",
+  fn: async (denops) => {
+    const base = await Deno.makeTempDir();
+    
+    await denops.cmd("let g:dvpm_test_lifecycle = []");
+    await denops.cmd("autocmd User DvpmBeginPre call add(g:dvpm_test_lifecycle, 'BeginPre')");
+    await denops.cmd("autocmd User DvpmBeginPost call add(g:dvpm_test_lifecycle, 'BeginPost')");
+    await denops.cmd("autocmd User DvpmEndPre call add(g:dvpm_test_lifecycle, 'EndPre')");
+    await denops.cmd("autocmd User DvpmEndPost call add(g:dvpm_test_lifecycle, 'EndPost')");
+
+    const dvpm = await Dvpm.begin(denops, { base });
+    await dvpm.end();
+
+    const lifecycle = await denops.eval("g:dvpm_test_lifecycle") as string[];
+    assertEquals(
+      lifecycle,
+      ["BeginPre", "BeginPost", "EndPre", "EndPost"],
+      "Lifecycle events should be fired in order",
+    );
+  },
+});
+
+test({
+  mode: "all",
+  name: "Dvpm triggers plugin install User autocmds",
+  fn: async (denops) => {
+    const base = await Deno.makeTempDir();
+    const dvpm = await Dvpm.begin(denops, { base });
+
+    const pluginUrl = "https://github.com/yukimemi/dvpm_install_event";
+    const preInstallEvent = "DvpmPluginInstallPre:dvpm_install_event";
+    const postInstallEvent = "DvpmPluginInstallPost:dvpm_install_event";
+
+    await dvpm.add({ url: pluginUrl });
+
+    // Mock install to trigger the event
+    const plugin = dvpm.plugins[0];
+    plugin.install = () => Promise.resolve(["Installed !"]);
+    plugin.update = () => Promise.resolve([]);
+    plugin.build = () => Promise.resolve();
+
+    await denops.cmd(`let g:dvpm_test_install_events = []`);
+    await denops.cmd(`autocmd User ${preInstallEvent} call add(g:dvpm_test_install_events, 'pre')`);
+    await denops.cmd(`autocmd User ${postInstallEvent} call add(g:dvpm_test_install_events, 'post')`);
+
+    await dvpm.end();
+
+    const events = await denops.eval("g:dvpm_test_install_events") as string[];
+    assertEquals(events, ["pre", "post"], "Install events should be fired");
   },
 });

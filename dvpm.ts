@@ -86,8 +86,10 @@ export class Dvpm {
     denops: Denops,
     option: DvpmOption,
   ): Promise<Dvpm> {
+    await autocmd.emit(denops, "User", "DvpmBeginPre");
     logger().debug(`[begin] Dvpm begin start !`);
     const dvpm = new Dvpm(denops, option);
+    const name = denops.name.replace(/-/g, "_");
 
     denops.dispatcher = {
       ...denops.dispatcher,
@@ -113,18 +115,19 @@ export class Dvpm {
     await execute(
       denops,
       `
-        function! s:${denops.name}_notify(method, params) abort
+        function! s:${name}_notify(method, params) abort
           call denops#plugin#wait_async('${denops.name}', function('denops#notify', ['${denops.name}', a:method, a:params]))
         endfunction
-        function! s:${denops.name}_request(method, params) abort
+        function! s:${name}_request(method, params) abort
           call denops#plugin#wait('${denops.name}')
           call denops#request('${denops.name}', a:method, a:params)
         endfunction
-        command! -nargs=? DvpmUpdate call s:${denops.name}_notify('update', [<f-args>])
-        command! -nargs=? DvpmList call s:${denops.name}_notify('bufWriteList', [<f-args>])
+        command! -nargs=? DvpmUpdate call s:${name}_notify('update', [<f-args>])
+        command! -nargs=? DvpmList call s:${name}_notify('bufWriteList', [<f-args>])
       `,
     );
 
+    await autocmd.emit(denops, "User", "DvpmBeginPost");
     logger().debug(`[begin] Dvpm begin end !`);
     return dvpm;
   }
@@ -274,7 +277,9 @@ export class Dvpm {
     logs: string[],
   ) {
     await this.#semaphore.lock(async () => {
+      const eventName = taskName === "install" ? "Install" : "Update";
       try {
+        await autocmd.emit(this.denops, "User", `DvpmPlugin${eventName}Pre:${p.info.name}`);
         const output = await task();
         if (output.length > 0) {
           this.isInstallOrUpdate = true;
@@ -295,6 +300,7 @@ export class Dvpm {
         if (taskName === "update") {
           await p.build();
         }
+        await autocmd.emit(this.denops, "User", `DvpmPlugin${eventName}Post:${p.info.name}`);
       }
     });
   }
@@ -305,6 +311,7 @@ export class Dvpm {
    * @param url - If specified, only the plugin with this URL will be installed.
    */
   public async install(url?: string) {
+    await autocmd.emit(this.denops, "User", "DvpmInstallPre");
     if (url) {
       const p = this.findPlugin(url);
       if (p == undefined) return;
@@ -316,6 +323,7 @@ export class Dvpm {
         ),
       );
     }
+    await autocmd.emit(this.denops, "User", "DvpmInstallPost");
   }
 
   /**
@@ -324,6 +332,7 @@ export class Dvpm {
    * @param url - If specified, only the plugin with this URL will be updated.
    */
   public async update(url?: string) {
+    await autocmd.emit(this.denops, "User", "DvpmUpdatePre");
     if (this.option.notify) {
       await notify(this.denops, `Update start`);
     } else {
@@ -355,6 +364,7 @@ export class Dvpm {
     } else {
       await echo(this.denops, `Update done`);
     }
+    await autocmd.emit(this.denops, "User", "DvpmUpdatePost");
   }
 
   /**
@@ -485,6 +495,7 @@ export class Dvpm {
    */
   public async end() {
     try {
+      await autocmd.emit(this.denops, "User", "DvpmEndPre");
       logger().debug(`[end] Dvpm end start !`);
       const enabledPlugins = this.resolveDependencies(this.plugins);
       await this.install();
@@ -549,6 +560,7 @@ export class Dvpm {
         await this.generateCache(enabledPlugins);
       }
       this.checkPluginUrlDuplicates(this.plugins);
+      await autocmd.emit(this.denops, "User", "DvpmEndPost");
     } catch (e) {
       if (e instanceof Error) {
         logger().error(`[end] ${e.message}, ${e.stack}`);
@@ -709,7 +721,7 @@ export class Dvpm {
         const name = p.info.name;
         logger().debug(`[loadPlugins] ${p.info.url} start !`);
         await p.before();
-        await autocmd.emit(this.denops, "User", `Dvpm:PreLoad:${name}`);
+        await autocmd.emit(this.denops, "User", `DvpmPluginLoadPre:${name}`);
 
         // Cleanup CMD proxies
         const lazy = p.info.lazy;
@@ -760,7 +772,7 @@ export class Dvpm {
         }
 
         await p.sourceAfter();
-        await autocmd.emit(this.denops, "User", `Dvpm:PostLoad:${name}`);
+        await autocmd.emit(this.denops, "User", `DvpmPluginLoadPost:${name}`);
         p.info.isLoad = true;
       } catch (e) {
         if (e instanceof Error) {
@@ -813,7 +825,7 @@ export class Dvpm {
       })
     ) {
       logger().debug(`[generateCache] Cache updated: ${this.option.cache}`);
-      await autocmd.emit(this.denops, "User", "Dvpm:CacheUpdated:all");
+      await autocmd.emit(this.denops, "User", "DvpmCacheUpdated");
     }
   }
 

@@ -604,18 +604,20 @@ e.g.
 
 ## Autocmd
 
-- Dvpm:CacheUpdated:all
+### Lifecycle
 
-Fires after updating the cache.
+- DvpmBeginPre / DvpmBeginPost
+- DvpmEndPre / DvpmEndPost
+- DvpmInstallPre / DvpmInstallPost
+- DvpmUpdatePre / DvpmUpdatePost
+- DvpmCacheUpdated
 
-- Dvpm:PreLoad:{pluginName}
+### Plugin
 
-Fires before loading a plugin (after `before` and `beforeFile` processing).
-`{pluginName}` is the `name` property of `PlugInfo`.
+- DvpmPluginLoadPre:{pluginName} / DvpmPluginLoadPost:{pluginName}
+- DvpmPluginInstallPre:{pluginName} / DvpmPluginInstallPost:{pluginName}
+- DvpmPluginUpdatePre:{pluginName} / DvpmPluginUpdatePost:{pluginName}
 
-- Dvpm:PostLoad:{pluginName}
-
-Fires after loading a plugin (after `after`, `afterFile`, and `build` processing).
 `{pluginName}` is the `name` property of `PlugInfo`.
 
 e.g.
@@ -625,14 +627,14 @@ import * as autocmd from "@denops/std/autocmd";
 
 ~~~
 
-await autocmd.define(denops, "User", "Dvpm:CacheUpdated:all", "echo 'dvpm cache updated !'");
+await autocmd.define(denops, "User", "DvpmCacheUpdated", "echo 'dvpm cache updated !'");
 
 // Use wildcard to hook all plugins
 await autocmd.define(
   denops,
   "User",
-  "Dvpm:PostLoad:*",
-  `echom "Loaded plugin: " . substitute(expand("<amatch>"), "^Dvpm:PostLoad:", "", "")`,
+  "DvpmPluginLoadPost:*",
+  `echom "Loaded plugin: " . substitute(expand("<amatch>"), "^DvpmPluginLoadPost:", "", "")`,
 );
 ```
 
