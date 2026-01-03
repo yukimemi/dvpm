@@ -52,15 +52,28 @@ export async function cache(
   await fs.ensureDir(dirname(p));
   if (await fs.exists(p)) {
     const content = (await Deno.readTextFile(p)).trim();
-    if (s !== content) {
-      logger().debug(`Save to ${p}`);
-      await Deno.writeTextFile(p, s);
-      return true;
+    if (s === content) {
+      return false;
     }
-    return false;
   }
+
   logger().debug(`Save to ${p}`);
-  await Deno.writeTextFile(p, s);
+  const tempFile = await Deno.makeTempFile({
+    dir: dirname(p),
+    prefix: ".dvpm_cache_",
+    suffix: ".tmp",
+  });
+  try {
+    await Deno.writeTextFile(tempFile, s);
+    await Deno.rename(tempFile, p);
+  } catch (e) {
+    try {
+      await Deno.remove(tempFile);
+    } catch {
+      // Ignore error
+    }
+    throw e;
+  }
   return true;
 }
 

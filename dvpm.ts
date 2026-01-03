@@ -767,6 +767,7 @@ export class Dvpm {
   }
 
   private async generateCache(plugins: Plugin[]) {
+    this.#cacheScript = [];
     for (const p of this.updateCache(plugins)) {
       try {
         logger().debug(`[generateCache] ${p.info.url} start !`);
