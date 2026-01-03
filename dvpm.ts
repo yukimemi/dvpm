@@ -24,7 +24,6 @@ import {
   type DvpmOption,
   DvpmOptionSchema,
   type KeyMap,
-  KeyMapSchema,
   LoadArgsSchema,
   type LoadType,
   type Plug,
@@ -43,6 +42,7 @@ export class Dvpm {
   #cacheScript: string[] = [];
   #installLogs: string[] = [];
   #updateLogs: string[] = [];
+  #loading = new Set<string>();
 
   /**
    * Whether a plugin was installed or updated during the current session.
@@ -559,16 +559,10 @@ export class Dvpm {
     }
   }
 
-  public async load(url: string, loadType: LoadType, arg: string, params?: CmdParams) {
+  public async load(url: string, loadType?: LoadType, arg?: string, params?: CmdParams) {
     const p = this.findPlugin(url);
     if (!p) return;
     if (p.info.isLoad) return;
-
-    if (loadType === "cmd") {
-      await this.denops.cmd(
-        `if exists(':${arg}') == 2 | exe 'delcommand ${arg}' | endif`,
-      );
-    }
 
     const pluginsToLoad: Plugin[] = [];
     const collectDependencies = (plugin: Plugin) => {
@@ -589,7 +583,7 @@ export class Dvpm {
 
     await this.loadPlugins(pluginsToLoad);
 
-    if (loadType === "cmd") {
+    if (loadType === "cmd" && arg) {
       const p = params;
       let cmd = arg;
       if (p) {
@@ -612,49 +606,12 @@ export class Dvpm {
       }
       await this.denops.cmd(`if exists(':${arg}') | exe '${cmd}' | endif`);
     }
-    if (loadType === "keys") {
-      const lazy = p.info.lazy;
-      const keys = (Array.isArray(lazy.keys) ? lazy.keys : [lazy.keys]).filter((k) =>
-        k !== undefined
-      ) as (string | KeyMap)[];
-      const keyMap = keys.find((k) => {
-        const out = KeyMapSchema(k);
-        return out instanceof type.errors ? k === arg : (out as KeyMap).lhs === arg;
-      });
-      const keyMapChecked = KeyMapSchema(keyMap);
-
-      if (!(keyMapChecked instanceof type.errors)) {
-        const km = keyMapChecked as KeyMap;
-        const modes = Array.isArray(km.mode)
-          ? km.mode as mapping.Mode[]
-          : [km.mode ?? "n"] as mapping.Mode[];
-        for (const mode of modes) {
-          await this.map(
-            km.lhs,
-            km.rhs,
-            {
-              mode,
-              noremap: km.noremap ?? true,
-              silent: km.silent ?? true,
-              nowait: km.nowait,
-              expr: km.expr,
-              desc: km.desc,
-            },
-          );
-        }
-        const feedArg = await this.denops.call(
-          "eval",
-          `"${km.lhs.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/</g, "\\<")}"`,
-        ) as string;
-        await send(this.denops, { keys: feedArg, remap: true });
-      } else {
-        await mapping.unmap(this.denops, arg, { mode: "n" });
-        const feedArg = await this.denops.call(
-          "eval",
-          `"${arg.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/</g, "\\<")}"`,
-        ) as string;
-        await send(this.denops, { keys: feedArg, remap: true });
-      }
+    if (loadType === "keys" && arg) {
+      const feedArg = await this.denops.call(
+        "eval",
+        `"${arg.replace(/\\/g, "\\\\").replace(/"/g, '"').replace(/</g, "\\<")}"`,
+      ) as string;
+      await send(this.denops, { keys: feedArg, remap: true });
     }
   }
 
@@ -662,6 +619,9 @@ export class Dvpm {
     const toVimLiteral = (s: string) => `'${s.replace(/'/g, "''").replace(/</g, "<lt>")}'`;
     await batch(this.denops, async (denops) => {
       for (const p of plugins) {
+        if (p.info.isLoad) {
+          continue;
+        }
         const lazy = p.info.lazy;
         if (lazy.cmd) {
           const cmds = Array.isArray(lazy.cmd) ? lazy.cmd : [lazy.cmd];
@@ -741,10 +701,28 @@ export class Dvpm {
   private async loadPlugins(plugins: Plugin[]) {
     for (const p of plugins) {
       try {
+        if (p.info.isLoad || this.#loading.has(p.info.url)) {
+          continue;
+        }
+        this.#loading.add(p.info.url);
+
         const name = p.info.name;
         logger().debug(`[loadPlugins] ${p.info.url} start !`);
         await p.before();
         await autocmd.emit(this.denops, "User", `Dvpm:PreLoad:${name}`);
+
+        // Cleanup CMD proxies
+        const lazy = p.info.lazy;
+        if (lazy.cmd) {
+          const cmds = Array.isArray(lazy.cmd) ? lazy.cmd : [lazy.cmd];
+          for (const cmd of cmds) {
+            const cmdName = typeof cmd === "string" ? cmd : cmd.name;
+            await this.denops.cmd(
+              `if exists(':${cmdName}') == 2 | exe 'delcommand ${cmdName}' | endif`,
+            );
+          }
+        }
+
         const added = await p.addRuntimepath();
         if (added) {
           await p.source();
@@ -754,25 +732,36 @@ export class Dvpm {
         if (p.initialClone) {
           await p.build();
         }
+
+        // Cleanup KEYS proxies
+        if (lazy.keys) {
+          const keys = (Array.isArray(lazy.keys) ? lazy.keys : [lazy.keys]).filter((k) =>
+            k !== undefined
+          ) as (string | KeyMap)[];
+          for (const key of keys) {
+            if (typeof key === "string") {
+              await mapping.unmap(this.denops, key, { mode: "n" });
+            } else {
+              const modes = Array.isArray(key.mode)
+                ? key.mode as mapping.Mode[]
+                : [key.mode ?? "n"] as mapping.Mode[];
+              for (const mode of modes) {
+                await this.map(key.lhs, key.rhs, { ...key, mode });
+              }
+            }
+          }
+        }
+
+        await p.sourceAfter();
         await autocmd.emit(this.denops, "User", `Dvpm:PostLoad:${name}`);
+        p.info.isLoad = true;
       } catch (e) {
         if (e instanceof Error) {
           logger().error(`[loadPlugins] ${p.info.url} ${e.message}, ${e.stack}`);
         }
       } finally {
+        this.#loading.delete(p.info.url);
         logger().debug(`[loadPlugins] ${p.info.url} end !`);
-      }
-    }
-    for (const p of plugins) {
-      try {
-        logger().debug(`[loadPlugins] ${p.info.url} sourceAfter start !`);
-        await p.sourceAfter();
-      } catch (e) {
-        if (e instanceof Error) {
-          logger().error(`[loadPlugins] ${p.info.url} sourceAfter ${e.message}, ${e.stack}`);
-        }
-      } finally {
-        logger().debug(`[loadPlugins] ${p.info.url} sourceAfter end !`);
       }
     }
   }

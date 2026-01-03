@@ -107,7 +107,7 @@ export const main: Entrypoint = async (denops: Denops) => {
   // Execute at startup regardless of whether the plugin is lazy-loaded.
   await dvpm.add({
     url: "yukimemi/hitori.vim",
-    lazy: true,
+    lazy: { enabled: true },
     add: async ({ denops }) => {
       // Set global variables before plugin is loaded.
       await vars.g.set(denops, "hitori_debug", 1);

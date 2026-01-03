@@ -118,8 +118,8 @@ export type LoadType = "cmd" | "keys" | "ft" | "event";
  */
 export type LoadArgs = {
   url: string;
-  loadType: LoadType;
-  arg: string;
+  loadType?: LoadType;
+  arg?: string;
   params?: CmdParams;
 };
 
@@ -143,8 +143,8 @@ const _CmdParamsSchema = type({
 
 const _LoadArgsSchema = type({
   url: "string",
-  loadType: "'cmd' | 'keys' | 'ft' | 'event'",
-  arg: "string",
+  "loadType?": type("'cmd' | 'keys' | 'ft' | 'event'").or("undefined"),
+  "arg?": type("string").or("undefined"),
   "params?": _CmdParamsSchema.or("undefined"),
 });
 
