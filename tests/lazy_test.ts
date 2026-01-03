@@ -18,7 +18,7 @@ test({
     const dvpm = new Dvpm(denops, { base });
 
     await dvpm.add({ url: "eager/plugin" });
-    await dvpm.add({ url: "lazy/plugin", lazy: true });
+    await dvpm.add({ url: "lazy/plugin", lazy: { enabled: true } });
 
     // deno-lint-ignore no-explicit-any
     const loadPluginsStub = stub(dvpm as any, "loadPlugins", () => Promise.resolve());
@@ -55,7 +55,7 @@ test({
 
     // eager depends on lazy
     await dvpm.add({ url: "eager/plugin", dependencies: ["lazy/plugin"] });
-    await dvpm.add({ url: "lazy/plugin", lazy: true });
+    await dvpm.add({ url: "lazy/plugin", lazy: { enabled: true } });
 
     // deno-lint-ignore no-explicit-any
     const loadPluginsStub = stub(dvpm as any, "loadPlugins", () => Promise.resolve());
@@ -100,8 +100,8 @@ test({
     const dvpm = new Dvpm(denops, { base });
 
     // lazy1 depends on lazy2
-    await dvpm.add({ url: "lazy1", lazy: true, dependencies: ["lazy2"] });
-    await dvpm.add({ url: "lazy2", lazy: true });
+    await dvpm.add({ url: "lazy1", lazy: { enabled: true }, dependencies: ["lazy2"] });
+    await dvpm.add({ url: "lazy2", lazy: { enabled: true } });
 
     const lazy1 = dvpm.plugins[0];
     const lazy2 = dvpm.plugins[1];
@@ -111,7 +111,7 @@ test({
 
     try {
       // Load lazy1
-      await dvpm.load("lazy1", "event", "BufRead");
+      await dvpm.load("https://github.com/lazy1", "event", "BufRead");
 
       // Both should be loaded, lazy2 first
       assertSpyCall(loadPluginsStub, 0, {

@@ -310,7 +310,7 @@ export type Plug = {
     afterFile?: string;
   };
   // Lazy load configuration. See `Lazy Loading`.
-  lazy?: boolean | Lazy;
+  lazy?: Lazy;
   // Whether to git clone and update. Default is true. (Optional)
   // If this option is set to false, then `enabled` is also set to false.
   clone?: Bool;
@@ -534,26 +534,11 @@ You can use `lazy` property to load plugins lazily.
 e.g.
 
 ```typescript
-  // Lazy load.
-  await dvpm.add({
-    url: "yukimemi/hitori.vim",
-    lazy: true,
-  });
-
   // Load on command.
   await dvpm.add({
     url: "yukimemi/hitori.vim",
     lazy: {
       cmd: "Hitori",
-    },
-  });
-
-  // Load on command with object.
-  // You can specify completion (default is "file").
-  await dvpm.add({
-    url: "yukimemi/hitori.vim",
-    lazy: {
-      cmd: [{ name: "Hitori", complete: "customlist,hitori#complete" }],
     },
   });
 
@@ -581,12 +566,27 @@ e.g.
     },
   });
 
-  // Load on keys with object (lazy.nvim equivalent).
-  // It will NOT unmap after loading, but remap to `rhs`.
+  // Library plugin (lazy loaded when depended upon)
+  await dvpm.add({
+    url: "vim-denops/denops.vim",
+    lazy: { enabled: true },
+  });
+
+  // Plugin that depends on the library
+  await dvpm.add({
+    url: "yukimemi/some-plugin",
+    dependencies: ["vim-denops/denops.vim"],
+  });
+
+  // Load manually in add hook
   await dvpm.add({
     url: "yukimemi/hitori.vim",
-    lazy: {
-      keys: { lhs: "<leader>h", rhs: "<cmd>Hitori<cr>", mode: "n", desc: "Hitori" },
+    lazy: { enabled: true },
+    add: async ({ denops }) => {
+      // For example, load if some environment variable is set
+      if (Deno.env.get("MY_VIM_DEBUG")) {
+        await denops.dispatch(denops.name, "load", "yukimemi/hitori.vim", "cmd", "dummy");
+      }
     },
   });
 ```

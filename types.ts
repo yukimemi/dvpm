@@ -231,7 +231,7 @@ export type Plug = {
   /**
    * Lazy loading configuration.
    */
-  lazy?: boolean | LazyParams;
+  lazy?: LazyParams;
   /**
    * Internal flag: whether the plugin is loaded.
    */
@@ -274,7 +274,7 @@ const _PlugSchema = type({
     "beforeFile?": "string",
     "afterFile?": "string",
   }).default(() => ({ enabled: false })),
-  "lazy?": type(_LazyParamsSchema, "|", "boolean"),
+  "lazy?": _LazyParamsSchema,
   isLoad: "boolean = false",
   isUpdate: "boolean = false",
   isCache: "boolean = false",
