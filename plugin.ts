@@ -185,7 +185,6 @@ export class Plugin {
         await op.runtimepath.set(this.denops, `${rtp},${this.info.dst}`);
       }
     });
-    this.info.isLoad = true;
     return added;
   }
 
@@ -344,7 +343,7 @@ export class Plugin {
       if (output.success) {
         this.initialClone = true;
         await this.genHelptags();
-        this.info.isUpdate = true;
+        this.info.isInstalled = true;
         let returnMsg = `Git clone ${this.info.url}`;
         if (this.info.rev) {
           returnMsg += ` --branch=${this.info.rev}`;
@@ -394,7 +393,7 @@ export class Plugin {
       await this.genHelptags();
       if (output.success) {
         if (beforeRev !== afterRev) {
-          this.info.isUpdate = true;
+          this.info.isUpdated = true;
           return await this.generateUpdateLog(git, beforeRev, afterRev);
         }
         return [];

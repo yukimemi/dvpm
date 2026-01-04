@@ -121,7 +121,7 @@ export const main: Entrypoint = async (denops: Denops) => {
     url: "neoclide/coc.nvim",
     rev: "master",
     build: async ({ info }) => {
-      if (!info.isUpdate || !info.isLoad) {
+      if (!(info.isInstalled || info.isUpdated) || !info.isLoaded) {
         // build option is called after git pull, even if there are no changes
         // so you need to check for changes
         return;
@@ -297,7 +297,7 @@ export type Plug = {
   afterFile?: string;
   // Build option. Execute after install or update. (Optional)
   // Executed even if there are no changes in the update.
-  // Therefore, conditionally branch on `info.isLoad` and `info.isUpdate` as necessary.
+  // Therefore, conditionally branch on `info.isLoaded`, `info.isInstalled` and `info.isUpdated` as necessary.
   build?: ({
     denops,
     info,

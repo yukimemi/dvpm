@@ -48,7 +48,7 @@ export class Dvpm {
   /**
    * Whether a plugin was installed or updated during the current session.
    */
-  public isInstallOrUpdate = false;
+  public isAnyPluginChanged = false;
 
   /**
    * List of managed plugins.
@@ -174,7 +174,7 @@ export class Dvpm {
     // Check plugins
     result.push({ type: "info", msg: "Plugin check" });
     const plugins = this.plugins;
-    const loaded = plugins.filter((p) => p.info.isLoad).length;
+    const loaded = plugins.filter((p) => p.info.isLoaded).length;
     const total = plugins.length;
     result.push({ type: "ok", msg: `Total plugins: ${total}` });
     result.push({ type: "ok", msg: `Loaded plugins: ${loaded}` });
@@ -255,7 +255,7 @@ export class Dvpm {
       .plug.url.length;
   }
 
-  private uniqueUrlByIsLoad(): Plugin[] {
+  private uniqueUrlByIsLoaded(): Plugin[] {
     const map = new Map<string, Plugin>();
 
     for (const p of this.plugins) {
@@ -263,15 +263,15 @@ export class Dvpm {
       if (!existing) {
         map.set(p.info.url, p);
       } else {
-        if (p.info.isLoad && !existing.info.isLoad) {
+        if (p.info.isLoaded && !existing.info.isLoaded) {
           map.set(p.info.url, p);
         }
       }
     }
 
     return Array.from(map.values()).sort((a, b) => {
-      if (a.info.isLoad && !b.info.isLoad) return -1;
-      if (!a.info.isLoad && b.info.isLoad) return 1;
+      if (a.info.isLoaded && !b.info.isLoaded) return -1;
+      if (!a.info.isLoaded && b.info.isLoaded) return 1;
       return a.info.url.localeCompare(b.info.url);
     });
   }
@@ -374,7 +374,7 @@ export class Dvpm {
         await autocmd.emit(this.denops, "User", `DvpmPlugin${eventName}Pre:${p.info.name}`);
         const output = await task();
         if (output.length > 0) {
-          this.isInstallOrUpdate = true;
+          this.isAnyPluginChanged = true;
           logs.push(...output);
           if (this.option.notify) {
             await notify(this.denops, output.join("\r"));
@@ -465,7 +465,7 @@ export class Dvpm {
    * @returns List of Plugin instances.
    */
   public list(): Plugin[] {
-    return this.uniqueUrlByIsLoad();
+    return this.uniqueUrlByIsLoaded();
   }
 
   /**
@@ -473,7 +473,7 @@ export class Dvpm {
    */
   public async bufWriteList() {
     const maxLen = this.maxUrlLen(this.plugins);
-    const uniquePlug = this.uniqueUrlByIsLoad();
+    const uniquePlug = this.uniqueUrlByIsLoaded();
     const maxProfileLen = uniquePlug.reduce((max, p) => {
       const len = (p.info.profiles?.join(",") || "").length;
       return len > max ? len : max;
@@ -488,9 +488,19 @@ export class Dvpm {
         get: (p: Plugin) => p.plug.url,
       },
       {
-        label: "isLoad",
-        width: COL_WIDTH_BOOL,
-        get: (p: Plugin) => `${p.info.isLoad}`,
+        label: "isLoaded",
+        width: COL_WIDTH_BOOL + 2,
+        get: (p: Plugin) => `${p.info.isLoaded}`,
+      },
+      {
+        label: "isInstalled",
+        width: COL_WIDTH_BOOL + 4,
+        get: (p: Plugin) => `${p.info.isInstalled}`,
+      },
+      {
+        label: "isUpdated",
+        width: COL_WIDTH_BOOL + 2,
+        get: (p: Plugin) => `${p.info.isUpdated}`,
       },
       {
         label: "isCache",
@@ -503,7 +513,7 @@ export class Dvpm {
         get: (p: Plugin) => `${p.info.lazy.enabled}`,
       },
       {
-        label: "isClone",
+        label: "clone",
         width: COL_WIDTH_BOOL,
         get: (p: Plugin) => `${p.info.clone}`,
       },
@@ -524,7 +534,7 @@ export class Dvpm {
     );
 
     const rowEndSeparator = columns.map((c) => "-".repeat(c.width)).join(SEP);
-    // Length of "url" column + separator + "isLoad" column
+    // Length of "url" column + separator + "isLoaded" column
     const countSeparatorLen = columns[0].width + SEP.length + columns[1].width;
 
     await this.bufWrite("dvpm://list", [
@@ -535,12 +545,12 @@ export class Dvpm {
       sprintf(
         `%-${maxLen + LIST_SPACE}s${SEP}%s`,
         `Loaded count`,
-        `${uniquePlug.filter((p) => p.info.isLoad).length}`,
+        `${uniquePlug.filter((p) => p.info.isLoaded).length}`,
       ),
       sprintf(
         `%-${maxLen + LIST_SPACE}s${SEP}%s`,
         `Not loaded count`,
-        `${uniquePlug.filter((p) => !p.info.isLoad).length}`,
+        `${uniquePlug.filter((p) => !p.info.isLoaded).length}`,
       ),
       rowEndSeparator.slice(0, countSeparatorLen),
       sprintf(
@@ -673,15 +683,15 @@ export class Dvpm {
   public async load(url: string, loadType?: LoadType, arg?: string, params?: CmdParams) {
     const p = this.findPlugin(url);
     if (!p) return;
-    if (p.info.isLoad) return;
+    if (p.info.isLoaded) return;
 
     const pluginsToLoad: Plugin[] = [];
     const collectDependencies = (plugin: Plugin) => {
-      if (plugin.info.isLoad) return;
+      if (plugin.info.isLoaded) return;
       if (plugin.info.dependencies) {
         for (const depUrl of plugin.info.dependencies) {
           const dep = this.findPlugin(depUrl);
-          if (dep && !dep.info.isLoad) {
+          if (dep && !dep.info.isLoaded) {
             collectDependencies(dep);
           }
         }
@@ -737,7 +747,7 @@ export class Dvpm {
     const toVimLiteral = (s: string) => `'${s.replace(/'/g, "''").replace(/</g, "<lt>")}'`;
     await batch(this.denops, async (denops) => {
       for (const p of plugins) {
-        if (p.info.isLoad) {
+        if (p.info.isLoaded) {
           continue;
         }
         const lazy = p.info.lazy;
@@ -819,7 +829,7 @@ export class Dvpm {
   private async loadPlugins(plugins: Plugin[]) {
     for (const p of plugins) {
       try {
-        if (p.info.isLoad || this.#loading.has(p.info.url)) {
+        if (p.info.isLoaded || this.#loading.has(p.info.url)) {
           continue;
         }
         this.#loading.add(p.info.url);
@@ -878,8 +888,8 @@ export class Dvpm {
         }
 
         await p.sourceAfter();
+        p.info.isLoaded = true;
         await autocmd.emit(this.denops, "User", `DvpmPluginLoadPost:${name}`);
-        p.info.isLoad = true;
       } catch (e) {
         if (e instanceof Error) {
           logger().error(`[loadPlugins] ${p.info.url} ${e.message}, ${e.stack}`);

@@ -35,7 +35,7 @@ test({
 
     const addHookFired = await denops.eval("g:dvpm_test_add_hook");
     assertEquals(addHookFired, 1, "add hook should be executed at end()");
-    assertEquals(plugin.info.isLoad, false, "Plugin should still be NOT loaded");
+    assertEquals(plugin.info.isLoaded, false, "Plugin should still be NOT loaded");
   },
 });
 

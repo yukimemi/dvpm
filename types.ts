@@ -235,11 +235,15 @@ export type Plug = {
   /**
    * Internal flag: whether the plugin is loaded.
    */
-  isLoad?: boolean;
+  isLoaded?: boolean;
   /**
-   * Internal flag: whether the plugin was updated.
+   * Internal flag: whether the plugin was installed (cloned) in this session.
    */
-  isUpdate?: boolean;
+  isInstalled?: boolean;
+  /**
+   * Internal flag: whether the plugin was updated (pulled changes) in this session.
+   */
+  isUpdated?: boolean;
   /**
    * Internal flag: whether the plugin is cached.
    */
@@ -275,8 +279,9 @@ const _PlugSchema = type({
     "afterFile?": "string",
   }).default(() => ({ enabled: false })),
   "lazy?": _LazyParamsSchema,
-  isLoad: "boolean = false",
-  isUpdate: "boolean = false",
+  isLoaded: "boolean = false",
+  isInstalled: "boolean = false",
+  isUpdated: "boolean = false",
   isCache: "boolean = false",
   elaps: "number = 0",
 });
@@ -328,8 +333,9 @@ export type PlugInfo = {
     afterFile?: string;
   };
   lazy: LazyParams;
-  isLoad: boolean;
-  isUpdate: boolean;
+  isLoaded: boolean;
+  isInstalled: boolean;
+  isUpdated: boolean;
   isCache: boolean;
   elaps: number;
 };
