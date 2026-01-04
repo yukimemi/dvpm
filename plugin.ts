@@ -262,6 +262,7 @@ export class Plugin {
         `[denopsPluginLoad] ${this.info.url} load name: [${name}], path: [${file.path}] !`,
       );
       await this.denops.call("denops#plugin#load", name, file.path);
+      await this.denops.call("denops#plugin#wait", name);
     }
   }
 

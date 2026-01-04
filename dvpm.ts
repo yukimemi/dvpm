@@ -616,6 +616,13 @@ export class Dvpm {
           cmd += ` ${p.args}`;
         }
       }
+      // Wait for the command to be defined (max 2 seconds)
+      for (let i = 0; i < 20; i++) {
+        if (await this.denops.call("exists", `:${arg}`) === 2) {
+          break;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
       await this.denops.cmd(`if exists(':${arg}') | exe '${cmd}' | endif`);
     }
     if (loadType === "keys" && arg) {
