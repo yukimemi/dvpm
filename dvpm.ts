@@ -107,6 +107,10 @@ export class Dvpm {
         return await dvpm.checkHealth();
       },
 
+      async bufWriteCheckHealth(): Promise<void> {
+        await dvpm.bufWriteCheckHealth();
+      },
+
       async bufWriteList(): Promise<void> {
         await dvpm.bufWriteList();
       },
@@ -129,6 +133,7 @@ export class Dvpm {
         endfunction
         command! -nargs=? DvpmUpdate call s:${name}_notify('update', [<f-args>])
         command! -nargs=? DvpmList call s:${name}_notify('bufWriteList', [<f-args>])
+        command! -nargs=0 DvpmCheckHealth call s:${name}_notify('bufWriteCheckHealth', [])
       `,
     );
 
@@ -205,6 +210,35 @@ export class Dvpm {
     }
 
     return result;
+  }
+
+  /**
+   * Writes the health check results to a buffer.
+   */
+  public async bufWriteCheckHealth() {
+    const results = await this.checkHealth();
+    const lines: string[] = [];
+
+    for (const result of results) {
+      let icon = "";
+      switch (result.type) {
+        case "ok":
+          icon = "✅ OK";
+          break;
+        case "warn":
+          icon = "⚠️ WARN";
+          break;
+        case "error":
+          icon = "❌ ERROR";
+          break;
+        case "info":
+          icon = "ℹ️ INFO";
+          break;
+      }
+      lines.push(`${icon} ${result.msg}`);
+    }
+
+    await this.bufWrite("dvpm://checkhealth", lines, "markdown");
   }
 
   private findPlugin(url: string): Plugin | undefined {
