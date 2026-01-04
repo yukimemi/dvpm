@@ -236,7 +236,9 @@ export type DvpmOption = {
   notify?: boolean;
   // git log arg. Used for :DvpmUpdate command output. Default is [].
   logarg?: string[];
-  // Whether to enable health check. Default is true. (Neovim only)
+  // Whether to enable health check. Default is false. (Neovim only)
+  // If set to true, yukimemi/dvpm will be automatically added to the plugin list
+  // to support Neovim's built-in :checkhealth command.
   health?: boolean;
 };
 ```

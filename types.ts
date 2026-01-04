@@ -372,7 +372,7 @@ const _DvpmOptionSchema = type({
   concurrency: "number = 8",
   notify: "boolean = false",
   logarg: type("string[]").default(() => []),
-  health: "boolean = true",
+  health: "boolean = false",
 });
 export const DvpmOptionSchema: Type<DvpmOption> = _DvpmOptionSchema as unknown as Type<DvpmOption>;
 
