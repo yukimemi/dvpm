@@ -118,12 +118,12 @@ test({
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
     const dvpm = await Dvpm.begin(denops, { base, health: false });
-    
+
     await dvpm.add({ url: "https://github.com/yukimemi/dvpm" });
-    
+
     // Command should exist and run without error
     await denops.cmd("DvpmCheckHealth");
-    
+
     // Wait for buffer to be opened (notify is async)
     let bufname = "";
     for (let i = 0; i < 20; i++) {
@@ -132,10 +132,10 @@ test({
       await new Promise((resolve) => setTimeout(resolve, 50));
     }
     assertEquals(bufname, "dvpm://checkhealth");
-    
+
     // Check buffer content
     const lines = await denops.call("getline", 1, "$") as string[];
-    const hasEnvironmentCheck = lines.some(l => l.includes("Environment check"));
+    const hasEnvironmentCheck = lines.some((l) => l.includes("Environment check"));
     assertEquals(hasEnvironmentCheck, true, "Buffer should contain health check results");
   },
 });

@@ -343,23 +343,6 @@ export class Dvpm {
     return sortedPlugins;
   }
 
-  private checkPluginUrlDuplicates(plugins: Plugin[]): void {
-    const urlSet = new Set<string>();
-    const duplicates = plugins.filter((p) => {
-      if (urlSet.has(p.info.url)) {
-        return true;
-      } else {
-        urlSet.add(p.info.url);
-        return false;
-      }
-    });
-    if (duplicates.length > 0) {
-      duplicates.forEach((d) => {
-        logger().warn(`[checkPluginUrlDuplicates] Duplicate plugin URLs detected: ${d.info.url}`);
-      });
-    }
-  }
-
   private async bufWrite(
     bufname: string,
     data: string[],
@@ -676,7 +659,6 @@ export class Dvpm {
       if (this.option.cache) {
         await this.generateCache(enabledPlugins);
       }
-      this.checkPluginUrlDuplicates(this.plugins);
       await autocmd.emit(this.denops, "User", "DvpmEndPost");
     } catch (e) {
       if (e instanceof Error) {
