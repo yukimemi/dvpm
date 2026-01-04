@@ -446,6 +446,12 @@ It outputs the list of plugins to the dvpm://list buffer.
 
 It checks the health of dvpm and its plugins. (Neovim only)
 
+```vim
+:DvpmCheckHealth
+```
+
+It outputs the health check results to the dvpm://checkhealth buffer. (Vim / Neovim)
+
 ## Cache setting
 
 If you want some plugins to be loaded before `VimEnter`, enable the `cache` setting. A sample
