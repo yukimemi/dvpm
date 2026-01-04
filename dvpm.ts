@@ -574,7 +574,10 @@ export class Dvpm {
       logger().debug(`[end] Dvpm end start !`);
 
       if (this.option.health && !this.findPlugin("yukimemi/dvpm")) {
-        await this.add({ url: "yukimemi/dvpm" });
+        await this.add({
+          url: "yukimemi/dvpm",
+          profiles: this.option.profiles,
+        });
       }
 
       const enabledPlugins = this.resolveDependencies(this.plugins);
