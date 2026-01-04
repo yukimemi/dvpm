@@ -595,6 +595,20 @@ e.g.
   });
 ```
 
+### Note on Lazy Loading
+
+Basically, all plugins managed by `dvpm` are loaded after `denops.vim` and `dvpm` themselves are loaded.
+This means they are inherently "lazy" relative to Vim/Neovim's initial startup.
+
+Explicit `lazy` settings are still useful if you want to:
+
+- Keep `runtimepath` as short as possible.
+- Load plugins only when they are actually needed (e.g., specific filetypes or commands).
+
+**Important:**
+Since `dvpm` is powered by `denops.vim`, it starts after Vim's initial startup process. Therefore, triggers that occur at the very beginning of startup may not work as expected.
+For example, if you have a plugin set to load on `ft: "html"`, and you start Vim with an HTML file (`vim index.html`), the plugin will **not** be loaded immediately because the `filetype` event for that file occurred before `dvpm` was ready to handle it.
+
 ### Hook execution order
 
 1. `add` / `addFile`: Always executed at startup (`Dvpm.end()`).

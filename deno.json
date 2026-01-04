@@ -1,16 +1,13 @@
 {
   "name": "@yukimemi/dvpm",
-  "version": "9.0.1",
+  "version": "9.1.0",
   "exports": "./mod.ts",
   "tasks": {
     "check": "deno check dvpm.ts git.ts logger.ts mod.ts plugin.ts types.ts util.ts scripts/ tests/",
     "fmt": "deno fmt",
     "lint": "deno lint",
     "test": "deno run -A scripts/test_runner.ts",
-    "ci": "deno task check && deno task lint && deno task fmt --check && deno publish --dry-run --allow-dirty && deno task test",
-    "hooks:install": "deno run --allow-read=deno.json,.git/hooks/ --allow-write=.git/hooks/ jsr:@hongminhee/deno-task-hooks",
-    "hooks:pre-commit": "deno task ci",
-    "hooks:pre-push": "deno task ci"
+    "ci": "deno task check && deno task lint && deno task fmt --check && deno publish --dry-run --allow-dirty && deno task test"
   },
   "fmt": {
     "useTabs": false,
