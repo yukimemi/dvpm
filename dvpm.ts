@@ -8,6 +8,7 @@ import * as autocmd from "@denops/std/autocmd";
 import * as buffer from "@denops/std/buffer";
 import * as fn from "@denops/std/function";
 import * as mapping from "@denops/std/mapping";
+import * as vars from "@denops/std/variable";
 import type { Denops } from "@denops/std";
 import type { OpenOptions } from "@denops/std/buffer";
 import { Plugin } from "./plugin.ts";
@@ -102,6 +103,10 @@ export class Dvpm {
         }
       },
 
+      async checkHealth(): Promise<unknown> {
+        return await dvpm.checkHealth();
+      },
+
       async bufWriteList(): Promise<void> {
         await dvpm.bufWriteList();
       },
@@ -127,9 +132,79 @@ export class Dvpm {
       `,
     );
 
+    await vars.g.set(denops, "dvpm_plugin_name", denops.name);
+
     await autocmd.emit(denops, "User", "DvpmBeginPost");
     logger().debug(`[begin] Dvpm begin end !`);
     return dvpm;
+  }
+
+  /**
+   * Check health of dvpm.
+   */
+  public async checkHealth(): Promise<
+    { type: "ok" | "warn" | "error" | "info"; msg: string }[]
+  > {
+    const result: { type: "ok" | "warn" | "error" | "info"; msg: string }[] = [];
+
+    // Check environment
+    result.push({ type: "info", msg: "Environment check" });
+    result.push({ type: "ok", msg: `Denops: ${this.denops.name}` });
+    result.push({ type: "ok", msg: `Deno: ${Deno.version.deno}` });
+    try {
+      const gitVersion = new Deno.Command("git", { args: ["--version"] });
+      const output = await gitVersion.output();
+      if (output.success) {
+        result.push({
+          type: "ok",
+          msg: `Git: ${new TextDecoder().decode(output.stdout).trim()}`,
+        });
+      } else {
+        result.push({ type: "error", msg: "Git command not found" });
+      }
+    } catch (e) {
+      result.push({ type: "error", msg: `Git command error: ${e}` });
+    }
+
+    // Check plugins
+    result.push({ type: "info", msg: "Plugin check" });
+    const plugins = this.plugins;
+    const loaded = plugins.filter((p) => p.info.isLoad).length;
+    const total = plugins.length;
+    result.push({ type: "ok", msg: `Total plugins: ${total}` });
+    result.push({ type: "ok", msg: `Loaded plugins: ${loaded}` });
+
+    // Check duplicates
+    const urlSet = new Set<string>();
+    for (const p of plugins) {
+      if (urlSet.has(p.info.url)) {
+        result.push({ type: "error", msg: `Duplicate plugin defined: ${p.info.url}` });
+      }
+      urlSet.add(p.info.url);
+    }
+
+    // Check dependencies
+    for (const p of plugins) {
+      if (p.info.dependencies) {
+        for (const dep of p.info.dependencies) {
+          if (!this.findPlugin(dep)) {
+            result.push({
+              type: "error",
+              msg: `Plugin ${p.info.url} depends on ${dep}, but it is not defined.`,
+            });
+          }
+        }
+      }
+    }
+
+    if (this.#installLogs.length > 0) {
+      result.push({ type: "warn", msg: "Install logs detected. Check :DvpmList" });
+    }
+    if (this.#updateLogs.length > 0) {
+      result.push({ type: "warn", msg: "Update logs detected. Check :DvpmList" });
+    }
+
+    return result;
   }
 
   private findPlugin(url: string): Plugin | undefined {
@@ -497,6 +572,11 @@ export class Dvpm {
     try {
       await autocmd.emit(this.denops, "User", "DvpmEndPre");
       logger().debug(`[end] Dvpm end start !`);
+
+      if (this.option.health && !this.findPlugin("yukimemi/dvpm")) {
+        await this.add({ url: "yukimemi/dvpm" });
+      }
+
       const enabledPlugins = this.resolveDependencies(this.plugins);
       await this.install();
 

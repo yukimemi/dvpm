@@ -15,7 +15,7 @@ test({
   name: "Lazy Loading: eager plugins are loaded at end()",
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
-    const dvpm = new Dvpm(denops, { base });
+    const dvpm = new Dvpm(denops, { base, health: false });
 
     await dvpm.add({ url: "eager/plugin" });
     await dvpm.add({ url: "lazy/plugin", lazy: { enabled: true } });
@@ -51,7 +51,7 @@ test({
   name: "Lazy Loading: lazy plugins are promoted to eager if depended on by eager plugins",
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
-    const dvpm = new Dvpm(denops, { base });
+    const dvpm = new Dvpm(denops, { base, health: false });
 
     // eager depends on lazy
     await dvpm.add({ url: "eager/plugin", dependencies: ["lazy/plugin"] });
@@ -97,7 +97,7 @@ test({
   name: "Lazy Loading: load() recursively loads dependencies",
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
-    const dvpm = new Dvpm(denops, { base });
+    const dvpm = new Dvpm(denops, { base, health: false });
 
     // lazy1 depends on lazy2
     await dvpm.add({ url: "lazy1", lazy: { enabled: true }, dependencies: ["lazy2"] });

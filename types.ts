@@ -366,6 +366,7 @@ const _DvpmOptionSchema = type({
   concurrency: "number = 8",
   notify: "boolean = false",
   logarg: type("string[]").default(() => []),
+  health: "boolean = true",
 });
 export const DvpmOptionSchema: Type<DvpmOption> = _DvpmOptionSchema as unknown as Type<DvpmOption>;
 
@@ -397,4 +398,8 @@ export type DvpmOption = {
    * Additional arguments for git log during updates.
    */
   logarg?: string[];
+  /**
+   * Whether to enable health check. Default is true.
+   */
+  health?: boolean;
 };

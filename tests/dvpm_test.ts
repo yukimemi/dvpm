@@ -16,6 +16,7 @@ test({
     const dvpm = new Dvpm(denops, {
       base,
       profiles: ["profile1"],
+      health: false,
     });
 
     await dvpm.add({
@@ -48,6 +49,7 @@ test({
     const dvpm = new Dvpm(denops, {
       base,
       profiles: ["profile1"],
+      health: false,
     });
 
     await dvpm.add({
@@ -79,6 +81,7 @@ test({
     const base = await Deno.makeTempDir();
     const dvpm = new Dvpm(denops, {
       base,
+      health: false,
     });
 
     await dvpm.add({
@@ -97,6 +100,7 @@ test({
     const base = await Deno.makeTempDir();
     const dvpm = new Dvpm(denops, {
       base,
+      health: false,
     });
 
     await dvpm.add({ url: "https://github.com/yukimemi/dvpm" });
@@ -116,6 +120,7 @@ test({
     const base = await Deno.makeTempDir();
     const dvpm = new Dvpm(denops, {
       base,
+      health: false,
     });
 
     await dvpm.add({ url: "https://github.com/yukimemi/dvpm" });

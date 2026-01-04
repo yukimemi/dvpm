@@ -15,7 +15,7 @@ test({
     "Dvpm triggers User autocmd 'DvpmPluginLoadPre:pluginname' and 'DvpmPluginLoadPost:pluginname'",
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
-    const dvpm = new Dvpm(denops, { base });
+    const dvpm = new Dvpm(denops, { base, health: false });
 
     const pluginUrl = "https://github.com/yukimemi/dvpm";
     const preLoadEvent = "DvpmPluginLoadPre:dvpm";
@@ -59,7 +59,7 @@ test({
   name: "Dvpm triggers User autocmd only when lazy plugin is loaded",
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
-    const dvpm = new Dvpm(denops, { base });
+    const dvpm = new Dvpm(denops, { base, health: false });
 
     const pluginUrl = "https://github.com/yukimemi/dvpm_lazy";
     const preLoadEvent = "DvpmPluginLoadPre:dvpm_lazy";
@@ -108,7 +108,7 @@ test({
   name: "Dvpm uses custom name for User autocmd",
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
-    const dvpm = new Dvpm(denops, { base });
+    const dvpm = new Dvpm(denops, { base, health: false });
 
     const pluginUrl = "https://github.com/yukimemi/dvpm";
     const customName = "custom-dvpm-name";
@@ -138,7 +138,7 @@ test({
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
     const cache = path.join(base, "cache.vim");
-    const dvpm = new Dvpm(denops, { base, cache });
+    const dvpm = new Dvpm(denops, { base, cache, health: false });
 
     await dvpm.add({
       url: "https://github.com/yukimemi/dvpm",
@@ -173,7 +173,7 @@ test({
     await denops.cmd("autocmd User DvpmEndPre call add(g:dvpm_test_lifecycle, 'EndPre')");
     await denops.cmd("autocmd User DvpmEndPost call add(g:dvpm_test_lifecycle, 'EndPost')");
 
-    const dvpm = await Dvpm.begin(denops, { base });
+    const dvpm = await Dvpm.begin(denops, { base, health: false });
     await dvpm.end();
 
     const lifecycle = await denops.eval("g:dvpm_test_lifecycle") as string[];
@@ -190,7 +190,7 @@ test({
   name: "Dvpm triggers plugin install User autocmds",
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
-    const dvpm = await Dvpm.begin(denops, { base });
+    const dvpm = await Dvpm.begin(denops, { base, health: false });
 
     const pluginUrl = "https://github.com/yukimemi/dvpm_install_event";
     const preInstallEvent = "DvpmPluginInstallPre:dvpm_install_event";

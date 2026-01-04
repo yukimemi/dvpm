@@ -13,7 +13,7 @@ test({
   name: "Dvpm handles cmd option with string",
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
-    const dvpm = new Dvpm(denops, { base });
+    const dvpm = new Dvpm(denops, { base, health: false });
 
     await dvpm.add({
       url: "https://example.com/plugin1",
@@ -42,7 +42,7 @@ test({
   name: "Dvpm handles cmd option with Command object (default complete)",
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
-    const dvpm = new Dvpm(denops, { base });
+    const dvpm = new Dvpm(denops, { base, health: false });
 
     await dvpm.add({
       url: "https://example.com/plugin2",
@@ -68,7 +68,7 @@ test({
   name: "Dvpm handles cmd option with Command object (custom complete)",
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
-    const dvpm = new Dvpm(denops, { base });
+    const dvpm = new Dvpm(denops, { base, health: false });
 
     await dvpm.add({
       url: "https://example.com/plugin3",
@@ -97,7 +97,7 @@ test({
   name: "Dvpm handles mixed cmd types",
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
-    const dvpm = new Dvpm(denops, { base });
+    const dvpm = new Dvpm(denops, { base, health: false });
 
     await dvpm.add({
       url: "https://example.com/plugin4",
