@@ -87,3 +87,27 @@ test({
     assertEquals(hasDepError, true, "Should detect missing dependencies");
   },
 });
+
+test({
+  mode: "nvim",
+  name: "Dvpm health check via autoload function works",
+  fn: async (denops) => {
+    // Current directory (dvpm project root)
+    const cwd = Deno.cwd();
+    await denops.cmd(`set runtimepath^=${cwd}`);
+
+    const base = await Deno.makeTempDir();
+    const dvpm = new Dvpm(denops, { base, health: false });
+
+    // Explicitly add dvpm plugin pointing to current directory
+    await dvpm.add({
+      url: "yukimemi/dvpm",
+      dst: cwd,
+    });
+
+    await denops.cmd(`let g:dvpm_plugin_name = '${denops.name}'`);
+
+    // Execute health check via autoload function
+    await denops.call("health#dvpm#check");
+  },
+});
