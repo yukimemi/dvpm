@@ -236,6 +236,8 @@ export type DvpmOption = {
   notify?: boolean;
   // git log arg. Used for :DvpmUpdate command output. Default is [].
   logarg?: string[];
+  // Whether to enable health check. Default is true. (Neovim only)
+  health?: boolean;
 };
 ```
 
@@ -437,6 +439,12 @@ If url is specified, update only target plugins, if not specified, update all pl
 ```
 
 It outputs the list of plugins to the dvpm://list buffer.
+
+```vim
+:checkhealth dvpm
+```
+
+It checks the health of dvpm and its plugins. (Neovim only)
 
 ## Cache setting
 
