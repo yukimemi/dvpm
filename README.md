@@ -351,6 +351,7 @@ export type KeyMap = {
   // If omitted, the proxy mapping is unmapped after loading.
   rhs?: string;
   // Mode(s) for the mapping. Default is "n".
+  // Note: "o" (Operator-pending mode) is not supported because of the asynchronous nature of Denops.
   mode?: string | string[];
   // Whether the mapping is non-recursive. Default is true.
   noremap?: boolean;
@@ -587,15 +588,20 @@ e.g.
 
   // Load on keys (unmap proxy after load).
   // Useful if the plugin defines its own mappings.
-  // Example: vim-textobj-entire defines 'ie' and 'ae' text objects.
-  await dvpm.add({ url: "kana/vim-textobj-user" });
+  // Example: vim-asterisk defines mappings for *, #, g*, z*, etc.
+  // Note: "o" (Operator-pending mode) is NOT supported.
   await dvpm.add({
-    url: "kana/vim-textobj-entire",
-    dependencies: ["kana/vim-textobj-user"],
+    url: "haya14busa/vim-asterisk",
     lazy: {
       keys: [
-        { lhs: "ie", mode: ["x", "o"] },
-        { lhs: "ae", mode: ["x", "o"] },
+        { lhs: "*", mode: ["n", "x"] },
+        { lhs: "#", mode: ["n", "x"] },
+        { lhs: "g*", mode: ["n", "x"] },
+        { lhs: "g#", mode: ["n", "x"] },
+        { lhs: "z*", mode: ["n", "x"] },
+        { lhs: "z#", mode: ["n", "x"] },
+        { lhs: "gz*", mode: ["n", "x"] },
+        { lhs: "gz#", mode: ["n", "x"] },
       ],
     },
   });
