@@ -363,7 +363,11 @@ test({
     // Check proxy mapping for 'n' and 'v'
     for (const mode of ["n", "v"]) {
       const mapResult = await denops.call("execute", `${mode}map ${lhs}`) as string;
-      assertEquals(mapResult.includes("denops#notify"), true, `Proxy mapping should be created for ${mode}`);
+      assertEquals(
+        mapResult.includes("denops#notify"),
+        true,
+        `Proxy mapping should be created for ${mode}`,
+      );
     }
 
     // Trigger loading

@@ -47,7 +47,7 @@ export type KeyMap = {
   /**
    * Right-hand side of the mapping.
    */
-  rhs: string;
+  rhs?: string;
   /**
    * Mode(s) for the mapping. Default is "n".
    */
