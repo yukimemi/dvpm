@@ -881,7 +881,18 @@ export class Dvpm {
                 ? key.mode as mapping.Mode[]
                 : [key.mode ?? "n"] as mapping.Mode[];
               for (const mode of modes) {
-                await this.map(key.lhs, key.rhs, { ...key, mode });
+                if (key.rhs) {
+                  await this.map(key.lhs, key.rhs, { ...key, mode });
+                } else {
+                  try {
+                    const m = await mapping.read(this.denops, key.lhs, { mode });
+                    if (m.rhs.includes(`denops#notify('${this.denops.name}', 'load',`)) {
+                      await mapping.unmap(this.denops, key.lhs, { mode });
+                    }
+                  } catch {
+                    // Ignore
+                  }
+                }
               }
             }
           }

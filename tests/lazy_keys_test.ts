@@ -328,3 +328,56 @@ test({
     );
   },
 });
+
+test({
+  mode: "all",
+  name: "keys with object (KeyMap) without rhs handles unmap correctly",
+  fn: async (denops) => {
+    const base = await Deno.makeTempDir();
+    const dvpm = new Dvpm(denops, { base, health: false });
+
+    const lhs = "gU";
+    const pluginRhs = ":let g:dvpm_test_keys_unmap = 1<CR>";
+
+    await dvpm.add({
+      url: "lazy/keys_unmap",
+      lazy: {
+        // rhs is undefined
+        keys: { lhs, mode: ["n", "v"] },
+      },
+      before: async ({ denops }) => {
+        // Simulate plugin defining the mapping
+        await denops.cmd(`nnoremap ${lhs} ${pluginRhs}`);
+        await denops.cmd(`vnoremap ${lhs} ${pluginRhs}`);
+      },
+    });
+
+    const plugin = dvpm.plugins[0];
+    plugin.install = () => Promise.resolve([]);
+    plugin.update = () => Promise.resolve([]);
+    plugin.build = () => Promise.resolve();
+    await Deno.mkdir(plugin.info.dst, { recursive: true });
+
+    await dvpm.end();
+
+    // Check proxy mapping for 'n' and 'v'
+    for (const mode of ["n", "v"]) {
+      const mapResult = await denops.call("execute", `${mode}map ${lhs}`) as string;
+      assertEquals(mapResult.includes("denops#notify"), true, `Proxy mapping should be created for ${mode}`);
+    }
+
+    // Trigger loading
+    await dvpm.load(plugin.info.url, "keys", lhs);
+
+    // After load: check RHS using maparg
+    for (const mode of ["n", "v"]) {
+      // deno-lint-ignore no-explicit-any
+      const info = (await denops.call("maparg", lhs, mode, 0, 1)) as any;
+      assertEquals(
+        info.rhs,
+        pluginRhs,
+        `Mapping should be preserved as plugin defined for ${mode} (proxy unmapped)`,
+      );
+    }
+  },
+});

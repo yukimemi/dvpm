@@ -76,7 +76,7 @@ export type KeyMap = {
 
 const _KeyMapSchema = type({
   lhs: "string",
-  rhs: "string",
+  "rhs?": "string",
   "mode?": "string | string[]",
   "noremap?": "boolean",
   "silent?": "boolean",

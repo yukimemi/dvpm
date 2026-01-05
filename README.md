@@ -347,8 +347,9 @@ export type Command = {
 export type KeyMap = {
   // Left-hand side of the mapping.
   lhs: string;
-  // Right-hand side of the mapping.
-  rhs: string;
+  // Right-hand side of the mapping. (Optional)
+  // If omitted, the proxy mapping is unmapped after loading.
+  rhs?: string;
   // Mode(s) for the mapping. Default is "n".
   mode?: string | string[];
   // Whether the mapping is non-recursive. Default is true.
@@ -581,6 +582,21 @@ e.g.
     url: "mbbill/undotree",
     lazy: {
       keys: { lhs: "<leader>u", rhs: "<cmd>UndotreeToggle<cr>" },
+    },
+  });
+
+  // Load on keys (unmap proxy after load).
+  // Useful if the plugin defines its own mappings.
+  // Example: vim-textobj-entire defines 'ie' and 'ae' text objects.
+  await dvpm.add({ url: "kana/vim-textobj-user" });
+  await dvpm.add({
+    url: "kana/vim-textobj-entire",
+    dependencies: ["kana/vim-textobj-user"],
+    lazy: {
+      keys: [
+        { lhs: "ie", mode: ["x", "o"] },
+        { lhs: "ae", mode: ["x", "o"] },
+      ],
     },
   });
 
