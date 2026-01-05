@@ -839,8 +839,9 @@ export class Dvpm {
         await p.before();
         await autocmd.emit(this.denops, "User", `DvpmPluginLoadPre:${name}`);
 
-        // Cleanup CMD proxies
         const lazy = p.info.lazy;
+
+        // Cleanup CMD proxies
         if (lazy.cmd) {
           const cmds = Array.isArray(lazy.cmd) ? lazy.cmd : [lazy.cmd];
           for (const cmd of cmds) {
@@ -849,16 +850,6 @@ export class Dvpm {
               `if exists(':${cmdName}') == 2 | exe 'delcommand ${cmdName}' | endif`,
             );
           }
-        }
-
-        const added = await p.addRuntimepath();
-        if (added) {
-          await p.source();
-        }
-        await p.denopsPluginLoad();
-        await p.after();
-        if (p.initialClone) {
-          await p.build();
         }
 
         // Cleanup KEYS proxies
@@ -881,18 +872,41 @@ export class Dvpm {
                 ? key.mode as mapping.Mode[]
                 : [key.mode ?? "n"] as mapping.Mode[];
               for (const mode of modes) {
-                if (key.rhs) {
-                  await this.map(key.lhs, key.rhs, { ...key, mode });
-                } else {
-                  try {
-                    const m = await mapping.read(this.denops, key.lhs, { mode });
-                    if (m.rhs.includes(`denops#notify('${this.denops.name}', 'load',`)) {
-                      await mapping.unmap(this.denops, key.lhs, { mode });
-                    }
-                  } catch {
-                    // Ignore
+                try {
+                  const m = await mapping.read(this.denops, key.lhs, { mode });
+                  if (m.rhs.includes(`denops#notify('${this.denops.name}', 'load',`)) {
+                    await mapping.unmap(this.denops, key.lhs, { mode });
                   }
+                } catch {
+                  // Ignore
                 }
+              }
+            }
+          }
+        }
+
+        const added = await p.addRuntimepath();
+        if (added) {
+          await p.source();
+        }
+        await p.denopsPluginLoad();
+        await p.after();
+        if (p.initialClone) {
+          await p.build();
+        }
+
+        // Setup KEYS mappings (Post-load: for explicit mappings)
+        if (lazy.keys) {
+          const keys = (Array.isArray(lazy.keys) ? lazy.keys : [lazy.keys]).filter((k) =>
+            k !== undefined
+          ) as (string | KeyMap)[];
+          for (const key of keys) {
+            if (typeof key !== "string" && key.rhs) {
+              const modes = Array.isArray(key.mode)
+                ? key.mode as mapping.Mode[]
+                : [key.mode ?? "n"] as mapping.Mode[];
+              for (const mode of modes) {
+                await this.map(key.lhs, key.rhs, { ...key, mode });
               }
             }
           }
