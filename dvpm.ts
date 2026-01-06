@@ -132,8 +132,8 @@ export class Dvpm {
           return denops#request('${denops.name}', a:method, a:params)
         endfunction
         function! Dvpm_Internal_Load_${name}(url, lhs) abort
-          call s:${name}_request('load', [a:url, 'keys', a:lhs, {'is_expr': v:true}])
-          return a:lhs
+          let l:res = s:${name}_request('load', [a:url, 'keys', a:lhs, {'is_expr': v:true}])
+          return empty(l:res) ? a:lhs : l:res
         endfunction
         command! -nargs=? DvpmUpdate call s:${name}_notify('update', [<f-args>])
         command! -nargs=? DvpmList call s:${name}_notify('bufWriteList', [<f-args>])
@@ -684,7 +684,12 @@ export class Dvpm {
     }
   }
 
-  public async load(url: string, loadType?: LoadType, arg?: string, params?: CmdParams) {
+  public async load(
+    url: string,
+    loadType?: LoadType,
+    arg?: string,
+    params?: CmdParams,
+  ): Promise<string | undefined> {
     const p = this.findPlugin(url);
     if (!p) return;
     if (p.info.isLoaded) return;
@@ -739,7 +744,15 @@ export class Dvpm {
       await this.denops.cmd(`if exists(':${arg}') | exe '${cmd}' | endif`);
     }
     if (loadType === "keys" && arg) {
-      if (!params?.is_expr) {
+      if (params?.is_expr) {
+        try {
+          const mode = await this.denops.call("mode") as string;
+          const m = await mapping.read(this.denops, arg, { mode: mode as mapping.Mode });
+          return m.rhs;
+        } catch {
+          return arg;
+        }
+      } else {
         const feedArg = await this.denops.call(
           "eval",
           `"${arg.replace(/\\/g, "\\\\").replace(/"/g, '"').replace(/</g, "\\<")}"`,
@@ -747,6 +760,7 @@ export class Dvpm {
         await send(this.denops, { keys: feedArg, remap: true });
       }
     }
+    return undefined;
   }
 
   private async fire(plugins: Plugin[]) {
