@@ -32,7 +32,11 @@ test({
     // Trigger loading by calling the mapping
     // We simulate what happens when 'ae' is pressed in Vim
     const name = denops.name.replace(/-/g, "_");
-    await denops.call(`Dvpm_Internal_Load_${name}`, plugin.info.url, lhs);
+    const ret = await denops.call(`Dvpm_Internal_Load_${name}`, plugin.info.url, lhs);
+
+    // Verify that the function returns the RHS, not the LHS
+    // This ensures that <expr> mapping will re-evaluate to the new RHS
+    assertEquals(ret, rhs);
 
     // After load: check if rhs is set
     const info = await mapping.read(denops, lhs, { mode: "o" });

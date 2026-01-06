@@ -115,9 +115,14 @@ export class Dvpm {
         await dvpm.bufWriteList();
       },
 
-      async load(url: unknown, loadType: unknown, arg: unknown, params?: unknown): Promise<void> {
+      async load(
+        url: unknown,
+        loadType: unknown,
+        arg: unknown,
+        params?: unknown,
+      ): Promise<unknown> {
         const args = LoadArgsSchema.assert({ url, loadType, arg, params });
-        await dvpm.load(args.url, args.loadType, args.arg, args.params);
+        return await dvpm.load(args.url, args.loadType, args.arg, args.params);
       },
     };
 
