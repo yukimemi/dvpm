@@ -713,6 +713,10 @@ export class Dvpm {
 
     await this.loadPlugins(pluginsToLoad);
 
+    if (arg) {
+      arg = arg.replace(/<lt>/g, "<");
+    }
+
     if (loadType === "cmd" && arg) {
       const p = params;
       let cmd = arg;
