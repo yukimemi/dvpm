@@ -745,10 +745,32 @@ export class Dvpm {
     }
     if (loadType === "keys" && arg) {
       if (params?.is_expr) {
+        // 1. Try to find explicit rhs from config
+        const lazy = p.info.lazy;
+        const keys = Array.isArray(lazy.keys) ? lazy.keys : [lazy.keys];
+        for (const k of keys) {
+          if (k && typeof k !== "string" && k.lhs === arg && k.rhs) {
+            return k.rhs;
+          }
+        }
+
+        // 2. Try to find defined mapping from Vim
         try {
-          const mode = await this.denops.call("mode") as string;
-          const m = await mapping.read(this.denops, arg, { mode: mode as mapping.Mode });
-          return m.rhs;
+          const m = await this.denops.call("mode") as string;
+          let mode: mapping.Mode = "n";
+          if (m.startsWith("no")) {
+            mode = "o";
+          } else if (m === "v" || m === "V" || m === "\x16") {
+            mode = "x";
+          } else if (m === "s" || m === "S" || m === "\x13") {
+            mode = "s";
+          } else if (m.startsWith("i")) {
+            mode = "i";
+          } else if (m.startsWith("c")) {
+            mode = "c";
+          }
+          const info = await mapping.read(this.denops, arg, { mode });
+          return info.rhs;
         } catch {
           return arg;
         }

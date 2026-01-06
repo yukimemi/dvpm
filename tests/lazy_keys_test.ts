@@ -68,7 +68,11 @@ test({
 
     // Check if proxy mapping is created
     const mapResult = await denops.call("execute", `nmap ${lhs}`) as string;
-    assertEquals(mapResult.includes("Dvpm_Internal_Load_"), true, "Proxy mapping should be created");
+    assertEquals(
+      mapResult.includes("Dvpm_Internal_Load_"),
+      true,
+      "Proxy mapping should be created",
+    );
 
     // Trigger loading by calling the mapping (via request)
     await dvpm.load(plugin.info.url, "keys", lhs);
@@ -313,7 +317,11 @@ test({
 
     // Check proxy mapping
     const mapResult = await denops.call("execute", `nmap ${lhs}`) as string;
-    assertEquals(mapResult.includes("Dvpm_Internal_Load_"), true, "Proxy mapping should be created");
+    assertEquals(
+      mapResult.includes("Dvpm_Internal_Load_"),
+      true,
+      "Proxy mapping should be created",
+    );
 
     // Trigger loading
     await dvpm.load(plugin.info.url, "keys", lhs);
