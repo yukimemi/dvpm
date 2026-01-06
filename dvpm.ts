@@ -754,16 +754,19 @@ export class Dvpm {
     }
     if (loadType === "keys" && arg) {
       if (params?.is_expr) {
+        logger().debug(`[load:keys] expr load triggered for: ${arg}`);
         // 1. Try to find explicit rhs from config
         const lazy = p.info.lazy;
         const keys = Array.isArray(lazy.keys) ? lazy.keys : [lazy.keys];
         for (const k of keys) {
           if (k && typeof k !== "string" && k.lhs === arg && k.rhs) {
+            logger().debug(`[load:keys] Found explicit RHS from config: ${k.rhs}`);
             return k.rhs;
           }
         }
 
         // 2. Try to find defined mapping from Vim
+        const modes: mapping.Mode[] = ["o", "x", "n", "v", "s", "i", "c"];
         try {
           const m = await this.denops.call("mode") as string;
           let mode: mapping.Mode = "n";
@@ -778,11 +781,32 @@ export class Dvpm {
           } else if (m.startsWith("c")) {
             mode = "c";
           }
-          const info = await mapping.read(this.denops, arg, { mode });
-          return info.rhs;
+          // Prioritize current mode
+          const idx = modes.indexOf(mode);
+          if (idx > -1) {
+            modes.splice(idx, 1);
+            modes.unshift(mode);
+          }
+          logger().debug(`[load:keys] mode prioritized: ${modes.join(", ")} (orig: ${m})`);
         } catch {
-          return arg;
+          // Ignore
         }
+
+        for (const mode of modes) {
+          try {
+            const info = await mapping.read(this.denops, arg, { mode });
+            // Avoid returning the same LHS to prevent infinite recursion
+            // if the mapping hasn't been updated properly for some reason
+            if (info.rhs && info.rhs !== arg) {
+              logger().debug(`[load:keys] Found mapping RHS from Vim in mode ${mode}: ${info.rhs}`);
+              return info.rhs;
+            }
+          } catch {
+            // Ignore
+          }
+        }
+        logger().debug(`[load:keys] No valid RHS found, returning original key: ${arg}`);
+        return arg;
       } else {
         const feedArg = await this.denops.call(
           "eval",
