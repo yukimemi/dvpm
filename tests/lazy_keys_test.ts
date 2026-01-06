@@ -13,7 +13,7 @@ test({
   name: "add hook is executed at end() even for lazy plugins",
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
-    const dvpm = new Dvpm(denops, { base, health: false });
+    const dvpm = await Dvpm.begin(denops, { base, health: false });
 
     await denops.cmd("let g:dvpm_test_add_hook = 0");
     await dvpm.add({
@@ -44,7 +44,7 @@ test({
   name: "keys with object (KeyMap) handles remapping correctly",
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
-    const dvpm = new Dvpm(denops, { base, health: false });
+    const dvpm = await Dvpm.begin(denops, { base, health: false });
 
     const lhs = "gL";
     const rhs = ":let g:dvpm_test_keys_rhs = 1<CR>";
@@ -68,7 +68,7 @@ test({
 
     // Check if proxy mapping is created
     const mapResult = await denops.call("execute", `nmap ${lhs}`) as string;
-    assertEquals(mapResult.includes("denops#notify"), true, "Proxy mapping should be created");
+    assertEquals(mapResult.includes("Dvpm_Internal_Load_"), true, "Proxy mapping should be created");
 
     // Trigger loading by calling the mapping (via request)
     await dvpm.load(plugin.info.url, "keys", lhs);
@@ -89,7 +89,7 @@ test({
   name: "keys with object (KeyMap) handles multiple modes and remapping correctly",
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
-    const dvpm = new Dvpm(denops, { base, health: false });
+    const dvpm = await Dvpm.begin(denops, { base, health: false });
 
     const lhs = "gX";
     const rhs = ":let g:dvpm_test_keys_multi = 1<CR>";
@@ -114,7 +114,7 @@ test({
       // deno-lint-ignore no-explicit-any
       const info = (await denops.call("maparg", lhs, mode, 0, 1)) as any;
       assertEquals(
-        info.rhs.includes("denops#notify"),
+        info.rhs.includes("Dvpm_Internal_Load_"),
         true,
         `Proxy mapping should exist in ${mode} mode`,
       );
@@ -137,7 +137,7 @@ test({
   name: "keys with <space> handles remapping correctly",
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
-    const dvpm = new Dvpm(denops, { base, health: false });
+    const dvpm = await Dvpm.begin(denops, { base, health: false });
 
     const lhs = "<space>b";
     const rhs = ":let g:dvpm_test_keys_space = 1<CR>";
@@ -192,7 +192,7 @@ test({
   name: "keys with <cmd>...<cr> RHS executes correctly on first press",
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
-    const dvpm = new Dvpm(denops, { base, health: false });
+    const dvpm = await Dvpm.begin(denops, { base, health: false });
 
     const lhs = "gC";
     const rhs = "<cmd>let g:dvpm_test_keys_cmd = 1<cr>";
@@ -229,7 +229,7 @@ test({
   name: "keys with desc property handles correctly",
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
-    const dvpm = new Dvpm(denops, { base, health: false });
+    const dvpm = await Dvpm.begin(denops, { base, health: false });
 
     const lhs = "gD";
     const rhs = ":let g:dvpm_test_keys_desc = 1<CR>";
@@ -287,7 +287,7 @@ test({
   name: "keys with string (plugin defined) handles correctly",
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
-    const dvpm = new Dvpm(denops, { base, health: false });
+    const dvpm = await Dvpm.begin(denops, { base, health: false });
 
     const lhs = "gP";
     const pluginRhs = ":let g:dvpm_test_keys_plugin = 1<CR>";
@@ -313,7 +313,7 @@ test({
 
     // Check proxy mapping
     const mapResult = await denops.call("execute", `nmap ${lhs}`) as string;
-    assertEquals(mapResult.includes("denops#notify"), true, "Proxy mapping should be created");
+    assertEquals(mapResult.includes("Dvpm_Internal_Load_"), true, "Proxy mapping should be created");
 
     // Trigger loading
     await dvpm.load(plugin.info.url, "keys", lhs);
@@ -334,7 +334,7 @@ test({
   name: "keys with object (KeyMap) without rhs handles unmap correctly",
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
-    const dvpm = new Dvpm(denops, { base, health: false });
+    const dvpm = await Dvpm.begin(denops, { base, health: false });
 
     const lhs = "gU";
     const pluginRhs = ":let g:dvpm_test_keys_unmap = 1<CR>";
@@ -364,7 +364,7 @@ test({
     for (const mode of ["n", "v"]) {
       const mapResult = await denops.call("execute", `${mode}map ${lhs}`) as string;
       assertEquals(
-        mapResult.includes("denops#notify"),
+        mapResult.includes("Dvpm_Internal_Load_"),
         true,
         `Proxy mapping should be created for ${mode}`,
       );

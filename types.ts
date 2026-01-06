@@ -130,6 +130,7 @@ export type CmdParams = {
   line2?: number;
   range?: number;
   count?: number;
+  is_expr?: boolean;
 };
 
 const _CmdParamsSchema = type({
@@ -139,6 +140,7 @@ const _CmdParamsSchema = type({
   "line2?": "number",
   "range?": "number",
   "count?": "number",
+  "is_expr?": "boolean",
 });
 
 const _LoadArgsSchema = type({

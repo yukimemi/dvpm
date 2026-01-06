@@ -129,7 +129,11 @@ export class Dvpm {
         endfunction
         function! s:${name}_request(method, params) abort
           call denops#plugin#wait('${denops.name}')
-          call denops#request('${denops.name}', a:method, a:params)
+          return denops#request('${denops.name}', a:method, a:params)
+        endfunction
+        function! Dvpm_Internal_Load_${name}(url, lhs) abort
+          call s:${name}_request('load', [a:url, 'keys', a:lhs, {'is_expr': v:true}])
+          return a:lhs
         endfunction
         command! -nargs=? DvpmUpdate call s:${name}_notify('update', [<f-args>])
         command! -nargs=? DvpmList call s:${name}_notify('bufWriteList', [<f-args>])
@@ -735,11 +739,13 @@ export class Dvpm {
       await this.denops.cmd(`if exists(':${arg}') | exe '${cmd}' | endif`);
     }
     if (loadType === "keys" && arg) {
-      const feedArg = await this.denops.call(
-        "eval",
-        `"${arg.replace(/\\/g, "\\\\").replace(/"/g, '"').replace(/</g, "\\<")}"`,
-      ) as string;
-      await send(this.denops, { keys: feedArg, remap: true });
+      if (!params?.is_expr) {
+        const feedArg = await this.denops.call(
+          "eval",
+          `"${arg.replace(/\\/g, "\\\\").replace(/"/g, '"').replace(/</g, "\\<")}"`,
+        ) as string;
+        await send(this.denops, { keys: feedArg, remap: true });
+      }
     }
   }
 
@@ -793,15 +799,14 @@ export class Dvpm {
           );
         }
         if (lazy.keys) {
+          const name = this.denops.name.replace(/-/g, "_");
           const keys = Array.isArray(lazy.keys) ? lazy.keys : [lazy.keys];
           for (const key of keys) {
             if (typeof key === "string") {
               await this.map(
                 key,
-                `<cmd>call denops#notify('${denops.name}', 'load', ['${p.info.url}', 'keys', ${
-                  toVimLiteral(key)
-                }])<CR>`,
-                { mode: "n" },
+                `Dvpm_Internal_Load_${name}('${p.info.url}', ${toVimLiteral(key)})`,
+                { mode: "n", expr: true, remap: true, silent: true },
               );
             } else {
               const modes = Array.isArray(key.mode)
@@ -810,11 +815,12 @@ export class Dvpm {
               for (const mode of modes) {
                 await this.map(
                   key.lhs,
-                  `<cmd>call denops#notify('${denops.name}', 'load', ['${p.info.url}', 'keys', ${
-                    toVimLiteral(key.lhs)
-                  }])<CR>`,
+                  `Dvpm_Internal_Load_${name}('${p.info.url}', ${toVimLiteral(key.lhs)})`,
                   {
                     mode,
+                    expr: true,
+                    remap: true,
+                    silent: true,
                     desc: key.desc,
                   },
                 );
@@ -861,7 +867,7 @@ export class Dvpm {
             if (typeof key === "string") {
               try {
                 const m = await mapping.read(this.denops, key, { mode: "n" });
-                if (m.rhs.includes(`denops#notify('${this.denops.name}', 'load',`)) {
+                if (m.rhs.includes(`Dvpm_Internal_Load_`)) {
                   await mapping.unmap(this.denops, key, { mode: "n" });
                 }
               } catch {
@@ -874,7 +880,7 @@ export class Dvpm {
               for (const mode of modes) {
                 try {
                   const m = await mapping.read(this.denops, key.lhs, { mode });
-                  if (m.rhs.includes(`denops#notify('${this.denops.name}', 'load',`)) {
+                  if (m.rhs.includes(`Dvpm_Internal_Load_`)) {
                     await mapping.unmap(this.denops, key.lhs, { mode });
                   }
                 } catch {
@@ -983,12 +989,13 @@ export class Dvpm {
   private async map(
     lhs: string,
     rhs: string,
-    opts: mapping.MapOptions & { desc?: string },
+    opts: mapping.MapOptions & { desc?: string; remap?: boolean },
   ) {
+    const noremap = opts.remap !== undefined ? !opts.remap : opts.noremap;
     if (this.denops.meta.host === "nvim") {
       const mode = opts.mode || "n";
       const keysOpts: Record<string, unknown> = {
-        remap: !opts.noremap,
+        remap: !noremap,
         silent: !!opts.silent,
         nowait: !!opts.nowait,
         expr: !!opts.expr,
@@ -1002,7 +1009,7 @@ export class Dvpm {
         [mode, lhs, rhs, keysOpts],
       );
     } else {
-      await mapping.map(this.denops, lhs, rhs, opts);
+      await mapping.map(this.denops, lhs, rhs, { ...opts, noremap });
     }
   }
 }
