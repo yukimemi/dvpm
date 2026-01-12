@@ -716,11 +716,11 @@ export class Dvpm {
     };
     collectDependencies(p);
 
-    await this.loadPlugins(pluginsToLoad);
-
     if (arg) {
       arg = arg.replace(/<lt>/g, "<");
     }
+
+    await this.loadPlugins(pluginsToLoad, loadType === "keys" ? arg : undefined);
 
     if (loadType === "cmd" && arg) {
       const p = params;
@@ -909,7 +909,7 @@ export class Dvpm {
     });
   }
 
-  private async loadPlugins(plugins: Plugin[]) {
+  private async loadPlugins(plugins: Plugin[], triggeredKey?: string) {
     for (const p of plugins) {
       try {
         if (p.info.isLoaded || this.#loading.has(p.info.url)) {
@@ -942,25 +942,30 @@ export class Dvpm {
           ) as (string | KeyMap)[];
           for (const key of keys) {
             if (typeof key === "string") {
+              // Skip unmapping if it's the triggered key in Normal mode to avoid deadlock
+              if (triggeredKey && key === triggeredKey) {
+                continue;
+              }
               try {
                 const m = await mapping.read(this.denops, key, { mode: "n" });
-                logger().debug(`[cleanup:keys] Checking proxy for ${key}: RHS=${m.rhs}`);
                 if (m.rhs.includes(`Dvpm_Internal_Load_`)) {
-                  logger().debug(`[cleanup:keys] Unmapping proxy for ${key}`);
                   await mapping.unmap(this.denops, key, { mode: "n" });
                 }
-              } catch (e) {
-                logger().debug(`[cleanup:keys] Failed to read/unmap ${key}: ${e}`);
+              } catch {
+                // Ignore
               }
             } else {
               const modes = Array.isArray(key.mode)
                 ? key.mode as mapping.Mode[]
                 : [key.mode ?? "n"] as mapping.Mode[];
               for (const mode of modes) {
+                // Skip unmapping if it's the triggered key in Normal mode to avoid deadlock
+                if (mode === "n" && triggeredKey && key.lhs === triggeredKey) {
+                  continue;
+                }
                 try {
                   const m = await mapping.read(this.denops, key.lhs, { mode });
                   if (m.rhs.includes(`Dvpm_Internal_Load_`)) {
-                    logger().debug(`[cleanup:keys] Unmapping proxy for ${key.lhs} in mode ${mode}`);
                     await mapping.unmap(this.denops, key.lhs, { mode });
                   }
                 } catch {
