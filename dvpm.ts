@@ -138,6 +138,21 @@ export class Dvpm {
         endfunction
         function! Dvpm_Internal_Load_${name}(url, lhs) abort
           let l:res = s:${name}_request('load', [a:url, 'keys', a:lhs, {'is_expr': v:true}])
+          let l:m = mode()
+          if l:m ==# 'no'
+            let l:m = 'o'
+          elseif l:m ==# 'v' || l:m ==# 'V' || l:m ==# "\<C-v>"
+            let l:m = 'x'
+          endif
+          if maparg(a:lhs, l:m) =~# 'Dvpm_Internal_Load_'
+            if l:m ==# 'n'
+              execute 'silent! nunmap ' . a:lhs
+            elseif l:m ==# 'x'
+              execute 'silent! xunmap ' . a:lhs
+            elseif l:m ==# 'o'
+              execute 'silent! ounmap ' . a:lhs
+            endif
+          endif
           return empty(l:res) ? a:lhs : l:res
         endfunction
         command! -nargs=? DvpmUpdate call s:${name}_notify('update', [<f-args>])
