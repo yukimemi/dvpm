@@ -735,106 +735,110 @@ export class Dvpm {
       arg = arg.replace(/<lt>/g, "<");
     }
 
-    await this.loadPlugins(pluginsToLoad, loadType === "keys" ? arg : undefined);
+    try {
+      await this.loadPlugins(pluginsToLoad, loadType === "keys" ? arg : undefined);
 
-    if (loadType === "cmd" && arg) {
-      const p = params;
-      let cmd = arg;
-      if (p) {
-        // Construct command with params
-        if (p.range && p.range > 0) {
-          if (p.line1 && p.line2 && p.line1 !== p.line2) {
-            cmd = `${p.line1},${p.line2}${cmd}`;
-          } else if (p.line1) {
-            cmd = `${p.line1}${cmd}`;
-          } else if (p.count && p.count > 0) {
-            cmd = `${p.count}${cmd}`;
+      if (loadType === "cmd" && arg) {
+        const p = params;
+        let cmd = arg;
+        if (p) {
+          // Construct command with params
+          if (p.range && p.range > 0) {
+            if (p.line1 && p.line2 && p.line1 !== p.line2) {
+              cmd = `${p.line1},${p.line2}${cmd}`;
+            } else if (p.line1) {
+              cmd = `${p.line1}${cmd}`;
+            } else if (p.count && p.count > 0) {
+              cmd = `${p.count}${cmd}`;
+            }
+          }
+          if (p.bang) {
+            cmd += "!";
+          }
+          if (p.args) {
+            cmd += ` ${p.args}`;
           }
         }
-        if (p.bang) {
-          cmd += "!";
+        // Wait for the command to be defined (max 2 seconds)
+        for (let i = 0; i < 20; i++) {
+          if (await this.denops.call("exists", `:${arg}`) === 2) {
+            break;
+          }
+          await new Promise((resolve) => setTimeout(resolve, 100));
         }
-        if (p.args) {
-          cmd += ` ${p.args}`;
-        }
+        await this.denops.cmd(`if exists(':${arg}') | exe '${cmd}' | endif`);
       }
-      // Wait for the command to be defined (max 2 seconds)
-      for (let i = 0; i < 20; i++) {
-        if (await this.denops.call("exists", `:${arg}`) === 2) {
-          break;
-        }
-        await new Promise((resolve) => setTimeout(resolve, 100));
-      }
-      await this.denops.cmd(`if exists(':${arg}') | exe '${cmd}' | endif`);
-    }
-    if (loadType === "keys" && arg) {
-      if (params?.is_expr) {
-        // 1. Try to find explicit rhs from config
-        const lazy = p.info.lazy;
-        const keys = Array.isArray(lazy.keys) ? lazy.keys : [lazy.keys];
-        for (const k of keys) {
-          if (k && typeof k !== "string" && k.lhs === arg && k.rhs) {
-            return k.rhs;
+      if (loadType === "keys" && arg) {
+        if (params?.is_expr) {
+          // 1. Try to find explicit rhs from config
+          const lazy = p.info.lazy;
+          const keys = Array.isArray(lazy.keys) ? lazy.keys : [lazy.keys];
+          for (const k of keys) {
+            if (k && typeof k !== "string" && k.lhs === arg && k.rhs) {
+              return k.rhs;
+            }
           }
-        }
 
-        // 2. Try to find defined mapping from Vim
-        const modes: mapping.Mode[] = ["o", "x", "n", "v", "s", "i", "c"];
-        try {
-          const m = await this.denops.call("mode") as string;
-          let mode: mapping.Mode = "n";
-          if (m.startsWith("no")) {
-            mode = "o";
-          } else if (m === "v" || m === "V" || m === "\x16") {
-            mode = "x";
-          } else if (m === "s" || m === "S" || m === "\x13") {
-            mode = "s";
-          } else if (m.startsWith("i")) {
-            mode = "i";
-          } else if (m.startsWith("c")) {
-            mode = "c";
-          }
-          // Prioritize current mode
-          const idx = modes.indexOf(mode);
-          if (idx > -1) {
-            modes.splice(idx, 1);
-            modes.unshift(mode);
-          }
-        } catch {
-          // Ignore
-        }
-
-        for (const mode of modes) {
+          // 2. Try to find defined mapping from Vim
+          const modes: mapping.Mode[] = ["o", "x", "n", "v", "s", "i", "c"];
           try {
-            const info = await mapping.read(this.denops, arg, { mode });
-            // Avoid returning the same LHS to prevent infinite recursion
-            // if the mapping hasn't been updated properly for some reason
-            if (info.rhs) {
-              if (info.rhs !== arg) {
-                return info.rhs;
-              }
-            } else {
-              // If RHS is empty, it's likely a Lua callback mapping.
-              // We cannot return it via <expr>, so we fallback to feedkeys.
-              // We return "<Ignore>" to consume the current key press without effect,
-              // and let feedkeys trigger the new mapping.
-              await send(this.denops, { keys: arg, remap: true });
-              return "<Ignore>";
+            const m = await this.denops.call("mode") as string;
+            let mode: mapping.Mode = "n";
+            if (m.startsWith("no")) {
+              mode = "o";
+            } else if (m === "v" || m === "V" || m === "\x16") {
+              mode = "x";
+            } else if (m === "s" || m === "S" || m === "\x13") {
+              mode = "s";
+            } else if (m.startsWith("i")) {
+              mode = "i";
+            } else if (m.startsWith("c")) {
+              mode = "c";
+            }
+            // Prioritize current mode
+            const idx = modes.indexOf(mode);
+            if (idx > -1) {
+              modes.splice(idx, 1);
+              modes.unshift(mode);
             }
           } catch {
             // Ignore
           }
+
+          for (const mode of modes) {
+            try {
+              const info = await mapping.read(this.denops, arg, { mode });
+              // Avoid returning the same LHS to prevent infinite recursion
+              // if the mapping hasn't been updated properly for some reason
+              if (info.rhs) {
+                if (info.rhs !== arg) {
+                  return info.rhs;
+                }
+              } else {
+                // If RHS is empty, it's likely a Lua callback mapping.
+                // We cannot return it via <expr>, so we fallback to feedkeys.
+                // We return "<Ignore>" to consume the current key press without effect,
+                // and let feedkeys trigger the new mapping.
+                await send(this.denops, { keys: arg, remap: true });
+                return "<Ignore>";
+              }
+            } catch {
+              // Ignore
+            }
+          }
+          return arg;
+        } else {
+          const feedArg = await this.denops.call(
+            "eval",
+            `"${arg.replace(/\\/g, "\\\\").replace(/"/g, '"').replace(/</g, "\\<")}"`,
+          ) as string;
+          await send(this.denops, { keys: feedArg, remap: true });
         }
-        return arg;
-      } else {
-        const feedArg = await this.denops.call(
-          "eval",
-          `"${arg.replace(/\\/g, "\\\\").replace(/"/g, '"').replace(/</g, "\\<")}"`,
-        ) as string;
-        await send(this.denops, { keys: feedArg, remap: true });
       }
+      return undefined;
+    } finally {
+      this.flushLog();
     }
-    return undefined;
   }
 
   private async fire(plugins: Plugin[]) {
@@ -936,105 +940,109 @@ export class Dvpm {
   }
 
   private async loadPlugins(plugins: Plugin[], triggeredKey?: string) {
-    for (const p of plugins) {
-      try {
-        if (p.info.isLoaded || this.#loading.has(p.info.url)) {
-          continue;
-        }
-        this.#loading.add(p.info.url);
-
-        const name = p.info.name;
-        logger().debug(`[loadPlugins] ${p.info.url} start !`);
-        await p.before();
-        await autocmd.emit(this.denops, "User", `DvpmPluginLoadPre:${name}`);
-
-        const lazy = p.info.lazy;
-
-        // Cleanup CMD proxies
-        if (lazy.cmd) {
-          const cmds = Array.isArray(lazy.cmd) ? lazy.cmd : [lazy.cmd];
-          for (const cmd of cmds) {
-            const cmdName = typeof cmd === "string" ? cmd : cmd.name;
-            await this.denops.cmd(
-              `if exists(':${cmdName}') == 2 | exe 'delcommand ${cmdName}' | endif`,
-            );
+    try {
+      for (const p of plugins) {
+        try {
+          if (p.info.isLoaded || this.#loading.has(p.info.url)) {
+            continue;
           }
-        }
+          this.#loading.add(p.info.url);
 
-        // Cleanup KEYS proxies
-        if (lazy.keys) {
-          const keys = (Array.isArray(lazy.keys) ? lazy.keys : [lazy.keys]).filter((k) =>
-            k !== undefined
-          ) as (string | KeyMap)[];
-          for (const key of keys) {
-            if (typeof key === "string") {
-              try {
-                const m = await mapping.read(this.denops, key, { mode: "n" });
-                if (m.rhs.includes(`denops#notify('${this.denops.name}', 'load',`)) {
-                  await mapping.unmap(this.denops, key, { mode: "n" });
-                }
-              } catch {
-                // Ignore
-              }
-            } else {
-              const modes = Array.isArray(key.mode)
-                ? key.mode as mapping.Mode[]
-                : [key.mode ?? "n"] as mapping.Mode[];
-              for (const mode of modes) {
+          const name = p.info.name;
+          logger().debug(`[loadPlugins] ${p.info.url} start !`);
+          await p.before();
+          await autocmd.emit(this.denops, "User", `DvpmPluginLoadPre:${name}`);
+
+          const lazy = p.info.lazy;
+
+          // Cleanup CMD proxies
+          if (lazy.cmd) {
+            const cmds = Array.isArray(lazy.cmd) ? lazy.cmd : [lazy.cmd];
+            for (const cmd of cmds) {
+              const cmdName = typeof cmd === "string" ? cmd : cmd.name;
+              await this.denops.cmd(
+                `if exists(':${cmdName}') == 2 | exe 'delcommand ${cmdName}' | endif`,
+              );
+            }
+          }
+
+          // Cleanup KEYS proxies
+          if (lazy.keys) {
+            const keys = (Array.isArray(lazy.keys) ? lazy.keys : [lazy.keys]).filter((k) =>
+              k !== undefined
+            ) as (string | KeyMap)[];
+            for (const key of keys) {
+              if (typeof key === "string") {
                 try {
-                  const m = await mapping.read(this.denops, key.lhs, { mode });
-                  if (
-                    m.rhs.includes(`denops#notify('${this.denops.name}', 'load',`) ||
-                    m.rhs.includes(`Dvpm_Internal_Load_`)
-                  ) {
-                    await mapping.unmap(this.denops, key.lhs, { mode });
+                  const m = await mapping.read(this.denops, key, { mode: "n" });
+                  if (m.rhs.includes(`denops#notify('${this.denops.name}', 'load',`)) {
+                    await mapping.unmap(this.denops, key, { mode: "n" });
                   }
                 } catch {
                   // Ignore
                 }
+              } else {
+                const modes = Array.isArray(key.mode)
+                  ? key.mode as mapping.Mode[]
+                  : [key.mode ?? "n"] as mapping.Mode[];
+                for (const mode of modes) {
+                  try {
+                    const m = await mapping.read(this.denops, key.lhs, { mode });
+                    if (
+                      m.rhs.includes(`denops#notify('${this.denops.name}', 'load',`) ||
+                      m.rhs.includes(`Dvpm_Internal_Load_`)
+                    ) {
+                      await mapping.unmap(this.denops, key.lhs, { mode });
+                    }
+                  } catch {
+                    // Ignore
+                  }
+                }
               }
             }
           }
-        }
 
-        const added = await p.addRuntimepath();
-        if (added) {
-          await p.source();
-        }
-        await p.denopsPluginLoad();
-        await p.after();
-        if (p.initialClone) {
-          await p.build();
-        }
+          const added = await p.addRuntimepath();
+          if (added) {
+            await p.source();
+          }
+          await p.denopsPluginLoad();
+          await p.after();
+          if (p.initialClone) {
+            await p.build();
+          }
 
-        // Setup KEYS mappings (Post-load: for explicit mappings)
-        if (lazy.keys) {
-          const keys = (Array.isArray(lazy.keys) ? lazy.keys : [lazy.keys]).filter((k) =>
-            k !== undefined
-          ) as (string | KeyMap)[];
-          for (const key of keys) {
-            if (typeof key !== "string" && key.rhs) {
-              const modes = Array.isArray(key.mode)
-                ? key.mode as mapping.Mode[]
-                : [key.mode ?? "n"] as mapping.Mode[];
-              for (const mode of modes) {
-                await this.map(key.lhs, key.rhs, { ...key, mode });
+          // Setup KEYS mappings (Post-load: for explicit mappings)
+          if (lazy.keys) {
+            const keys = (Array.isArray(lazy.keys) ? lazy.keys : [lazy.keys]).filter((k) =>
+              k !== undefined
+            ) as (string | KeyMap)[];
+            for (const key of keys) {
+              if (typeof key !== "string" && key.rhs) {
+                const modes = Array.isArray(key.mode)
+                  ? key.mode as mapping.Mode[]
+                  : [key.mode ?? "n"] as mapping.Mode[];
+                for (const mode of modes) {
+                  await this.map(key.lhs, key.rhs, { ...key, mode });
+                }
               }
             }
           }
-        }
 
-        await p.sourceAfter();
-        p.info.isLoaded = true;
-        await autocmd.emit(this.denops, "User", `DvpmPluginLoadPost:${name}`);
-      } catch (e) {
-        if (e instanceof Error) {
-          logger().error(`[loadPlugins] ${p.info.url} ${e.message}, ${e.stack}`);
+          await p.sourceAfter();
+          p.info.isLoaded = true;
+          await autocmd.emit(this.denops, "User", `DvpmPluginLoadPost:${name}`);
+        } catch (e) {
+          if (e instanceof Error) {
+            logger().error(`[loadPlugins] ${p.info.url} ${e.message}, ${e.stack}`);
+          }
+        } finally {
+          this.#loading.delete(p.info.url);
+          logger().debug(`[loadPlugins] ${p.info.url} end !`);
         }
-      } finally {
-        this.#loading.delete(p.info.url);
-        logger().debug(`[loadPlugins] ${p.info.url} end !`);
       }
+    } finally {
+      this.flushLog();
     }
   }
 
@@ -1090,6 +1098,14 @@ export class Dvpm {
    */
   public async cache(arg: { script: string; path: string }): Promise<boolean> {
     return await cache(this.denops, { script: arg.script, path: arg.path });
+  }
+
+  private flushLog() {
+    for (const handler of logger().handlers) {
+      if (typeof (handler as any).flush === "function") {
+        (handler as any).flush();
+      }
+    }
   }
 
   private async map(
