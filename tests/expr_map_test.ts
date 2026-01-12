@@ -118,7 +118,10 @@ test({
       },
       after: async ({ denops }) => {
         // Simulate Lua callback mapping in Neovim
-        await execute(denops, `lua vim.keymap.set("n", "${lhs}", function() vim.g.dvpm_test_lua_rhs = 1 end)`);
+        await execute(
+          denops,
+          `lua vim.keymap.set("n", "${lhs}", function() vim.g.dvpm_test_lua_rhs = 1 end)`,
+        );
       },
     });
 
