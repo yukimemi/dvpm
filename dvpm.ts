@@ -944,11 +944,13 @@ export class Dvpm {
             if (typeof key === "string") {
               try {
                 const m = await mapping.read(this.denops, key, { mode: "n" });
+                logger().debug(`[cleanup:keys] Checking proxy for ${key}: RHS=${m.rhs}`);
                 if (m.rhs.includes(`Dvpm_Internal_Load_`)) {
+                  logger().debug(`[cleanup:keys] Unmapping proxy for ${key}`);
                   await mapping.unmap(this.denops, key, { mode: "n" });
                 }
-              } catch {
-                // Ignore
+              } catch (e) {
+                logger().debug(`[cleanup:keys] Failed to read/unmap ${key}: ${e}`);
               }
             } else {
               const modes = Array.isArray(key.mode)
@@ -958,6 +960,7 @@ export class Dvpm {
                 try {
                   const m = await mapping.read(this.denops, key.lhs, { mode });
                   if (m.rhs.includes(`Dvpm_Internal_Load_`)) {
+                    logger().debug(`[cleanup:keys] Unmapping proxy for ${key.lhs} in mode ${mode}`);
                     await mapping.unmap(this.denops, key.lhs, { mode });
                   }
                 } catch {
