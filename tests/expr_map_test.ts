@@ -130,8 +130,9 @@ test({
 
     await dvpm.end();
 
-    // Trigger loading directly via dispatcher to avoid deadlock in tests
-    const ret = await denops.dispatcher.load(plugin.info.url, "keys", lhs, { is_expr: true });
+    // Trigger loading
+    const name = denops.name.replace(/-/g, "_");
+    const ret = await denops.call(`Dvpm_Internal_Load_${name}`, plugin.info.url, lhs);
 
     // It should return "<Ignore>" because RHS is empty (Lua callback)
     assertEquals(ret, "<Ignore>");

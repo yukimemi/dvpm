@@ -769,13 +769,11 @@ export class Dvpm {
     }
     if (loadType === "keys" && arg) {
       if (params?.is_expr) {
-        logger().debug(`[load:keys] expr load triggered for: ${arg}`);
         // 1. Try to find explicit rhs from config
         const lazy = p.info.lazy;
         const keys = Array.isArray(lazy.keys) ? lazy.keys : [lazy.keys];
         for (const k of keys) {
           if (k && typeof k !== "string" && k.lhs === arg && k.rhs) {
-            logger().debug(`[load:keys] Found explicit RHS from config: ${k.rhs}`);
             return k.rhs;
           }
         }
@@ -802,7 +800,6 @@ export class Dvpm {
             modes.splice(idx, 1);
             modes.unshift(mode);
           }
-          logger().debug(`[load:keys] mode prioritized: ${modes.join(", ")} (orig: ${m})`);
         } catch {
           // Ignore
         }
@@ -828,9 +825,15 @@ export class Dvpm {
             // Ignore
           }
         }
-        logger().debug(`[load:keys] No valid RHS found, returning original key: ${arg}`);
         return arg;
       } else {
+        const feedArg = await this.denops.call(
+          "eval",
+          `"${arg.replace(/\\/g, "\\\\").replace(/"/g, '"').replace(/</g, "\\<")}"`,
+        ) as string;
+        await send(this.denops, { keys: feedArg, remap: true });
+      }
+    }
         const feedArg = await this.denops.call(
           "eval",
           `"${arg.replace(/\\/g, "\\\\").replace(/"/g, '"').replace(/</g, "\\<")}"`,
@@ -897,25 +900,40 @@ export class Dvpm {
             if (typeof key === "string") {
               await this.map(
                 key,
-                `Dvpm_Internal_Load_${name}('${p.info.url}', ${toVimLiteral(key)})`,
-                { mode: "n", expr: true, remap: true, silent: true },
+                `<cmd>call denops#notify('${denops.name}', 'load', ['${p.info.url}', 'keys', ${
+                  toVimLiteral(key)
+                }])<CR>`,
+                { mode: "n" },
               );
             } else {
               const modes = Array.isArray(key.mode)
                 ? key.mode as mapping.Mode[]
                 : [key.mode ?? "n"] as mapping.Mode[];
               for (const mode of modes) {
-                await this.map(
-                  key.lhs,
-                  `Dvpm_Internal_Load_${name}('${p.info.url}', ${toVimLiteral(key.lhs)})`,
-                  {
-                    mode,
-                    expr: true,
-                    remap: true,
-                    silent: true,
-                    desc: key.desc,
-                  },
-                );
+                if (mode === "n") {
+                  await this.map(
+                    key.lhs,
+                    `<cmd>call denops#notify('${denops.name}', 'load', ['${p.info.url}', 'keys', ${
+                      toVimLiteral(key.lhs)
+                    }])<CR>`,
+                    {
+                      mode,
+                      desc: key.desc,
+                    },
+                  );
+                } else {
+                  await this.map(
+                    key.lhs,
+                    `Dvpm_Internal_Load_${name}('${p.info.url}', ${toVimLiteral(key.lhs)})`,
+                    {
+                      mode,
+                      expr: true,
+                      remap: true,
+                      silent: true,
+                      desc: key.desc,
+                    },
+                  );
+                }
               }
             }
           }
@@ -957,13 +975,9 @@ export class Dvpm {
           ) as (string | KeyMap)[];
           for (const key of keys) {
             if (typeof key === "string") {
-              // Skip unmapping if it's the triggered key in Normal mode to avoid deadlock
-              if (triggeredKey && key === triggeredKey) {
-                continue;
-              }
               try {
                 const m = await mapping.read(this.denops, key, { mode: "n" });
-                if (m.rhs.includes(`Dvpm_Internal_Load_`)) {
+                if (m.rhs.includes(`denops#notify('${this.denops.name}', 'load',`)) {
                   await mapping.unmap(this.denops, key, { mode: "n" });
                 }
               } catch {
@@ -974,13 +988,12 @@ export class Dvpm {
                 ? key.mode as mapping.Mode[]
                 : [key.mode ?? "n"] as mapping.Mode[];
               for (const mode of modes) {
-                // Skip unmapping if it's the triggered key in Normal mode to avoid deadlock
-                if (mode === "n" && triggeredKey && key.lhs === triggeredKey) {
-                  continue;
-                }
                 try {
                   const m = await mapping.read(this.denops, key.lhs, { mode });
-                  if (m.rhs.includes(`Dvpm_Internal_Load_`)) {
+                  if (
+                    m.rhs.includes(`denops#notify('${this.denops.name}', 'load',`) ||
+                    m.rhs.includes(`Dvpm_Internal_Load_`)
+                  ) {
                     await mapping.unmap(this.denops, key.lhs, { mode });
                   }
                 } catch {
