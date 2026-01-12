@@ -1,6 +1,7 @@
 import { assertEquals } from "@std/assert";
 import { test } from "@denops/test";
 import * as mapping from "@denops/std/mapping";
+import { execute } from "@denops/std/helper";
 import { Dvpm } from "../dvpm.ts";
 
 test({
@@ -95,5 +96,51 @@ test({
 
     // It should return the pluginRhs found via mapping.read
     assertEquals(ret, pluginRhs);
+  },
+});
+
+test({
+  mode: "all",
+  name: "Verify lazy loading for Lua callback mapping (empty RHS) via Dvpm",
+  fn: async (denops) => {
+    if (denops.meta.host !== "nvim") return;
+
+    const base = await Deno.makeTempDir();
+    const dvpm = await Dvpm.begin(denops, { base, health: false });
+
+    const lhs = "ml";
+    await denops.cmd("let g:dvpm_test_lua_rhs = 0");
+
+    await dvpm.add({
+      url: "lazy/lua_rhs",
+      lazy: {
+        keys: { lhs, mode: "n" },
+      },
+      after: async ({ denops }) => {
+        // Simulate Lua callback mapping in Neovim
+        await execute(denops, `lua vim.keymap.set("n", "${lhs}", function() vim.g.dvpm_test_lua_rhs = 1 end)`);
+      },
+    });
+
+    const plugin = dvpm.plugins[0];
+    plugin.install = () => Promise.resolve([]);
+    plugin.update = () => Promise.resolve([]);
+    plugin.build = () => Promise.resolve();
+    await Deno.mkdir(plugin.info.dst, { recursive: true });
+
+    await dvpm.end();
+
+    // Trigger loading directly via dispatcher to avoid deadlock in tests
+    const ret = await denops.dispatcher.load(plugin.info.url, "keys", lhs, { is_expr: true });
+
+    // It should return "<Ignore>" because RHS is empty (Lua callback)
+    assertEquals(ret, "<Ignore>");
+
+    // Wait for feedkeys to be processed
+    await new Promise((resolve) => setTimeout(resolve, 200));
+
+    // Check if the Lua callback was eventually executed
+    const fired = await denops.eval("g:dvpm_test_lua_rhs");
+    assertEquals(fired, 1, "Lua callback should be executed after feedkeys");
   },
 });

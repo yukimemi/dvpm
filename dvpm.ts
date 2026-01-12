@@ -797,9 +797,17 @@ export class Dvpm {
             const info = await mapping.read(this.denops, arg, { mode });
             // Avoid returning the same LHS to prevent infinite recursion
             // if the mapping hasn't been updated properly for some reason
-            if (info.rhs && info.rhs !== arg) {
-              logger().debug(`[load:keys] Found mapping RHS from Vim in mode ${mode}: ${info.rhs}`);
-              return info.rhs;
+            if (info.rhs) {
+              if (info.rhs !== arg) {
+                return info.rhs;
+              }
+            } else {
+              // If RHS is empty, it's likely a Lua callback mapping.
+              // We cannot return it via <expr>, so we fallback to feedkeys.
+              // We return "<Ignore>" to consume the current key press without effect,
+              // and let feedkeys trigger the new mapping.
+              await send(this.denops, { keys: arg, remap: true });
+              return "<Ignore>";
             }
           } catch {
             // Ignore
