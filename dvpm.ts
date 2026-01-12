@@ -834,13 +834,6 @@ export class Dvpm {
         await send(this.denops, { keys: feedArg, remap: true });
       }
     }
-        const feedArg = await this.denops.call(
-          "eval",
-          `"${arg.replace(/\\/g, "\\\\").replace(/"/g, '"').replace(/</g, "\\<")}"`,
-        ) as string;
-        await send(this.denops, { keys: feedArg, remap: true });
-      }
-    }
     return undefined;
   }
 
