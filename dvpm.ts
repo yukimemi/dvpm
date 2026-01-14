@@ -736,7 +736,7 @@ export class Dvpm {
     }
 
     try {
-      await this.loadPlugins(pluginsToLoad, loadType === "keys" ? arg : undefined);
+      await this.loadPlugins(pluginsToLoad);
 
       if (loadType === "cmd" && arg) {
         const p = params;
@@ -939,7 +939,7 @@ export class Dvpm {
     });
   }
 
-  private async loadPlugins(plugins: Plugin[], triggeredKey?: string) {
+  private async loadPlugins(plugins: Plugin[]) {
     try {
       for (const p of plugins) {
         try {
@@ -1102,8 +1102,8 @@ export class Dvpm {
 
   private flushLog() {
     for (const handler of logger().handlers) {
-      if (typeof (handler as any).flush === "function") {
-        (handler as any).flush();
+      if ("flush" in handler && typeof handler.flush === "function") {
+        (handler as unknown as { flush: () => void }).flush();
       }
     }
   }
