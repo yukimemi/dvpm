@@ -69,7 +69,7 @@ test({
     // Check if proxy mapping is created
     const mapResult = await denops.call("execute", `nmap ${lhs}`) as string;
     assertEquals(
-      mapResult.includes("Dvpm_Internal_Load_"),
+      mapResult.includes("denops#notify"),
       true,
       "Proxy mapping should be created",
     );
@@ -117,11 +117,19 @@ test({
     for (const mode of ["n", "v"]) {
       // deno-lint-ignore no-explicit-any
       const info = (await denops.call("maparg", lhs, mode, 0, 1)) as any;
-      assertEquals(
-        info.rhs.includes("Dvpm_Internal_Load_"),
-        true,
-        `Proxy mapping should exist in ${mode} mode`,
-      );
+      if (mode === "n") {
+        assertEquals(
+          info.rhs.includes("denops#notify"),
+          true,
+          `Proxy mapping should exist in ${mode} mode`,
+        );
+      } else {
+        assertEquals(
+          info.rhs.includes("Dvpm_Internal_Load_"),
+          true,
+          `Proxy mapping should exist in ${mode} mode`,
+        );
+      }
     }
 
     // Trigger loading
@@ -318,7 +326,7 @@ test({
     // Check proxy mapping
     const mapResult = await denops.call("execute", `nmap ${lhs}`) as string;
     assertEquals(
-      mapResult.includes("Dvpm_Internal_Load_"),
+      mapResult.includes("denops#notify"),
       true,
       "Proxy mapping should be created",
     );
@@ -371,11 +379,19 @@ test({
     // Check proxy mapping for 'n' and 'v'
     for (const mode of ["n", "v"]) {
       const mapResult = await denops.call("execute", `${mode}map ${lhs}`) as string;
-      assertEquals(
-        mapResult.includes("Dvpm_Internal_Load_"),
-        true,
-        `Proxy mapping should be created for ${mode}`,
-      );
+      if (mode === "n") {
+        assertEquals(
+          mapResult.includes("denops#notify"),
+          true,
+          `Proxy mapping should be created for ${mode}`,
+        );
+      } else {
+        assertEquals(
+          mapResult.includes("Dvpm_Internal_Load_"),
+          true,
+          `Proxy mapping should be created for ${mode}`,
+        );
+      }
     }
 
     // Trigger loading
