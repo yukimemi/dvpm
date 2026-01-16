@@ -133,15 +133,13 @@ test({
 
     await dvpm.end();
 
-    // Trigger loading
-    const name = denops.name.replace(/-/g, "_");
-    const ret = await denops.call(`Dvpm_Internal_Load_${name}`, plugin.info.url, lhs);
+    // Trigger loading (simulate <cmd> mapping behavior for Normal mode)
+    await denops.cmd(
+      `call denops#notify('${denops.name}', 'load', ['${plugin.info.url}', 'keys', '${lhs}'])`,
+    );
 
-    // It should return "<Ignore>" because RHS is empty (Lua callback)
-    assertEquals(ret, "<Ignore>");
-
-    // Wait for feedkeys to be processed
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    // Wait for load and feedkeys processing
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     // Check if the Lua callback was eventually executed
     const fired = await denops.eval("g:dvpm_test_lua_rhs");
