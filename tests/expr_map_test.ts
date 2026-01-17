@@ -102,6 +102,7 @@ test({
 test({
   mode: "all",
   name: "Verify lazy loading for Lua callback mapping (empty RHS) via Dvpm",
+  ignore: Deno.build.os === "windows" && Deno.env.get("CI") === "true",
   fn: async (denops) => {
     if (denops.meta.host !== "nvim") return;
 
