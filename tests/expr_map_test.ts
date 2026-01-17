@@ -32,7 +32,9 @@ test({
 
     // Trigger loading ASYNCHRONOUSLY via timer to avoid IPC deadlock
     const name = denops.name.replace(/-/g, "_");
-    await denops.cmd(`call timer_start(0, { -> Dvpm_Internal_Load_${name}('${plugin.info.url}', '${lhs}') })`);
+    await denops.cmd(
+      `call timer_start(0, { -> Dvpm_Internal_Load_${name}('${plugin.info.url}', '${lhs}') })`,
+    );
 
     // Wait for load and key processing
     await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -91,7 +93,9 @@ test({
     await mapping.map(denops, lhs, pluginRhs, { mode: "n", noremap: true });
 
     // Trigger loading ASYNCHRONOUSLY via timer
-    await denops.cmd(`call timer_start(0, { -> Dvpm_Internal_Load_${name}('${plugin.info.url}', '${lhs}') })`);
+    await denops.cmd(
+      `call timer_start(0, { -> Dvpm_Internal_Load_${name}('${plugin.info.url}', '${lhs}') })`,
+    );
 
     // Wait for load and key processing
     await new Promise((resolve) => setTimeout(resolve, 1000));
