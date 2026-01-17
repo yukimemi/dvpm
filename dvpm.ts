@@ -822,7 +822,7 @@ export class Dvpm {
                   "eval",
                   `"${arg.replace(/\\/g, "\\\\").replace(/"/g, '"').replace(/</g, "\\<")}"`,
                 ) as string;
-                await this.denops.call("feedkeys", feedArg, "m");
+                await this.denops.cmd("call feedkeys(keys, 'm')", { keys: feedArg });
                 return "<Ignore>";
               }
             } catch {
@@ -835,7 +835,7 @@ export class Dvpm {
             "eval",
             `"${arg.replace(/\\/g, "\\\\").replace(/"/g, '"').replace(/</g, "\\<")}"`,
           ) as string;
-          await this.denops.call("feedkeys", feedArg, "m");
+          await this.denops.cmd("call feedkeys(keys, 'm')", { keys: feedArg });
         }
       }
       return undefined;
