@@ -334,6 +334,9 @@ test({
     // Trigger loading
     await dvpm.load(plugin.info.url, "keys", lhs);
 
+    // Wait for feedkeys to be processed
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
     // After load: check RHS using maparg
     // deno-lint-ignore no-explicit-any
     const info = (await denops.call("maparg", lhs, "n", 0, 1)) as any;
