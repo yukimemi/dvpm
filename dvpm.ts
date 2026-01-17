@@ -832,7 +832,7 @@ export class Dvpm {
             "eval",
             `"${arg.replace(/\\/g, "\\\\").replace(/"/g, '"').replace(/</g, "\\<")}"`,
           ) as string;
-          await send(this.denops, { keys: feedArg, remap: true });
+          await this.denops.call("feedkeys", feedArg, "m");
         }
       }
       return undefined;
