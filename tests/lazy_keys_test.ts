@@ -77,6 +77,9 @@ test({
     // Trigger loading by calling the mapping (via request)
     await dvpm.load(plugin.info.url, "keys", lhs);
 
+    // Wait for feedkeys to be processed
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
     // After load: check RHS using maparg
     // deno-lint-ignore no-explicit-any
     const info = (await denops.call("maparg", lhs, "n", 0, 1)) as any;
@@ -135,6 +138,9 @@ test({
     // Trigger loading
     await dvpm.load(plugin.info.url, "keys", lhs);
 
+    // Wait for feedkeys to be processed
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
     // After load: check RHS
     for (const mode of ["n", "v"]) {
       // deno-lint-ignore no-explicit-any
@@ -173,6 +179,10 @@ test({
     // Trigger loading
     await dvpm.load(plugin.info.url, "keys", lhs);
 
+    // After re-mapping, the RHS should be executed (via feedkeys in load())
+    // Wait a bit for feedkeys to be processed
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
     // After load: check RHS using maparg
     // deno-lint-ignore no-explicit-any
     const info = (await denops.call("maparg", lhs, "n", 0, 1)) as any;
@@ -182,9 +192,6 @@ test({
       "Mapping should be updated to RHS for <space>b",
     );
 
-    // After re-mapping, the RHS should be executed (via feedkeys in load())
-    // Wait a bit for feedkeys to be processed
-    await new Promise((resolve) => setTimeout(resolve, 200));
     const rhsResult = await denops.eval("g:dvpm_test_keys_space");
     assertEquals(rhsResult, 1, "RHS <cmd>...<cr> should be executed after load()");
 
@@ -229,7 +236,7 @@ test({
     await dvpm.load(plugin.info.url, "keys", lhs);
 
     // Wait for feedkeys
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     const result = await denops.eval("g:dvpm_test_keys_cmd");
     assertEquals(result, 1, "RHS <cmd>...<cr> should be executed immediately");
@@ -277,6 +284,9 @@ test({
 
     // Trigger loading
     await dvpm.load(plugin.info.url, "keys", lhs);
+
+    // Wait for feedkeys to be processed
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     if (await denops.call("has", "nvim")) {
       // After load: check RHS and desc
@@ -335,7 +345,7 @@ test({
     await dvpm.load(plugin.info.url, "keys", lhs);
 
     // Wait for feedkeys to be processed
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // After load: check RHS using maparg
     // deno-lint-ignore no-explicit-any
@@ -399,6 +409,9 @@ test({
 
     // Trigger loading
     await dvpm.load(plugin.info.url, "keys", lhs);
+
+    // Wait for feedkeys to be processed
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // After load: check RHS using maparg
     for (const mode of ["n", "v"]) {

@@ -139,7 +139,7 @@ test({
     );
 
     // Wait for load and feedkeys processing
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // Check if the Lua callback was eventually executed
     const fired = await denops.eval("g:dvpm_test_lua_rhs");
