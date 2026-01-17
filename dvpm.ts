@@ -819,7 +819,11 @@ export class Dvpm {
                 // We cannot return it via <expr>, so we fallback to feedkeys.
                 // We return "<Ignore>" to consume the current key press without effect,
                 // and let feedkeys trigger the new mapping.
-                await send(this.denops, { keys: arg, remap: true });
+                const feedArg = await this.denops.call(
+                  "eval",
+                  `"${arg.replace(/\\/g, "\\\\").replace(/"/g, '"').replace(/</g, "\\<")}"`,
+                ) as string;
+                await this.denops.call("feedkeys", feedArg, "m");
                 return "<Ignore>";
               }
             } catch {
