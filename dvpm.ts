@@ -16,7 +16,6 @@ import { Semaphore } from "@core/asyncutil";
 import { batch } from "@denops/std/batch";
 import { cache, convertUrl, notify } from "./util.ts";
 import { echo, execute } from "@denops/std/helper";
-import { send } from "@denops/std/helper/keymap";
 import { logger } from "./logger.ts";
 import { sprintf } from "@std/fmt/printf";
 import {
