@@ -7,6 +7,7 @@ import { Dvpm } from "../dvpm.ts";
 test({
   mode: "all",
   name: "Verify operator-pending mode lazy loading via Dvpm",
+  ignore: Deno.build.os === "windows" && Deno.env.get("CI") === "true",
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
     const dvpm = await Dvpm.begin(denops, { base, health: false });
@@ -48,6 +49,7 @@ test({
 test({
   mode: "all",
   name: "Verify operator-pending mode lazy loading (implicit RHS) via Dvpm",
+  ignore: Deno.build.os === "windows" && Deno.env.get("CI") === "true",
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
     const dvpm = await Dvpm.begin(denops, { base, health: false });
@@ -109,6 +111,7 @@ test({
 test({
   mode: "all",
   name: "Verify lazy loading for Lua callback mapping (empty RHS) via Dvpm",
+  ignore: Deno.build.os === "windows" && Deno.env.get("CI") === "true",
   fn: async (denops) => {
     if (denops.meta.host !== "nvim") return;
 

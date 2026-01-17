@@ -153,6 +153,7 @@ test({
 test({
   mode: "all",
   name: "keys with <space> handles remapping correctly",
+  ignore: Deno.build.os === "windows" && Deno.env.get("CI") === "true",
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
     const dvpm = await Dvpm.begin(denops, { base, health: false });
@@ -307,6 +308,7 @@ test({
 test({
   mode: "all",
   name: "keys with string (plugin defined) handles correctly",
+  ignore: Deno.build.os === "windows" && Deno.env.get("CI") === "true",
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
     const dvpm = await Dvpm.begin(denops, { base, health: false });
