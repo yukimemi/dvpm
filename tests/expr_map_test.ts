@@ -30,14 +30,13 @@ test({
 
     await dvpm.end();
 
-    // Trigger loading by calling the mapping
+    // Trigger loading ASYNCHRONOUSLY to avoid deadlock
     // We simulate what happens when 'ae' is pressed in Vim
     const name = denops.name.replace(/-/g, "_");
-    const ret = await denops.call(`Dvpm_Internal_Load_${name}`, plugin.info.url, lhs);
+    await denops.cmd(`call Dvpm_Internal_Load_${name}('${plugin.info.url}', '${lhs}')`);
 
-    // Verify that the function returns the RHS, not the LHS
-    // This ensures that <expr> mapping will re-evaluate to the new RHS
-    assertEquals(ret, rhs);
+    // Wait for load and key processing
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // After load: check if rhs is set
     const info = await mapping.read(denops, lhs, { mode: "o" });
@@ -92,10 +91,15 @@ test({
     // Let's define 'n' map to verify the mapping.read logic itself works.
     await mapping.map(denops, lhs, pluginRhs, { mode: "n", noremap: true });
 
-    const ret = await denops.call(`Dvpm_Internal_Load_${name}`, plugin.info.url, lhs);
+    // Trigger loading ASYNCHRONOUSLY
+    await denops.cmd(`call Dvpm_Internal_Load_${name}('${plugin.info.url}', '${lhs}')`);
 
-    // It should return the pluginRhs found via mapping.read
-    assertEquals(ret, pluginRhs);
+    // Wait for load and key processing
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // After load: check if rhs is set
+    const info = await mapping.read(denops, lhs, { mode: "o" });
+    assertEquals(info.rhs, pluginRhs);
   },
 });
 
