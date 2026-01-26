@@ -379,7 +379,11 @@ export class Dvpm {
       if (filetype) {
         await fn.setbufvar(denops, buf.bufnr, "&filetype", filetype);
       }
-      await buffer.replace(denops, buf.bufnr, data);
+      await buffer.replace(
+        denops,
+        buf.bufnr,
+        data.flatMap((l) => l.split(/\r?\n/)),
+      );
       await buffer.concrete(denops, buf.bufnr);
     });
     return buf.bufnr;
