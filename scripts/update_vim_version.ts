@@ -38,7 +38,7 @@ async function updateWorkflowFile(
   };
 
   // Vim
-  const vimRegex = /((?:vim_)?version:\s+")(v9\.\d+\.\d+)(")/g;
+  const vimRegex = /((?:vim_)?version:\s+")(v\d+\.\d+\.\d+)(")/g;
   newContent = newContent.replace(vimRegex, (_match, p1, oldVer, p3) => {
     if (oldVer !== vimVersion) {
       result.vim.old = oldVer;
@@ -47,7 +47,7 @@ async function updateWorkflowFile(
   });
 
   // Neovim
-  const neovimRegex = /((?:vim_)?version:\s+")(v0\.\d+\.\d+)(")/g;
+  const neovimRegex = /((?:vim_)?version:\s+")(v\d+\.\d+\.\d+)(")/g;
   newContent = newContent.replace(neovimRegex, (_match, p1, oldVer, p3) => {
     if (oldVer !== neovimVersion) {
       result.neovim.old = oldVer;
@@ -94,24 +94,18 @@ async function main() {
     if (githubOutput) {
       const messages: string[] = [];
       if (vimOld) {
-        messages.push(`- Vim: 
-${vimOld}
- -> 
-${vimVersion}`);
+        messages.push(`- Vim: ${vimOld} -> ${vimVersion}`);
       }
       if (neovimOld) {
-        messages.push(`- Neovim: 
-${neovimOld}
- -> 
-${neovimVersion}`);
+        messages.push(`- Neovim: ${neovimOld} -> ${neovimVersion}`);
       }
 
       if (messages.length > 0) {
         const body = messages.join("\n");
+        const delimiter = crypto.randomUUID();
         await Deno.writeTextFile(
           githubOutput,
-          `body=${body}
-`,
+          `body<<${delimiter}\n${body}\n${delimiter}\n`,
           {
             append: true,
           },
