@@ -20,8 +20,5 @@
       "groupName": "github-actions",
       "automerge": true
     }
-  ],
-  "deno": {
-    "enabled": true
-  }
+  ]
 }
