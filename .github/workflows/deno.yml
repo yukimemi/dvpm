@@ -42,7 +42,7 @@ jobs:
         id: vim-rhysd
         with:
           version: "v9.1.2022"
-      - uses: thinca/action-setup-vim@48d4eafc4678801eb56149666a1a1e94b54a660e # v1
+      - uses: thinca/action-setup-vim@5cd81cc774094a684018d40e87d5bcf5b86ea9c8 # v3
         if: matrix.os != 'ubuntu-latest'
         id: vim-thinca
         with:
