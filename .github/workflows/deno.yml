@@ -36,19 +36,19 @@ jobs:
           app-id: ${{ vars.APP_ID }}
           private-key: ${{ secrets.PRIVATE_KEY }}
 
-      - uses: actions/checkout@v4
-      - uses: rhysd/action-setup-vim@v1
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: rhysd/action-setup-vim@19e3dd31a84dbc2c5445d65e9b363f616cab96c1 # v1
         if: matrix.os == 'ubuntu-latest'
         id: vim-rhysd
         with:
           version: "v9.1.2022"
-      - uses: thinca/action-setup-vim@v1
+      - uses: thinca/action-setup-vim@48d4eafc4678801eb56149666a1a1e94b54a660e # v1
         if: matrix.os != 'ubuntu-latest'
         id: vim-thinca
         with:
           vim_type: "Vim"
           vim_version: "v9.1.2022"
-      - uses: rhysd/action-setup-vim@v1
+      - uses: rhysd/action-setup-vim@19e3dd31a84dbc2c5445d65e9b363f616cab96c1 # v1
         id: nvim
         with:
           neovim: true
@@ -69,7 +69,7 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
       - run: deno task ci
         if: matrix.os == 'ubuntu-latest'
-      - uses: peter-evans/create-pull-request@v7
+      - uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676 # v7
         if: matrix.os == 'ubuntu-latest'
         with:
           token: ${{ steps.app-token.outputs.token }}
