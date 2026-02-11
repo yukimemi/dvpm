@@ -31,29 +31,49 @@ async function updateWorkflowFile(
   neovimVersion: string,
 ): Promise<UpdateResult> {
   const content = await Deno.readTextFile(filePath);
-  let newContent = content;
   const result: UpdateResult = {
     vim: { new: vimVersion },
     neovim: { new: neovimVersion },
   };
 
-  // Vim
-  const vimRegex = /((?:vim_)?version:\s+")(v\d+\.\d+\.\d+)(")/g;
-  newContent = newContent.replace(vimRegex, (_match, p1, oldVer, p3) => {
-    if (oldVer !== vimVersion) {
-      result.vim.old = oldVer;
+  const lines = content.split("\n");
+  let inVimSetup = false;
+  let inNeovimSetup = false;
+
+  const newLines = lines.map((line) => {
+    if (line.includes("rhysd/action-setup-vim") || line.includes("thinca/action-setup-vim")) {
+      inVimSetup = true;
+      inNeovimSetup = false;
+    } else if (inVimSetup && line.includes("neovim: true")) {
+      inNeovimSetup = true;
+    } else if (line.trim() === "" || line.startsWith("    -") || line.startsWith("  -")) {
+      // New step or empty line
+      if (!line.includes("version:")) {
+        inVimSetup = false;
+        inNeovimSetup = false;
+      }
     }
-    return `${p1}${vimVersion}${p3}`;
+
+    if (inVimSetup && (line.includes("version:") || line.includes("vim_version:"))) {
+      const regex = /((?:vim_)?version:\s+")(v\d+\.\d+\.\d+)(")/;
+      const match = line.match(regex);
+      if (match) {
+        const [fullMatch, p1, oldVer, p3] = match;
+        const targetVer = inNeovimSetup ? neovimVersion : vimVersion;
+        if (oldVer !== targetVer) {
+          if (inNeovimSetup) {
+            result.neovim.old = oldVer;
+          } else {
+            result.vim.old = oldVer;
+          }
+          return line.replace(fullMatch, `${p1}${targetVer}${p3}`);
+        }
+      }
+    }
+    return line;
   });
 
-  // Neovim
-  const neovimRegex = /((?:vim_)?version:\s+")(v\d+\.\d+\.\d+)(")/g;
-  newContent = newContent.replace(neovimRegex, (_match, p1, oldVer, p3) => {
-    if (oldVer !== neovimVersion) {
-      result.neovim.old = oldVer;
-    }
-    return `${p1}${neovimVersion}${p3}`;
-  });
+  const newContent = newLines.join("\n");
 
   if (content !== newContent) {
     console.log(`Updating ${filePath}...`);
