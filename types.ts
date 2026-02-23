@@ -235,6 +235,10 @@ export type Plug = {
    */
   lazy?: LazyParams;
   /**
+   * Whether to clean local changes before update.
+   */
+  clean?: Bool;
+  /**
    * Internal flag: whether the plugin is loaded.
    */
   isLoaded?: boolean;
@@ -281,6 +285,7 @@ const _PlugSchema = type({
     "afterFile?": "string",
   }).default(() => ({ enabled: false })),
   "lazy?": _LazyParamsSchema,
+  "clean?": BoolSchema,
   isLoaded: "boolean = false",
   isInstalled: "boolean = false",
   isUpdated: "boolean = false",
@@ -335,6 +340,7 @@ export type PlugInfo = {
     afterFile?: string;
   };
   lazy: LazyParams;
+  clean: Bool;
   isLoaded: boolean;
   isInstalled: boolean;
   isUpdated: boolean;
@@ -347,6 +353,7 @@ const _PlugOptionSchema = type({
   base: "string",
   profiles: type("string[]").default(() => []),
   logarg: type("string[]").default(() => []),
+  clean: BoolSchema.default(false),
 });
 /**
  * Options for a single plugin.
@@ -364,6 +371,10 @@ export type PlugOption = {
    * Additional arguments for git log.
    */
   logarg: string[];
+  /**
+   * Whether to clean local changes before update.
+   */
+  clean: Bool;
 };
 export const PlugOptionSchema: Type<PlugOption> = _PlugOptionSchema as unknown as Type<PlugOption>;
 
@@ -375,6 +386,7 @@ const _DvpmOptionSchema = type({
   notify: "boolean = false",
   logarg: type("string[]").default(() => []),
   health: "boolean = false",
+  clean: BoolSchema.default(false),
 });
 export const DvpmOptionSchema: Type<DvpmOption> = _DvpmOptionSchema as unknown as Type<DvpmOption>;
 
@@ -410,4 +422,8 @@ export type DvpmOption = {
    * Whether to enable health check. Default is true.
    */
   health?: boolean;
+  /**
+   * Whether to clean local changes before update.
+   */
+  clean?: Bool;
 };

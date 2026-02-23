@@ -17,8 +17,8 @@ test({
     const option = {
       base,
       profiles: [],
-      profile: false,
       logarg: [],
+      clean: false,
     };
 
     const testCases = [
@@ -88,5 +88,41 @@ test({
         `Test Case: ${testCase.name} - dst`,
       );
     }
+  },
+});
+
+test({
+  mode: "all",
+  name: "Plugin clean option priority test",
+  fn: async (denops) => {
+    const base = await Deno.makeTempDir();
+
+    // Global clean: true
+    const option = {
+      base,
+      profiles: [],
+      logarg: [],
+      clean: true,
+    };
+
+    // 1. No dst, no explicit clean -> follows global (true)
+    const p1 = await Plugin.create(denops, { url: "owner/p1" }, option);
+    assertEquals(p1.info.clean, true, "p1: should be true (global)");
+
+    // 2. dst specified, no explicit clean -> should be false
+    const p2 = await Plugin.create(denops, { url: "owner/p2", dst: "~/src/p2" }, option);
+    assertEquals(p2.info.clean, false, "p2: should be false (dst specified)");
+
+    // 3. dst specified, but explicit clean: true -> should be true
+    const p3 = await Plugin.create(
+      denops,
+      { url: "owner/p3", dst: "~/src/p3", clean: true },
+      option,
+    );
+    assertEquals(p3.info.clean, true, "p3: should be true (explicit clean)");
+
+    // 4. No dst, but explicit clean: false -> should be false
+    const p4 = await Plugin.create(denops, { url: "owner/p4", clean: false }, option);
+    assertEquals(p4.info.clean, false, "p4: should be false (explicit clean)");
   },
 });

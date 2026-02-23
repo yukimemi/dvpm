@@ -39,3 +39,36 @@ Deno.test({
     assertEquals(actual, expected);
   },
 });
+
+Deno.test({
+  name: "Test clean",
+  sanitizeOps: false,
+  sanitizeResources: false,
+  fn: async () => {
+    const git = await init();
+    const testFile = `${git.base}/test.txt`;
+    const readmeFile = `${git.base}/README.md`;
+
+    // Create untracked file
+    await Deno.writeTextFile(testFile, "test");
+    // Modify tracked file
+    const originalContent = await Deno.readTextFile(readmeFile);
+    await Deno.writeTextFile(readmeFile, "modified");
+
+    await git.clean();
+
+    // Check untracked file is removed
+    try {
+      await Deno.stat(testFile);
+      throw new Error("test.txt should be removed");
+    } catch (e) {
+      if (!(e instanceof Deno.errors.NotFound)) {
+        throw e;
+      }
+    }
+
+    // Check tracked file is restored
+    const restoredContent = await Deno.readTextFile(readmeFile);
+    assertEquals(restoredContent, originalContent);
+  },
+});

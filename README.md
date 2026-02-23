@@ -240,6 +240,8 @@ export type DvpmOption = {
   // If set to true, yukimemi/dvpm will be automatically added to the plugin list
   // to support Neovim's built-in :checkhealth command.
   health?: boolean;
+  // Whether to clean local changes before update. Default is false.
+  clean?: Bool;
 };
 ```
 
@@ -320,6 +322,10 @@ export type Plug = {
   // Whether to git clone and update. Default is true. (Optional)
   // If this option is set to false, then `enabled` is also set to false.
   clone?: Bool;
+  // Whether to clean local changes before update. Default is false. (Optional)
+  // If `dst` is specified, it defaults to `false` even if global `clean` is `true`.
+  // Priority: 1. Plug.clean, 2. if Plug.dst then false, 3. DvpmOption.clean
+  clean?: Bool;
   // Dependencies. (Optional)
   dependencies?: string[];
 };

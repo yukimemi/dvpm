@@ -220,14 +220,29 @@ export class Git {
   }
 
   /**
+   * Cleans the repository by removing untracked files and resetting tracked files.
+   *
+   * @returns Command output.
+   */
+  public async clean(): Promise<Deno.CommandOutput> {
+    await this.git(["checkout", "."]);
+    return await this.git(["clean", "-fd"]);
+  }
+
+  /**
    * Pulls the latest changes from the remote repository.
    *
    * @param refToPull - Optional reference to pull. Defaults to the default branch.
+   * @param shouldClean - Whether to clean local changes before pulling.
    * @returns Command output.
    */
-  public async pull(refToPull?: string): Promise<Deno.CommandOutput> {
+  public async pull(refToPull?: string, shouldClean = false): Promise<Deno.CommandOutput> {
     const currentRef = await this.getBranch();
     const targetRef = refToPull ?? await this.getDefaultBranchGit();
+
+    if (shouldClean) {
+      await this.clean();
+    }
 
     const isTargetRefABranch = await this.isBranch(targetRef);
 

@@ -73,6 +73,7 @@ export class Plugin {
     await p.initEnabled();
     await p.initClone();
     await p.initCache();
+    await p.initClean();
     await p.initLazy();
     p.initDependencies();
 
@@ -113,6 +114,13 @@ export class Plugin {
     ) {
       this.info.cache.enabled = true;
     }
+  }
+
+  private async initClean() {
+    const clean = this.plug.clean !== undefined
+      ? this.plug.clean
+      : (this.plug.dst !== undefined ? false : this.option.clean);
+    this.info.clean = await this.is(clean as Bool);
   }
 
   private async initLazy() {
@@ -388,7 +396,7 @@ export class Plugin {
       this.info.rev
         ? await echo(this.denops, `Update ${this.info.url}, branch: ${this.info.rev}`)
         : await echo(this.denops, `Update ${this.info.url}`);
-      const output = await git.pull(this.info.rev);
+      const output = await git.pull(this.info.rev, this.info.clean as boolean);
       const afterRev = await git.getRevision();
       await this.genHelptags();
       if (output.success) {

@@ -19,6 +19,7 @@ import { echo, execute } from "@denops/std/helper";
 import { logger } from "./logger.ts";
 import { sprintf } from "@std/fmt/printf";
 import {
+  type Bool,
   type CmdParams,
   CommandSchema,
   type DvpmOption,
@@ -607,6 +608,7 @@ export class Dvpm {
           base: this.option.base,
           profiles: type("string[]").assert(this.option.profiles),
           logarg: type("string[]").assert(this.option.logarg),
+          clean: type("boolean | Function").assert(this.option.clean) as Bool,
         },
       );
       this.plugins.push(p);
