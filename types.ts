@@ -5,6 +5,7 @@
 // =============================================================================
 
 import type { Denops } from "@denops/std";
+import type { Mode } from "@denops/std/mapping";
 import { type Type, type } from "arktype";
 
 export type Bool =
@@ -51,7 +52,7 @@ export type KeyMap = {
   /**
    * Mode(s) for the mapping. Default is "n".
    */
-  mode?: string | string[];
+  mode?: Mode | Mode[];
   /**
    * Whether the mapping is non-recursive. Default is true.
    */
@@ -77,7 +78,7 @@ export type KeyMap = {
 const _KeyMapSchema = type({
   lhs: "string",
   "rhs?": "string",
-  "mode?": "string | string[]",
+  "mode?": "('n'|'i'|'c'|'v'|'x'|'s'|'o'|'t'|'l'|'')[] | 'n'|'i'|'c'|'v'|'x'|'s'|'o'|'t'|'l'|''",
   "noremap?": "boolean",
   "silent?": "boolean",
   "nowait?": "boolean",

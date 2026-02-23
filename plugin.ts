@@ -91,7 +91,7 @@ export class Plugin {
   }
 
   private async initEnabled() {
-    this.info.enabled = await this.is(this.info.enabled as Bool) &&
+    this.info.enabled = await this.is(this.info.enabled) &&
       (
         this.option.profiles.length === 0 ||
         (
@@ -102,12 +102,12 @@ export class Plugin {
   }
 
   private async initClone() {
-    const enabled = this.info.enabled as boolean;
-    this.info.clone = await this.is((enabled || this.info.clone) as Bool);
+    const enabled = await this.is(this.info.enabled);
+    this.info.clone = await this.is(enabled || this.info.clone);
   }
 
   private async initCache() {
-    this.info.cache.enabled = await this.is(this.info.cache.enabled as Bool);
+    this.info.cache.enabled = await this.is(this.info.cache.enabled);
     if (
       this.info.cache?.before || this.info.cache?.after || this.info.cache?.beforeFile ||
       this.info.cache?.afterFile
@@ -120,7 +120,7 @@ export class Plugin {
     const clean = this.plug.clean !== undefined
       ? this.plug.clean
       : (this.plug.dst !== undefined ? false : this.option.clean);
-    this.info.clean = await this.is(clean as Bool);
+    this.info.clean = await this.is(clean);
   }
 
   private async initLazy() {
@@ -128,7 +128,7 @@ export class Plugin {
     if (lazy.cmd || lazy.event || lazy.ft || lazy.keys) {
       lazy.enabled = true;
     }
-    lazy.enabled = await this.is(lazy.enabled as Bool);
+    lazy.enabled = await this.is(lazy.enabled ?? false);
   }
 
   private initDependencies() {
@@ -396,7 +396,7 @@ export class Plugin {
       this.info.rev
         ? await echo(this.denops, `Update ${this.info.url}, branch: ${this.info.rev}`)
         : await echo(this.denops, `Update ${this.info.url}`);
-      const output = await git.pull(this.info.rev, this.info.clean as boolean);
+      const output = await git.pull(this.info.rev, await this.is(this.info.clean));
       const afterRev = await git.getRevision();
       await this.genHelptags();
       if (output.success) {

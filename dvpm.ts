@@ -19,12 +19,12 @@ import { echo, execute } from "@denops/std/helper";
 import { logger } from "./logger.ts";
 import { sprintf } from "@std/fmt/printf";
 import {
-  type Bool,
+  BoolSchema,
   type CmdParams,
   CommandSchema,
   type DvpmOption,
   DvpmOptionSchema,
-  type KeyMap,
+  KeyMapSchema,
   LoadArgsSchema,
   type LoadType,
   type Plug,
@@ -608,7 +608,7 @@ export class Dvpm {
           base: this.option.base,
           profiles: type("string[]").assert(this.option.profiles),
           logarg: type("string[]").assert(this.option.logarg),
-          clean: type("boolean | Function").assert(this.option.clean) as Bool,
+          clean: BoolSchema.assert(this.option.clean),
         },
       );
       this.plugins.push(p);
@@ -787,7 +787,7 @@ export class Dvpm {
           // 2. Try to find defined mapping from Vim
           const modes: mapping.Mode[] = ["o", "x", "n", "v", "s", "i", "c"];
           try {
-            const m = await this.denops.call("mode") as string;
+            const m = type("string").assert(await this.denops.call("mode"));
             let mode: mapping.Mode = "n";
             if (m.startsWith("no")) {
               mode = "o";
@@ -824,10 +824,12 @@ export class Dvpm {
                 // We cannot return it via <expr>, so we fallback to feedkeys.
                 // We return "<Ignore>" to consume the current key press without effect,
                 // and let feedkeys trigger the new mapping.
-                const feedArg = await this.denops.call(
-                  "eval",
-                  `"${arg.replace(/\\/g, "\\\\").replace(/"/g, '"').replace(/</g, "\\<")}"`,
-                ) as string;
+                const feedArg = type("string").assert(
+                  await this.denops.call(
+                    "eval",
+                    `"${arg.replace(/\\/g, "\\\\").replace(/"/g, '"').replace(/</g, "\\<")}"`,
+                  ),
+                );
                 await this.denops.cmd("call feedkeys(keys, 'm')", { keys: feedArg });
                 return "<Ignore>";
               }
@@ -837,10 +839,12 @@ export class Dvpm {
           }
           return arg;
         } else {
-          const feedArg = await this.denops.call(
-            "eval",
-            `"${arg.replace(/\\/g, "\\\\").replace(/"/g, '"').replace(/</g, "\\<")}"`,
-          ) as string;
+          const feedArg = type("string").assert(
+            await this.denops.call(
+              "eval",
+              `"${arg.replace(/\\/g, "\\\\").replace(/"/g, '"').replace(/</g, "\\<")}"`,
+            ),
+          );
           await this.denops.cmd("call feedkeys(keys, 'm')", { keys: feedArg });
         }
       }
@@ -912,9 +916,7 @@ export class Dvpm {
                 { mode: "n" },
               );
             } else {
-              const modes = Array.isArray(key.mode)
-                ? key.mode as mapping.Mode[]
-                : [key.mode ?? "n"] as mapping.Mode[];
+              const modes = Array.isArray(key.mode) ? key.mode : [key.mode ?? "n"];
               for (const mode of modes) {
                 if (mode === "n") {
                   await this.map(
@@ -977,9 +979,9 @@ export class Dvpm {
 
           // Cleanup KEYS proxies
           if (lazy.keys) {
-            const keys = (Array.isArray(lazy.keys) ? lazy.keys : [lazy.keys]).filter((k) =>
-              k !== undefined
-            ) as (string | KeyMap)[];
+            const keys = type(KeyMapSchema.or("string").array()).assert(
+              (Array.isArray(lazy.keys) ? lazy.keys : [lazy.keys]).filter((k) => k !== undefined),
+            );
             for (const key of keys) {
               if (typeof key === "string") {
                 try {
@@ -991,9 +993,7 @@ export class Dvpm {
                   // Ignore
                 }
               } else {
-                const modes = Array.isArray(key.mode)
-                  ? key.mode as mapping.Mode[]
-                  : [key.mode ?? "n"] as mapping.Mode[];
+                const modes = Array.isArray(key.mode) ? key.mode : [key.mode ?? "n"];
                 for (const mode of modes) {
                   try {
                     const m = await mapping.read(this.denops, key.lhs, { mode });
@@ -1023,14 +1023,12 @@ export class Dvpm {
 
           // Setup KEYS mappings (Post-load: for explicit mappings)
           if (lazy.keys) {
-            const keys = (Array.isArray(lazy.keys) ? lazy.keys : [lazy.keys]).filter((k) =>
-              k !== undefined
-            ) as (string | KeyMap)[];
+            const keys = type(KeyMapSchema.or("string").array()).assert(
+              (Array.isArray(lazy.keys) ? lazy.keys : [lazy.keys]).filter((k) => k !== undefined),
+            );
             for (const key of keys) {
               if (typeof key !== "string" && key.rhs) {
-                const modes = Array.isArray(key.mode)
-                  ? key.mode as mapping.Mode[]
-                  : [key.mode ?? "n"] as mapping.Mode[];
+                const modes = Array.isArray(key.mode) ? key.mode : [key.mode ?? "n"];
                 for (const mode of modes) {
                   await this.map(key.lhs, key.rhs, { ...key, mode });
                 }
@@ -1112,7 +1110,7 @@ export class Dvpm {
   private flushLog() {
     for (const handler of logger().handlers) {
       if ("flush" in handler && typeof handler.flush === "function") {
-        (handler as unknown as { flush: () => void }).flush();
+        handler.flush();
       }
     }
   }
