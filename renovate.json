@@ -32,10 +32,8 @@
         "^\\.github/workflows/.*\\.yml$"
       ],
       "matchStrings": [
-        "vim_version: \"(?<currentValue>v\\d+\\.\\d+\\.\\d+)\"",
-        "version: \"(?<currentValue>v\\d+\\.\\d+\\.\\d+)\"\\s+# renovate: datasource=github-releases depName=(?<depName>.*)"
-      ],
-      "datasourceTemplate": "github-releases"
+        "(?:vim_version|version): \"(?<currentValue>v\\d+\\.\\d+\\.\\d+)\"\\s+# renovate: datasource=(?<datasource>.*) depName=(?<depName>.*)"
+      ]
     }
   ]
 }
