@@ -6,6 +6,7 @@
     ":prConcurrentLimitNone"
   ],
   "labels": ["automerge"],
+  "platformAutomerge": true,
   "packageRules": [
     {
       "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
@@ -19,6 +20,22 @@
       "matchDatasources": ["github-actions"],
       "groupName": "github-actions",
       "automerge": true
+    }
+  ],
+  "deno": {
+    "enabled": true
+  },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": [
+        "^\\.github/workflows/.*\\.yml$"
+      ],
+      "matchStrings": [
+        "vim_version: \"(?<currentValue>v\\d+\\.\\d+\\.\\d+)\"",
+        "version: \"(?<currentValue>v\\d+\\.\\d+\\.\\d+)\"\\s+# renovate: datasource=github-releases depName=(?<depName>.*)"
+      ],
+      "datasourceTemplate": "github-releases"
     }
   ]
 }
