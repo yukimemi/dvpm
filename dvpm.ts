@@ -879,6 +879,18 @@ export class Dvpm {
             );
           }
         }
+        if (lazy.colorscheme) {
+          const colorschemes = Array.isArray(lazy.colorscheme)
+            ? lazy.colorscheme
+            : [lazy.colorscheme];
+          await autocmd.define(
+            denops,
+            "ColorSchemePre",
+            colorschemes,
+            `call denops#request('${denops.name}', 'load', ['${p.info.url}', 'colorscheme', '<amatch>'])`,
+            { once: true },
+          );
+        }
         if (lazy.event) {
           const events = Array.isArray(lazy.event) ? lazy.event : [lazy.event];
           await autocmd.define(

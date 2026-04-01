@@ -97,6 +97,7 @@ export type LazyParams = {
   event?: string | string[];
   ft?: string | string[];
   keys?: string | string[] | KeyMap | KeyMap[];
+  colorscheme?: string | string[];
 };
 
 const _LazyParamsSchema = type({
@@ -105,6 +106,7 @@ const _LazyParamsSchema = type({
   "event?": "string | string[]",
   "ft?": "string | string[]",
   "keys?": type(KeyMapSchema, "|", "string").array().or(KeyMapSchema).or("string"),
+  "colorscheme?": "string | string[]",
 });
 
 export const LazyParamsSchema: Type<LazyParams> = _LazyParamsSchema as unknown as Type<LazyParams>;
@@ -112,7 +114,7 @@ export const LazyParamsSchema: Type<LazyParams> = _LazyParamsSchema as unknown a
 /**
  * Represents the type of load trigger.
  */
-export type LoadType = "cmd" | "keys" | "ft" | "event";
+export type LoadType = "cmd" | "keys" | "ft" | "event" | "colorscheme";
 
 /**
  * Schema for the arguments of the load method.
@@ -146,7 +148,7 @@ const _CmdParamsSchema = type({
 
 const _LoadArgsSchema = type({
   url: "string",
-  "loadType?": type("'cmd' | 'keys' | 'ft' | 'event'").or("undefined"),
+  "loadType?": type("'cmd' | 'keys' | 'ft' | 'event' | 'colorscheme'").or("undefined"),
   "arg?": type("string").or("undefined"),
   "params?": _CmdParamsSchema.or("undefined"),
 });
