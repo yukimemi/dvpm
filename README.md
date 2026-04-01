@@ -341,6 +341,8 @@ export type Lazy = {
   ft?: string | string[];
   // Load the plugin when the key is pressed. (Optional)
   keys?: string | string[] | KeyMap | KeyMap[];
+  // Load the plugin when the colorscheme is applied. (Optional)
+  colorscheme?: string | string[];
 };
 
 export type Command = {
@@ -580,6 +582,14 @@ e.g.
     url: "othree/html5.vim",
     lazy: {
       ft: "html",
+    },
+  });
+
+  // Load on colorscheme.
+  await dvpm.add({
+    url: "folke/tokyonight.nvim",
+    lazy: {
+      colorscheme: "tokyonight",
     },
   });
 

@@ -125,7 +125,7 @@ export class Plugin {
 
   private async initLazy() {
     const lazy = this.info.lazy;
-    if (lazy.cmd || lazy.event || lazy.ft || lazy.keys) {
+    if (lazy.cmd || lazy.event || lazy.ft || lazy.keys || lazy.colorscheme) {
       lazy.enabled = true;
     }
     lazy.enabled = await this.is(lazy.enabled ?? false);
