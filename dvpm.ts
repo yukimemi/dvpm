@@ -1132,25 +1132,29 @@ export class Dvpm {
           // Cleanup CMD proxies
           if (lazy.cmd) {
             const cmds = Array.isArray(lazy.cmd) ? lazy.cmd : [lazy.cmd];
-            for (const cmd of cmds) {
-              const cmdName = typeof cmd === "string" ? cmd : cmd.name;
-              await this.denops.cmd(
-                `if exists(':${cmdName}') == 2 | exe 'delcommand ${cmdName}' | endif`,
-              );
-            }
+            await batch(this.denops, async (denops) => {
+              for (const cmd of cmds) {
+                const cmdName = typeof cmd === "string" ? cmd : cmd.name;
+                await denops.cmd(
+                  `if exists(':${cmdName}') == 2 | exe 'delcommand ${cmdName}' | endif`,
+                );
+              }
+            });
           }
 
-          // Cleanup KEYS proxies
+          // Cleanup KEYS proxies: read rhs first (needs return value, can't batch),
+          // then batch the unmap calls.
           if (lazy.keys) {
             const keys = type(KeyMapSchema.or("string").array()).assert(
               (Array.isArray(lazy.keys) ? lazy.keys : [lazy.keys]).filter((k) => k !== undefined),
             );
+            const toUnmap: Array<{ lhs: string; mode: mapping.Mode }> = [];
             for (const key of keys) {
               if (typeof key === "string") {
                 try {
                   const m = await mapping.read(this.denops, key, { mode: "n" });
                   if (m.rhs.includes(`denops#notify('${this.denops.name}', 'load',`)) {
-                    await mapping.unmap(this.denops, key, { mode: "n" });
+                    toUnmap.push({ lhs: key, mode: "n" });
                   }
                 } catch {
                   // Ignore
@@ -1164,13 +1168,20 @@ export class Dvpm {
                       m.rhs.includes(`denops#notify('${this.denops.name}', 'load',`) ||
                       m.rhs.includes(`Dvpm_Internal_Load_`)
                     ) {
-                      await mapping.unmap(this.denops, key.lhs, { mode });
+                      toUnmap.push({ lhs: key.lhs, mode });
                     }
                   } catch {
                     // Ignore
                   }
                 }
               }
+            }
+            if (toUnmap.length > 0) {
+              await batch(this.denops, async (denops) => {
+                for (const { lhs, mode } of toUnmap) {
+                  await mapping.unmap(denops, lhs, { mode });
+                }
+              });
             }
           }
 
@@ -1205,14 +1216,16 @@ export class Dvpm {
             const keys = type(KeyMapSchema.or("string").array()).assert(
               (Array.isArray(lazy.keys) ? lazy.keys : [lazy.keys]).filter((k) => k !== undefined),
             );
-            for (const key of keys) {
-              if (typeof key !== "string" && key.rhs) {
-                const modes = Array.isArray(key.mode) ? key.mode : [key.mode ?? "n"];
-                for (const mode of modes) {
-                  await this.map(key.lhs, key.rhs, { ...key, mode });
+            await batch(this.denops, async (denops) => {
+              for (const key of keys) {
+                if (typeof key !== "string" && key.rhs) {
+                  const modes = Array.isArray(key.mode) ? key.mode : [key.mode ?? "n"];
+                  for (const mode of modes) {
+                    await this.map(key.lhs, key.rhs, { ...key, mode }, denops);
+                  }
                 }
               }
-            }
+            });
           }
 
           const _sourceAfterStart = performance.now();
@@ -1318,9 +1331,10 @@ export class Dvpm {
     lhs: string,
     rhs: string,
     opts: mapping.MapOptions & { desc?: string; remap?: boolean },
+    denops: Denops = this.denops,
   ) {
     const noremap = opts.remap !== undefined ? !opts.remap : opts.noremap;
-    if (this.denops.meta.host === "nvim") {
+    if (denops.meta.host === "nvim") {
       const mode = opts.mode || "n";
       const keysOpts: Record<string, unknown> = {
         remap: !noremap,
@@ -1331,13 +1345,13 @@ export class Dvpm {
       if (opts.desc) {
         keysOpts.desc = opts.desc;
       }
-      await this.denops.call(
+      await denops.call(
         "luaeval",
         `vim.keymap.set(_A[1], _A[2], _A[3], _A[4])`,
         [mode, lhs, rhs, keysOpts],
       );
     } else {
-      await mapping.map(this.denops, lhs, rhs, { ...opts, noremap });
+      await mapping.map(denops, lhs, rhs, { ...opts, noremap });
     }
   }
 }
