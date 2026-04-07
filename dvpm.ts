@@ -902,41 +902,60 @@ export class Dvpm {
       }
       if (loadType === "keys" && arg) {
         if (params?.is_expr) {
-          // 1. Try to find explicit rhs from config
-          const lazy = p.info.lazy;
-          const keys = Array.isArray(lazy.keys) ? lazy.keys : [lazy.keys];
-          for (const k of keys) {
-            if (k && typeof k !== "string" && k.lhs === arg && k.rhs) {
-              return k.rhs;
-            }
-          }
-
-          // 2. Try to find defined mapping from Vim
-          const modes: mapping.Mode[] = ["o", "x", "n", "v", "s", "i", "c"];
+          // Determine current mode first (needed for mode-aware rhs lookup)
+          const modes: mapping.Mode[] = ["o", "x", "n", "v", "s", "i", "c", "t", "l", ""];
+          let currentMode: mapping.Mode = "n";
           try {
             const m = type("string").assert(await this.denops.call("mode"));
-            let mode: mapping.Mode = "n";
             if (m.startsWith("no")) {
-              mode = "o";
+              currentMode = "o";
             } else if (m === "v" || m === "V" || m === "\x16") {
-              mode = "x";
+              currentMode = "x";
             } else if (m === "s" || m === "S" || m === "\x13") {
-              mode = "s";
+              currentMode = "s";
             } else if (m.startsWith("i")) {
-              mode = "i";
+              currentMode = "i";
             } else if (m.startsWith("c")) {
-              mode = "c";
+              currentMode = "c";
+            } else if (m === "t") {
+              currentMode = "t";
             }
             // Prioritize current mode
-            const idx = modes.indexOf(mode);
+            const idx = modes.indexOf(currentMode);
             if (idx > -1) {
               modes.splice(idx, 1);
-              modes.unshift(mode);
+              modes.unshift(currentMode);
             }
           } catch {
             // Ignore
           }
 
+          // 1. Try to find explicit rhs from config (mode-aware)
+          // "v" covers both Visual ("x") and Select ("s"); "" is a wildcard for all modes.
+          const lazy = p.info.lazy;
+          const keys = Array.isArray(lazy.keys) ? lazy.keys : [lazy.keys];
+          let fallbackRhs: string | undefined;
+          for (const k of keys) {
+            if (k && typeof k !== "string" && k.lhs === arg && k.rhs) {
+              if (fallbackRhs === undefined) {
+                fallbackRhs = k.rhs;
+              }
+              const keyModes = Array.isArray(k.mode) ? k.mode : [k.mode ?? "n"];
+              if (
+                keyModes.includes(currentMode) ||
+                keyModes.includes("") ||
+                (currentMode === "x" && keyModes.includes("v")) ||
+                (currentMode === "s" && keyModes.includes("v"))
+              ) {
+                return k.rhs;
+              }
+            }
+          }
+          if (fallbackRhs !== undefined) {
+            return fallbackRhs;
+          }
+
+          // 2. Try to find defined mapping from Vim
           for (const mode of modes) {
             try {
               const info = await mapping.read(this.denops, arg, { mode });
