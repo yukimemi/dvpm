@@ -205,16 +205,16 @@ export class Plugin {
   }
 
   /**
-   * Executes the `add` configuration.
+   * Executes the `init` configuration.
    */
-  public async add() {
-    if (this.info.add) {
-      logger().debug(`[add] ${this.info.url} execute add !`);
-      await this.info.add({ denops: this.denops, info: this.info });
+  public async init() {
+    if (this.info.init) {
+      logger().debug(`[init] ${this.info.url} execute init !`);
+      await this.info.init({ denops: this.denops, info: this.info });
     }
-    if (this.info.addFile) {
-      logger().debug(`[add] ${this.info.url} execute addFile !`);
-      await executeFile(this.denops, this.info.addFile);
+    if (this.info.initFile) {
+      logger().debug(`[init] ${this.info.url} execute initFile !`);
+      await executeFile(this.denops, this.info.initFile);
     }
   }
 
