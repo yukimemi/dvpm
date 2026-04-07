@@ -472,8 +472,10 @@ It outputs the health check results to the dvpm://checkhealth buffer. (Vim / Neo
 ```
 
 It outputs the plugin performance profile to the `dvpm://profile` buffer.
-Plugins are sorted by total load time (slowest first), with a visual bar chart
-showing relative time so you can immediately spot bottlenecks.
+Loaded plugins are sorted by total load time (slowest first) with a visual bar
+chart. Lazy plugins that have not been triggered yet are listed separately so
+they do not distort the chart. The buffer is overwritten each time the command
+is run, always reflecting the current load state.
 
 > **Note:** Requires `profile: true` in `Dvpm.begin` options. Profiling is
 > disabled by default to avoid any overhead during normal startup.
@@ -484,26 +486,33 @@ showing relative time so you can immediately spot bottlenecks.
 
 Each row shows the time spent in every loading phase:
 
-| column   | description                                              |
-|----------|----------------------------------------------------------|
-| `total`  | Total time charged to this plugin                        |
-| `add`    | Time spent in the `add` / `addFile` hook                 |
-| `before` | Time spent in the `before` / `beforeFile` hook           |
-| `load`   | Time for runtimepath + source + sourceAfter + denops loading |
-| `after`  | Time spent in the `after` / `afterFile` hook             |
-| `build`  | Time spent in the `build` hook (first install only)      |
-| `bar`    | ASCII bar chart scaled to the slowest plugin             |
+| column   | description                                                      |
+|----------|------------------------------------------------------------------|
+| `total`  | Total time charged to this plugin                                |
+| `add`    | Time spent in the `add` / `addFile` hook                         |
+| `before` | Time spent in the `before` / `beforeFile` hook                   |
+| `load`   | runtimepath + source + sourceAfter + denops plugin loading       |
+| `after`  | Time spent in the `after` / `afterFile` hook                     |
+| `build`  | Time spent in the `build` hook (first install only)              |
+| `bar`    | ASCII bar chart scaled to the slowest loaded plugin              |
 
 Example output:
 
 ```text
 DVPM Plugin Performance Profile
-Total profiled load time: 312.5ms  Profiled plugins: 8
+Total profiled load time: 312.5ms  Loaded: 8  Lazy (not loaded): 15
 
-plugin                            total     add    before    load       after     build    bar
+plugin                            total       add    before      load     after     build    bar
 --------------------------------  ---------  ---------  ---------  ---------  ---------  ---------  ------------------------------
 nvim-treesitter                    210.3ms    0.5ms    1.2ms   207.8ms    0.8ms    0.0ms  ██████████████████████████████
-telescope.nvim                      55.1ms    0.3ms    0.6ms    53.4ms    0.8ms    0.0ms  ███████░░░░░░░░░░░░░░░░░░░░░░░
+telescope.nvim                      55.1ms    0.3ms    0.6ms    53.4ms    0.8ms    0.0ms  ████████░░░░░░░░░░░░░░░░░░░░░░
+--------------------------------  ---------  ---------  ---------  ---------  ---------  ---------  ------------------------------
+Total                              312.5ms
+
+Lazy plugins (not yet loaded) — only add hook measured:
+--------------------------------  ---------  ---------  ---------  ---------  ---------  ---------  ------------------------------
+lazy-plugin-1                        0.2ms         -         -         -         -         -  (not loaded)
+lazy-plugin-2                        0.1ms         -         -         -         -         -  (not loaded)
 ```
 
 ## Cache setting
