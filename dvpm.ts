@@ -929,21 +929,27 @@ export class Dvpm {
           }
 
           // 1. Try to find explicit rhs from config (mode-aware)
+          // "v" mode covers both Visual ("x") and Select ("s") in Vim.
           const lazy = p.info.lazy;
           const keys = Array.isArray(lazy.keys) ? lazy.keys : [lazy.keys];
+          let fallbackRhs: string | undefined;
           for (const k of keys) {
             if (k && typeof k !== "string" && k.lhs === arg && k.rhs) {
+              if (fallbackRhs === undefined) {
+                fallbackRhs = k.rhs;
+              }
               const keyModes = Array.isArray(k.mode) ? k.mode : [k.mode ?? "n"];
-              if (keyModes.includes(currentMode)) {
+              if (
+                keyModes.includes(currentMode) ||
+                (currentMode === "x" && keyModes.includes("v")) ||
+                (currentMode === "s" && keyModes.includes("v"))
+              ) {
                 return k.rhs;
               }
             }
           }
-          // Fallback: return first matching key regardless of mode (backwards compatibility)
-          for (const k of keys) {
-            if (k && typeof k !== "string" && k.lhs === arg && k.rhs) {
-              return k.rhs;
-            }
+          if (fallbackRhs !== undefined) {
+            return fallbackRhs;
           }
 
           // 2. Try to find defined mapping from Vim
