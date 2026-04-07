@@ -322,7 +322,17 @@ const _PlugSchema = type({
   isUpdated: "boolean = false",
   isCache: "boolean = false",
   elaps: "number = 0",
-  "profile?": "object",
+  "profile?": {
+    add: "number",
+    before: "number",
+    runtimepath: "number",
+    source: "number",
+    denopsLoad: "number",
+    after: "number",
+    sourceAfter: "number",
+    build: "number",
+    total: "number",
+  },
 });
 
 export const PlugSchema: Type<Plug> = _PlugSchema as unknown as Type<Plug>;

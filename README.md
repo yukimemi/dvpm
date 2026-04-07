@@ -489,7 +489,7 @@ Each row shows the time spent in every loading phase:
 | `total`  | Total time charged to this plugin                        |
 | `add`    | Time spent in the `add` / `addFile` hook                 |
 | `before` | Time spent in the `before` / `beforeFile` hook           |
-| `source` | Time for runtimepath + sourcing scripts + denops loading |
+| `load`   | Time for runtimepath + sourcing scripts + denops loading |
 | `after`  | Time spent in the `after` / `afterFile` hook             |
 | `build`  | Time spent in the `build` hook (first install only)      |
 | `bar`    | ASCII bar chart scaled to the slowest plugin             |

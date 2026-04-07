@@ -627,7 +627,7 @@ export class Dvpm {
       SEP + sprintf(`%${COL_TIME}s`, "total") +
       SEP + sprintf(`%${COL_TIME}s`, "add") +
       SEP + sprintf(`%${COL_TIME}s`, "before") +
-      SEP + sprintf(`%${COL_TIME}s`, "source") +
+      SEP + sprintf(`%${COL_TIME}s`, "load") +
       SEP + sprintf(`%${COL_TIME}s`, "after") +
       SEP + sprintf(`%${COL_TIME}s`, "build") +
       SEP + "bar",
