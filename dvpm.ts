@@ -8,6 +8,7 @@ import * as autocmd from "@denops/std/autocmd";
 import * as buffer from "@denops/std/buffer";
 import * as fn from "@denops/std/function";
 import * as mapping from "@denops/std/mapping";
+import * as op from "@denops/std/option";
 import * as vars from "@denops/std/variable";
 import type { Denops } from "@denops/std";
 import type { OpenOptions } from "@denops/std/buffer";
@@ -1090,6 +1091,31 @@ export class Dvpm {
 
   private async loadPlugins(plugins: Plugin[]) {
     try {
+      // Batch-add all plugin paths to runtimepath in a single get+set operation.
+      // Without this, N plugins would each do a mutex-lock + rtp-get + rtp-set,
+      // resulting in 2N RPC round-trips for rtp management alone.
+      const newlyAdded = new Set<string>();
+      const _batchRtpStart = performance.now();
+      await Plugin.mutex.lock(async () => {
+        const rtp = (await op.runtimepath.get(this.denops)).split(",");
+        const rtpSet = new Set(rtp);
+        for (const p of plugins) {
+          if (p.info.enabled && !rtpSet.has(p.info.dst)) {
+            newlyAdded.add(p.info.dst);
+            rtpSet.add(p.info.dst);
+            rtp.push(p.info.dst);
+          }
+        }
+        if (newlyAdded.size > 0) {
+          await op.runtimepath.set(this.denops, rtp.join(","));
+        }
+      });
+      // Distribute batch rtp time equally across newly-added plugins so that
+      // profiling reflects real user-perceived cost per plugin.
+      const _rtpPerPlugin = newlyAdded.size > 0
+        ? (performance.now() - _batchRtpStart) / newlyAdded.size
+        : 0;
+
       for (const p of plugins) {
         try {
           if (p.info.isLoaded || this.#loading.has(p.info.url)) {
@@ -1112,25 +1138,29 @@ export class Dvpm {
           // Cleanup CMD proxies
           if (lazy.cmd) {
             const cmds = Array.isArray(lazy.cmd) ? lazy.cmd : [lazy.cmd];
-            for (const cmd of cmds) {
-              const cmdName = typeof cmd === "string" ? cmd : cmd.name;
-              await this.denops.cmd(
-                `if exists(':${cmdName}') == 2 | exe 'delcommand ${cmdName}' | endif`,
-              );
-            }
+            await batch(this.denops, async (denops) => {
+              for (const cmd of cmds) {
+                const cmdName = typeof cmd === "string" ? cmd : cmd.name;
+                await denops.cmd(
+                  `if exists(':${cmdName}') == 2 | exe 'delcommand ${cmdName}' | endif`,
+                );
+              }
+            });
           }
 
-          // Cleanup KEYS proxies
+          // Cleanup KEYS proxies: read rhs first (needs return value, can't batch),
+          // then batch the unmap calls.
           if (lazy.keys) {
             const keys = type(KeyMapSchema.or("string").array()).assert(
               (Array.isArray(lazy.keys) ? lazy.keys : [lazy.keys]).filter((k) => k !== undefined),
             );
+            const toUnmap: Array<{ lhs: string; mode: mapping.Mode }> = [];
             for (const key of keys) {
               if (typeof key === "string") {
                 try {
                   const m = await mapping.read(this.denops, key, { mode: "n" });
                   if (m.rhs.includes(`denops#notify('${this.denops.name}', 'load',`)) {
-                    await mapping.unmap(this.denops, key, { mode: "n" });
+                    toUnmap.push({ lhs: key, mode: "n" });
                   }
                 } catch {
                   // Ignore
@@ -1144,7 +1174,7 @@ export class Dvpm {
                       m.rhs.includes(`denops#notify('${this.denops.name}', 'load',`) ||
                       m.rhs.includes(`Dvpm_Internal_Load_`)
                     ) {
-                      await mapping.unmap(this.denops, key.lhs, { mode });
+                      toUnmap.push({ lhs: key.lhs, mode });
                     }
                   } catch {
                     // Ignore
@@ -1152,11 +1182,18 @@ export class Dvpm {
                 }
               }
             }
+            if (toUnmap.length > 0) {
+              await batch(this.denops, async (denops) => {
+                for (const { lhs, mode } of toUnmap) {
+                  await mapping.unmap(denops, lhs, { mode });
+                }
+              });
+            }
           }
 
-          const _rtpStart = performance.now();
-          const added = await p.addRuntimepath();
-          const _rtpElaps = performance.now() - _rtpStart;
+          // rtp was already updated in the batch phase before this loop.
+          const added = newlyAdded.has(p.info.dst);
+          const _rtpElaps = added ? _rtpPerPlugin : 0;
 
           const _sourceStart = performance.now();
           if (added) {
@@ -1184,14 +1221,16 @@ export class Dvpm {
             const keys = type(KeyMapSchema.or("string").array()).assert(
               (Array.isArray(lazy.keys) ? lazy.keys : [lazy.keys]).filter((k) => k !== undefined),
             );
-            for (const key of keys) {
-              if (typeof key !== "string" && key.rhs) {
-                const modes = Array.isArray(key.mode) ? key.mode : [key.mode ?? "n"];
-                for (const mode of modes) {
-                  await this.map(key.lhs, key.rhs, { ...key, mode });
+            await batch(this.denops, async (denops) => {
+              for (const key of keys) {
+                if (typeof key !== "string" && key.rhs) {
+                  const modes = Array.isArray(key.mode) ? key.mode : [key.mode ?? "n"];
+                  for (const mode of modes) {
+                    await this.map(key.lhs, key.rhs, { ...key, mode }, denops);
+                  }
                 }
               }
-            }
+            });
           }
 
           const _sourceAfterStart = performance.now();
@@ -1297,9 +1336,10 @@ export class Dvpm {
     lhs: string,
     rhs: string,
     opts: mapping.MapOptions & { desc?: string; remap?: boolean },
+    denops: Denops = this.denops,
   ) {
     const noremap = opts.remap !== undefined ? !opts.remap : opts.noremap;
-    if (this.denops.meta.host === "nvim") {
+    if (denops.meta.host === "nvim") {
       const mode = opts.mode || "n";
       const keysOpts: Record<string, unknown> = {
         remap: !noremap,
@@ -1310,13 +1350,13 @@ export class Dvpm {
       if (opts.desc) {
         keysOpts.desc = opts.desc;
       }
-      await this.denops.call(
+      await denops.call(
         "luaeval",
         `vim.keymap.set(_A[1], _A[2], _A[3], _A[4])`,
         [mode, lhs, rhs, keysOpts],
       );
     } else {
-      await mapping.map(this.denops, lhs, rhs, { ...opts, noremap });
+      await mapping.map(denops, lhs, rhs, { ...opts, noremap });
     }
   }
 }

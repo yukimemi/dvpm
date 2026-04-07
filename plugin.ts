@@ -12,7 +12,15 @@ import type { Denops } from "@denops/std";
 import { Git } from "./git.ts";
 import { PlugInfoSchema, PlugOptionSchema, PlugSchema } from "./types.ts";
 import { Semaphore } from "@core/asyncutil";
-import { cmdOutToString, convertUrl, executeFile, getExecuteStr, parseUrl } from "./util.ts";
+import {
+  buildExecuteCmd,
+  cmdOutToString,
+  convertUrl,
+  executeFile,
+  getExecuteStr,
+  parseUrl,
+} from "./util.ts";
+import { batch } from "@denops/std/batch";
 import { echo, execute } from "@denops/std/helper";
 import { exists, expandGlob } from "@std/fs";
 import { logger } from "./logger.ts";
@@ -164,10 +172,10 @@ export class Plugin {
       cacheStr.push(await getExecuteStr(this.denops, this.info.cache.beforeFile));
     }
     for await (const file of expandGlob(`${this.info.dst}/plugin/**/*.vim`)) {
-      cacheStr.push(`source ${file.path}`);
+      cacheStr.push(buildExecuteCmd(file.path));
     }
     for await (const file of expandGlob(`${this.info.dst}/plugin/**/*.lua`)) {
-      cacheStr.push(`luafile ${file.path}`);
+      cacheStr.push(buildExecuteCmd(file.path));
     }
     if (this.info.cache?.afterFile) {
       cacheStr.push(await getExecuteStr(this.denops, this.info.cache.afterFile));
@@ -273,25 +281,38 @@ export class Plugin {
     }
   }
 
-  private async sourceGlob(target: string) {
-    for await (const file of expandGlob(target)) {
-      logger().debug(`[sourceGlob] ${this.info.url} source ${file.path} !`);
-      await executeFile(this.denops, file.path);
-    }
-  }
-
   private async sourcePre() {
-    await this.sourceGlob(`${this.info.dst}/plugin/**/*.vim`);
-    await this.sourceGlob(`${this.info.dst}/ftdetect/**/*.vim`);
-    await this.sourceGlob(`${this.info.dst}/plugin/**/*.lua`);
-    await this.sourceGlob(`${this.info.dst}/ftdetect/**/*.lua`);
+    const patterns = [
+      `${this.info.dst}/plugin/**/*.vim`,
+      `${this.info.dst}/ftdetect/**/*.vim`,
+      `${this.info.dst}/plugin/**/*.lua`,
+      `${this.info.dst}/ftdetect/**/*.lua`,
+    ];
+    await batch(this.denops, async (denops) => {
+      for (const pattern of patterns) {
+        for await (const file of expandGlob(pattern)) {
+          logger().debug(`[sourcePre] ${this.info.url} source ${file.path} !`);
+          await denops.cmd(buildExecuteCmd(file.path));
+        }
+      }
+    });
   }
 
   private async sourcePost() {
-    await this.sourceGlob(`${this.info.dst}/after/plugin/**/*.vim`);
-    await this.sourceGlob(`${this.info.dst}/after/ftdetect/**/*.vim`);
-    await this.sourceGlob(`${this.info.dst}/after/plugin/**/*.lua`);
-    await this.sourceGlob(`${this.info.dst}/after/ftdetect/**/*.lua`);
+    const patterns = [
+      `${this.info.dst}/after/plugin/**/*.vim`,
+      `${this.info.dst}/after/ftdetect/**/*.vim`,
+      `${this.info.dst}/after/plugin/**/*.lua`,
+      `${this.info.dst}/after/ftdetect/**/*.lua`,
+    ];
+    await batch(this.denops, async (denops) => {
+      for (const pattern of patterns) {
+        for await (const file of expandGlob(pattern)) {
+          logger().debug(`[sourcePost] ${this.info.url} source ${file.path} !`);
+          await denops.cmd(buildExecuteCmd(file.path));
+        }
+      }
+    });
   }
 
   private async isHelptagsOld(docDir: string) {
