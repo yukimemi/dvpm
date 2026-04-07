@@ -463,6 +463,38 @@ It checks the health of dvpm and its plugins. (Neovim only)
 
 It outputs the health check results to the dvpm://checkhealth buffer. (Vim / Neovim)
 
+```vim
+:DvpmProfile
+```
+
+It outputs the plugin performance profile to the `dvpm://profile` buffer.
+Plugins are sorted by total load time (slowest first), with a visual bar chart
+showing relative time so you can immediately spot bottlenecks.
+
+Each row shows the time spent in every loading phase:
+
+| column   | description                                              |
+|----------|----------------------------------------------------------|
+| `total`  | Total time charged to this plugin                        |
+| `add`    | Time spent in the `add` / `addFile` hook                 |
+| `before` | Time spent in the `before` / `beforeFile` hook           |
+| `source` | Time for runtimepath + sourcing scripts + denops loading |
+| `after`  | Time spent in the `after` / `afterFile` hook             |
+| `build`  | Time spent in the `build` hook (first install only)      |
+| `bar`    | ASCII bar chart scaled to the slowest plugin             |
+
+Example output:
+
+```
+DVPM Plugin Performance Profile
+Total startup time: 312.5ms  Profiled plugins: 8
+
+plugin                            total     add    before    source     after     build    bar
+--------------------------------  ---------  ---------  ---------  ---------  ---------  ---------  ------------------------------
+nvim-treesitter                    210.3ms    0.5ms    1.2ms   207.8ms    0.8ms    0.0ms  ██████████████████████████████
+telescope.nvim                      55.1ms    0.3ms    0.6ms    53.4ms    0.8ms    0.0ms  ███████░░░░░░░░░░░░░░░░░░░░░░░
+```
+
 ## Cache setting
 
 If you want some plugins to be loaded before `VimEnter`, enable the `cache` setting. A sample
