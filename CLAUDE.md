@@ -32,8 +32,8 @@ On this machine, Vim is not available locally — only Neovim tests run. Set `DE
 1. `deno task ci`
 2. Bump `version` in `deno.json`
 3. Commit → push to main
-4. `deno publish`
-5. `git tag <version>` → `git push origin <version>`
+4. `git tag <version>` → `git push origin <version>` (no `v` prefix, e.g. `11.0.1` not `v11.0.1`)
+5. GHA automatically runs `deno publish` when a version tag is pushed
 
 ## Architecture
 
