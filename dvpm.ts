@@ -629,7 +629,7 @@ export class Dvpm {
     // Column definitions: label + value extractor
     const cols: { label: string; get: (prof: ProfileData) => string }[] = [
       { label: "total", get: (prof) => fmtFixed(prof.total, COL_TIME) },
-      { label: "add", get: (prof) => fmtFixed(prof.add, COL_TIME) },
+      { label: "init", get: (prof) => fmtFixed(prof.init, COL_TIME) },
       { label: "before", get: (prof) => fmtFixed(prof.before, COL_TIME) },
       {
         label: "load",
@@ -667,12 +667,12 @@ export class Dvpm {
     const grandTotal = loaded.reduce((s, p) => s + p.info.profile!.total, 0);
     const totalRow = row("Total", [fmtFixed(grandTotal, COL_TIME)]);
 
-    // Lazy plugins not yet loaded — only add hook has run
+    // Lazy plugins not yet loaded — only init hook has run
     const lazyRows = notLoaded.map((p) =>
       row(
         p.plug.url,
         [
-          fmtFixed(p.info.profile!.add, COL_TIME),
+          fmtFixed(p.info.profile!.init, COL_TIME),
           ...cols.slice(1).map(() => sprintf(`%${COL_TIME}s`, "-")),
         ],
         "(not loaded)",
@@ -695,7 +695,7 @@ export class Dvpm {
     if (lazyRows.length > 0) {
       lines.push(
         "",
-        `Lazy plugins (not yet loaded) — only add hook measured:`,
+        `Lazy plugins (not yet loaded) — only init hook measured:`,
         separatorRow,
         ...lazyRows,
         separatorRow,
@@ -782,12 +782,12 @@ export class Dvpm {
       const lazyPlugins = enabledPlugins.filter((p) => lazyPluginsSet.has(p));
 
       for (const p of enabledPlugins) {
-        const _addStart = performance.now();
-        await p.add();
+        const _initStart = performance.now();
+        await p.init();
         if (this.option.profile) {
-          const _addElaps = performance.now() - _addStart;
+          const _initElaps = performance.now() - _initStart;
           p.info.profile = {
-            add: _addElaps,
+            init: _initElaps,
             before: 0,
             runtimepath: 0,
             source: 0,
@@ -795,7 +795,7 @@ export class Dvpm {
             after: 0,
             sourceAfter: 0,
             build: 0,
-            total: _addElaps,
+            total: _initElaps,
           };
         }
       }
@@ -1127,10 +1127,6 @@ export class Dvpm {
           logger().debug(`[loadPlugins] ${p.info.url} start !`);
           const _profileStart = performance.now();
 
-          const _beforeStart = performance.now();
-          await p.before();
-          const _beforeElaps = performance.now() - _beforeStart;
-
           await autocmd.emit(this.denops, "User", `DvpmPluginLoadPre:${name}`);
 
           const lazy = p.info.lazy;
@@ -1195,11 +1191,18 @@ export class Dvpm {
           const added = newlyAdded.has(p.info.dst);
           const _rtpElaps = added ? _rtpPerPlugin : 0;
 
-          const _sourceStart = performance.now();
-          if (added) {
-            await p.source();
+          let _beforeElaps = 0;
+          let _sourceElaps = 0;
+          if (!p.info.isLoaded) {
+            const _beforeStart = performance.now();
+            await p.before();
+            _beforeElaps = performance.now() - _beforeStart;
+            if (added) {
+              const _sourceStart = performance.now();
+              await p.source();
+              _sourceElaps = performance.now() - _sourceStart;
+            }
           }
-          const _sourceElaps = performance.now() - _sourceStart;
 
           const _denopsStart = performance.now();
           await p.denopsPluginLoad();
@@ -1240,9 +1243,9 @@ export class Dvpm {
           const _loadElaps = performance.now() - _profileStart;
           p.info.elaps = _loadElaps;
           if (this.option.profile) {
-            const _addElaps = p.info.profile?.add ?? 0;
+            const _initElaps = p.info.profile?.init ?? 0;
             p.info.profile = {
-              add: _addElaps,
+              init: _initElaps,
               before: _beforeElaps,
               runtimepath: _rtpElaps,
               source: _sourceElaps,
@@ -1250,7 +1253,7 @@ export class Dvpm {
               after: _afterElaps,
               sourceAfter: _sourceAfterElaps,
               build: _buildElaps,
-              total: _addElaps + _loadElaps,
+              total: _initElaps + _loadElaps,
             };
           }
 

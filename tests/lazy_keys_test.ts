@@ -10,19 +10,19 @@ import { Dvpm } from "../dvpm.ts";
 
 test({
   mode: "all",
-  name: "add hook is executed at end() even for lazy plugins",
+  name: "init hook is executed at end() even for lazy plugins",
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
     const dvpm = await Dvpm.begin(denops, { base, health: false });
 
-    await denops.cmd("let g:dvpm_test_add_hook = 0");
+    await denops.cmd("let g:dvpm_test_init_hook = 0");
     await dvpm.add({
       url: "lazy/plugin",
       lazy: {
         enabled: true,
       },
-      add: async ({ denops }) => {
-        await denops.cmd("let g:dvpm_test_add_hook = 1");
+      init: async ({ denops }) => {
+        await denops.cmd("let g:dvpm_test_init_hook = 1");
       },
     });
 
@@ -33,8 +33,8 @@ test({
 
     await dvpm.end();
 
-    const addHookFired = await denops.eval("g:dvpm_test_add_hook");
-    assertEquals(addHookFired, 1, "add hook should be executed at end()");
+    const initHookFired = await denops.eval("g:dvpm_test_init_hook");
+    assertEquals(initHookFired, 1, "init hook should be executed at end()");
     assertEquals(plugin.info.isLoaded, false, "Plugin should still be NOT loaded");
   },
 });

@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git fetch:*)",
+      "Bash(jj diff:*)",
+      "Bash(deno task:*)",
+      "Bash(wait)",
+      "Bash(jj describe -m 'refactor: rename add/addFile to init/initFile and fix before hook timing:*)",
+      "Bash(jj branch:*)",
+      "Bash(jj git:*)",
+      "Bash(jj --help)",
+      "Bash(jj bookmark:*)",
+      "Bash(gh run:*)",
+      "Bash(python -c \"import sys,json; comments=json.load\\(sys.stdin\\); [print\\(f'--- {c[\\\\\"path\\\\\"]}:{c[\\\\\"line\\\\\"]}\\\\n{c[\\\\\"body\\\\\"]}\\\\n'\\) for c in comments]\")",
+      "Bash(python -c \"import sys,json; comments=json.load\\(sys.stdin\\); [print\\(c['id']\\) for c in comments]\")",
+      "Bash(python -c ':*)"
+    ]
+  }
+}

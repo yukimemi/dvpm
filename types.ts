@@ -16,8 +16,8 @@ export type Bool =
  * Per-plugin performance profile data collected during loading.
  */
 export type ProfileData = {
-  /** Time spent in the `add` hook (ms). */
-  add: number;
+  /** Time spent in the `init` hook (ms). */
+  init: number;
   /** Time spent in the `before` hook (ms). */
   before: number;
   /** Time spent adding to runtimepath (ms). */
@@ -208,23 +208,23 @@ export type Plug = {
    */
   profiles?: string[];
   /**
-   * Configuration to run at startup.
+   * Configuration to run at startup (always, before runtimepath is set, ignores lazy).
    */
-  add?: ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>;
+  init?: ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>;
   /**
-   * Configuration to run before adding to runtimepath.
+   * Configuration to run after adding to runtimepath, before sourcing plugin/*.vim.
    */
   before?: ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>;
   /**
-   * Configuration to run after adding to runtimepath.
+   * Configuration to run after adding to runtimepath and sourcing plugin/*.vim.
    */
   after?: ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>;
   /**
-   * Path to a Vim/Lua file to source at startup.
+   * Path to a Vim/Lua file to source at startup (always, before runtimepath is set, ignores lazy).
    */
-  addFile?: string;
+  initFile?: string;
   /**
-   * Path to a Vim/Lua file to source before adding to runtimepath.
+   * Path to a Vim/Lua file to source after adding to runtimepath, before sourcing plugin/*.vim.
    */
   beforeFile?: string;
   /**
@@ -298,10 +298,10 @@ const _PlugSchema = type({
   "rev?": "string",
   enabled: BoolSchema.default(true),
   profiles: type("string[]").default(() => []),
-  "add?": ConfigSchema,
+  "init?": ConfigSchema,
   "before?": ConfigSchema,
   "after?": ConfigSchema,
-  "addFile?": "string",
+  "initFile?": "string",
   "beforeFile?": "string",
   "afterFile?": "string",
   "build?": ConfigSchema,
@@ -323,7 +323,7 @@ const _PlugSchema = type({
   isCache: "boolean = false",
   elaps: "number = 0",
   "profile?": {
-    add: "number",
+    init: "number",
     before: "number",
     runtimepath: "number",
     source: "number",
@@ -364,10 +364,10 @@ export type PlugInfo = {
   rev?: string;
   enabled: Bool;
   profiles: string[];
-  add?: ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>;
+  init?: ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>;
   before?: ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>;
   after?: ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>;
-  addFile?: string;
+  initFile?: string;
   beforeFile?: string;
   afterFile?: string;
   build?: ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>;

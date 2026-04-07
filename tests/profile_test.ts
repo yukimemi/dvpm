@@ -54,16 +54,16 @@ test({
     );
 
     const prof = plugin.info.profile!;
-    assertEquals(typeof prof.add, "number", "add should be a number");
+    assertEquals(typeof prof.init, "number", "init should be a number");
     assertEquals(typeof prof.before, "number", "before should be a number");
     assertEquals(typeof prof.source, "number", "source should be a number");
     assertEquals(typeof prof.after, "number", "after should be a number");
     assertEquals(typeof prof.total, "number", "total should be a number");
     assertEquals(prof.total >= 0, true, "total should be non-negative");
     assertEquals(
-      prof.total >= prof.add,
+      prof.total >= prof.init,
       true,
-      "total should be at least as large as add",
+      "total should be at least as large as init",
     );
   },
 });
@@ -89,7 +89,7 @@ test({
     assertEquals(hasTitle, true, "buffer should contain title");
 
     const hasHeader = lines.some((l) =>
-      l.includes("total") && l.includes("add") && l.includes("load")
+      l.includes("total") && l.includes("init") && l.includes("load")
     );
     assertEquals(hasHeader, true, "buffer should contain column headers");
   },
