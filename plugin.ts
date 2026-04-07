@@ -12,7 +12,14 @@ import type { Denops } from "@denops/std";
 import { Git } from "./git.ts";
 import { PlugInfoSchema, PlugOptionSchema, PlugSchema } from "./types.ts";
 import { Semaphore } from "@core/asyncutil";
-import { buildExecuteCmd, cmdOutToString, convertUrl, executeFile, getExecuteStr, parseUrl } from "./util.ts";
+import {
+  buildExecuteCmd,
+  cmdOutToString,
+  convertUrl,
+  executeFile,
+  getExecuteStr,
+  parseUrl,
+} from "./util.ts";
 import { batch } from "@denops/std/batch";
 import { echo, execute } from "@denops/std/helper";
 import { exists, expandGlob } from "@std/fs";
