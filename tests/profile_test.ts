@@ -48,7 +48,10 @@ test({
     await dvpm.end();
 
     const plugin = dvpm.plugins[0];
-    assertExists(plugin.info.profile, "profile data should be collected when profile option is true");
+    assertExists(
+      plugin.info.profile,
+      "profile data should be collected when profile option is true",
+    );
 
     const prof = plugin.info.profile!;
     assertEquals(typeof prof.add, "number", "add should be a number");
@@ -85,7 +88,9 @@ test({
     const hasTitle = lines.some((l) => l.includes("DVPM Plugin Performance Profile"));
     assertEquals(hasTitle, true, "buffer should contain title");
 
-    const hasHeader = lines.some((l) => l.includes("total") && l.includes("add") && l.includes("load"));
+    const hasHeader = lines.some((l) =>
+      l.includes("total") && l.includes("add") && l.includes("load")
+    );
     assertEquals(hasHeader, true, "buffer should contain column headers");
   },
 });
@@ -154,6 +159,10 @@ test({
 
     const lines = await denops.call("getbufline", bufnr, 1, "$") as string[];
     const titleLines = lines.filter((l) => l.includes("DVPM Plugin Performance Profile"));
-    assertEquals(titleLines.length, 1, "title should appear exactly once (buffer is overwritten, not appended)");
+    assertEquals(
+      titleLines.length,
+      1,
+      "title should appear exactly once (buffer is overwritten, not appended)",
+    );
   },
 });
