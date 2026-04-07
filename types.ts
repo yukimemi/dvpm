@@ -13,6 +13,30 @@ export type Bool =
   | (({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<boolean>);
 
 /**
+ * Per-plugin performance profile data collected during loading.
+ */
+export type ProfileData = {
+  /** Time spent in the `add` hook (ms). */
+  add: number;
+  /** Time spent in the `before` hook (ms). */
+  before: number;
+  /** Time spent adding to runtimepath (ms). */
+  runtimepath: number;
+  /** Time spent sourcing plugin scripts (ms). */
+  source: number;
+  /** Time spent loading denops plugins (ms). */
+  denopsLoad: number;
+  /** Time spent in the `after` hook (ms). */
+  after: number;
+  /** Time spent sourcing after-directory scripts (ms). */
+  sourceAfter: number;
+  /** Time spent in the `build` hook (ms). */
+  build: number;
+  /** Total elapsed time for this plugin (ms). */
+  total: number;
+};
+
+/**
  * Represents a boolean or a function that returns a Promise<boolean>.
  * Corresponds to the `Bool` type.
  */
@@ -261,6 +285,10 @@ export type Plug = {
    * Internal flag: elapsed time for loading.
    */
   elaps?: number;
+  /**
+   * Internal: per-phase performance profile data.
+   */
+  profile?: ProfileData;
 };
 
 const _PlugSchema = type({
@@ -294,6 +322,17 @@ const _PlugSchema = type({
   isUpdated: "boolean = false",
   isCache: "boolean = false",
   elaps: "number = 0",
+  "profile?": {
+    add: "number",
+    before: "number",
+    runtimepath: "number",
+    source: "number",
+    denopsLoad: "number",
+    after: "number",
+    sourceAfter: "number",
+    build: "number",
+    total: "number",
+  },
 });
 
 export const PlugSchema: Type<Plug> = _PlugSchema as unknown as Type<Plug>;
@@ -349,6 +388,7 @@ export type PlugInfo = {
   isUpdated: boolean;
   isCache: boolean;
   elaps: number;
+  profile?: ProfileData;
 };
 export const PlugInfoSchema: Type<PlugInfo> = _PlugInfoSchema as unknown as Type<PlugInfo>;
 
@@ -389,6 +429,7 @@ const _DvpmOptionSchema = type({
   notify: "boolean = false",
   logarg: type("string[]").default(() => []),
   health: "boolean = false",
+  profile: "boolean = false",
   clean: BoolSchema.default(false),
 });
 export const DvpmOptionSchema: Type<DvpmOption> = _DvpmOptionSchema as unknown as Type<DvpmOption>;
@@ -425,6 +466,12 @@ export type DvpmOption = {
    * Whether to enable health check. Default is true.
    */
   health?: boolean;
+  /**
+   * Whether to enable plugin performance profiling. Default is false.
+   * When enabled, timing data for each loading phase is collected and
+   * can be viewed with :DvpmProfile.
+   */
+  profile?: boolean;
   /**
    * Whether to clean local changes before update.
    */
