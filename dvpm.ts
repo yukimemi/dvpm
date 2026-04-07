@@ -680,7 +680,9 @@ export class Dvpm {
 
     const lines = [
       `DVPM Plugin Performance Profile`,
-      `Total profiled load time: ${fmt(this.totalElaps)}  Loaded: ${loaded.length}  Lazy (not loaded): ${notLoaded.length}`,
+      `Total profiled load time: ${
+        fmt(this.totalElaps)
+      }  Loaded: ${loaded.length}  Lazy (not loaded): ${notLoaded.length}`,
       "",
       headerRow,
       separatorRow,
