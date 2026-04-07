@@ -903,7 +903,7 @@ export class Dvpm {
       if (loadType === "keys" && arg) {
         if (params?.is_expr) {
           // Determine current mode first (needed for mode-aware rhs lookup)
-          const modes: mapping.Mode[] = ["o", "x", "n", "v", "s", "i", "c"];
+          const modes: mapping.Mode[] = ["o", "x", "n", "v", "s", "i", "c", "t", "l", ""];
           let currentMode: mapping.Mode = "n";
           try {
             const m = type("string").assert(await this.denops.call("mode"));
@@ -917,6 +917,8 @@ export class Dvpm {
               currentMode = "i";
             } else if (m.startsWith("c")) {
               currentMode = "c";
+            } else if (m === "t") {
+              currentMode = "t";
             }
             // Prioritize current mode
             const idx = modes.indexOf(currentMode);
@@ -929,7 +931,7 @@ export class Dvpm {
           }
 
           // 1. Try to find explicit rhs from config (mode-aware)
-          // "v" mode covers both Visual ("x") and Select ("s") in Vim.
+          // "v" covers both Visual ("x") and Select ("s"); "" is a wildcard for all modes.
           const lazy = p.info.lazy;
           const keys = Array.isArray(lazy.keys) ? lazy.keys : [lazy.keys];
           let fallbackRhs: string | undefined;
@@ -941,6 +943,7 @@ export class Dvpm {
               const keyModes = Array.isArray(k.mode) ? k.mode : [k.mode ?? "n"];
               if (
                 keyModes.includes(currentMode) ||
+                keyModes.includes("") ||
                 (currentMode === "x" && keyModes.includes("v")) ||
                 (currentMode === "s" && keyModes.includes("v"))
               ) {
