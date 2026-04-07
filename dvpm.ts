@@ -1095,6 +1095,7 @@ export class Dvpm {
       // Without this, N plugins would each do a mutex-lock + rtp-get + rtp-set,
       // resulting in 2N RPC round-trips for rtp management alone.
       const newlyAdded = new Set<string>();
+      const _batchRtpStart = performance.now();
       await Plugin.mutex.lock(async () => {
         const rtp = (await op.runtimepath.get(this.denops)).split(",");
         const rtpSet = new Set(rtp);
@@ -1109,6 +1110,11 @@ export class Dvpm {
           await op.runtimepath.set(this.denops, rtp.join(","));
         }
       });
+      // Distribute batch rtp time equally across newly-added plugins so that
+      // profiling reflects real user-perceived cost per plugin.
+      const _rtpPerPlugin = newlyAdded.size > 0
+        ? (performance.now() - _batchRtpStart) / newlyAdded.size
+        : 0;
 
       for (const p of plugins) {
         try {
@@ -1186,9 +1192,8 @@ export class Dvpm {
           }
 
           // rtp was already updated in the batch phase before this loop.
-          const _rtpStart = performance.now();
           const added = newlyAdded.has(p.info.dst);
-          const _rtpElaps = performance.now() - _rtpStart;
+          const _rtpElaps = added ? _rtpPerPlugin : 0;
 
           const _sourceStart = performance.now();
           if (added) {

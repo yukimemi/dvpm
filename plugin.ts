@@ -285,10 +285,8 @@ export class Plugin {
       for (const pattern of patterns) {
         for await (const file of expandGlob(pattern)) {
           logger().debug(`[sourcePre] ${this.info.url} source ${file.path} !`);
-          const cmd = path.extname(file.path) === ".lua"
-            ? `luafile ${file.path}`
-            : `source ${file.path}`;
-          await denops.cmd(cmd);
+          const cmd = path.extname(file.path) === ".lua" ? "luafile" : "source";
+          await denops.cmd(`execute '${cmd}' fnameescape('${file.path.replace(/'/g, "''")}')`);
         }
       }
     });
@@ -305,10 +303,8 @@ export class Plugin {
       for (const pattern of patterns) {
         for await (const file of expandGlob(pattern)) {
           logger().debug(`[sourcePost] ${this.info.url} source ${file.path} !`);
-          const cmd = path.extname(file.path) === ".lua"
-            ? `luafile ${file.path}`
-            : `source ${file.path}`;
-          await denops.cmd(cmd);
+          const cmd = path.extname(file.path) === ".lua" ? "luafile" : "source";
+          await denops.cmd(`execute '${cmd}' fnameescape('${file.path.replace(/'/g, "''")}')`);
         }
       }
     });
