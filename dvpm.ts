@@ -8,6 +8,7 @@ import * as autocmd from "@denops/std/autocmd";
 import * as buffer from "@denops/std/buffer";
 import * as fn from "@denops/std/function";
 import * as mapping from "@denops/std/mapping";
+import * as op from "@denops/std/option";
 import * as vars from "@denops/std/variable";
 import type { Denops } from "@denops/std";
 import type { OpenOptions } from "@denops/std/buffer";
@@ -1090,6 +1091,25 @@ export class Dvpm {
 
   private async loadPlugins(plugins: Plugin[]) {
     try {
+      // Batch-add all plugin paths to runtimepath in a single get+set operation.
+      // Without this, N plugins would each do a mutex-lock + rtp-get + rtp-set,
+      // resulting in 2N RPC round-trips for rtp management alone.
+      const newlyAdded = new Set<string>();
+      await Plugin.mutex.lock(async () => {
+        const rtp = (await op.runtimepath.get(this.denops)).split(",");
+        const rtpSet = new Set(rtp);
+        for (const p of plugins) {
+          if (p.info.enabled && !rtpSet.has(p.info.dst)) {
+            newlyAdded.add(p.info.dst);
+            rtpSet.add(p.info.dst);
+            rtp.push(p.info.dst);
+          }
+        }
+        if (newlyAdded.size > 0) {
+          await op.runtimepath.set(this.denops, rtp.join(","));
+        }
+      });
+
       for (const p of plugins) {
         try {
           if (p.info.isLoaded || this.#loading.has(p.info.url)) {
@@ -1154,8 +1174,9 @@ export class Dvpm {
             }
           }
 
+          // rtp was already updated in the batch phase before this loop.
           const _rtpStart = performance.now();
-          const added = await p.addRuntimepath();
+          const added = newlyAdded.has(p.info.dst);
           const _rtpElaps = performance.now() - _rtpStart;
 
           const _sourceStart = performance.now();
