@@ -78,23 +78,34 @@ export async function cache(
 }
 
 /**
+ * Builds a safe Vim command to execute a file using fnameescape.
+ * Works for both absolute paths (from expandGlob) and already-expanded paths.
+ *
+ * @param absolutePath - Absolute file path.
+ * @returns A Vimscript string using execute + fnameescape.
+ */
+export function buildExecuteCmd(absolutePath: string): string {
+  const ext = extname(absolutePath);
+  const escaped = absolutePath.replace(/'/g, "''");
+  if (ext === ".lua") {
+    return `execute 'luafile' fnameescape('${escaped}')`;
+  } else if (ext === ".vim") {
+    return `execute 'source' fnameescape('${escaped}')`;
+  }
+  logger().error(`unknown extension: ${ext}`);
+  return "";
+}
+
+/**
  * Determines the Vim command to execute a file based on its extension (.lua or .vim).
  *
  * @param denops - Denops instance.
- * @param path - File path.
- * @returns A string containing the Vim command (e.g., "luafile ..." or "source ...").
+ * @param path - File path (may contain ~ or $VAR, will be expanded).
+ * @returns A string containing the Vim command using fnameescape.
  */
 export async function getExecuteStr(denops: Denops, path: string): Promise<string> {
   const p = type("string").assert(await fn.expand(denops, path));
-  const extension = extname(p);
-  if (extension === ".lua") {
-    return `luafile ${p}`;
-  } else if (extension === ".vim") {
-    return `source ${p}`;
-  }
-
-  logger().error(`unknown extension: ${extension}`);
-  return "";
+  return buildExecuteCmd(p);
 }
 
 /**
