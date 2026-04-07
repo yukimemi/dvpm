@@ -115,6 +115,10 @@ export class Dvpm {
         await dvpm.bufWriteList();
       },
 
+      async bufWriteProfile(): Promise<void> {
+        await dvpm.bufWriteProfile();
+      },
+
       async load(
         url: unknown,
         loadType: unknown,
@@ -158,6 +162,7 @@ export class Dvpm {
         command! -nargs=? DvpmUpdate call s:${name}_notify('update', [<f-args>])
         command! -nargs=? DvpmList call s:${name}_notify('bufWriteList', [<f-args>])
         command! -nargs=0 DvpmCheckHealth call s:${name}_notify('bufWriteCheckHealth', [])
+        command! -nargs=0 DvpmProfile call s:${name}_notify('bufWriteProfile', [])
       `,
     );
 
@@ -594,6 +599,79 @@ export class Dvpm {
   }
 
   /**
+   * Writes the plugin performance profile to a special Vim buffer (`dvpm://profile`).
+   * Shows per-plugin timing breakdown with a visual bar chart sorted by total time.
+   */
+  public async bufWriteProfile() {
+    const BAR_WIDTH = 30;
+    const profiled = this.uniqueUrlByIsLoaded().filter((p) => p.info.profile != null);
+
+    const fmt = (ms: number) => `${ms.toFixed(1)}ms`;
+    const fmtFixed = (ms: number, width: number) => sprintf(`%${width}s`, fmt(ms));
+
+    const maxTotal = profiled.reduce((m, p) => Math.max(m, p.info.profile!.total), 0);
+    const bar = (total: number) => {
+      const filled = maxTotal > 0 ? Math.round((total / maxTotal) * BAR_WIDTH) : 0;
+      return "█".repeat(filled) + "░".repeat(BAR_WIDTH - filled);
+    };
+
+    const maxUrlLen = profiled.length > 0
+      ? profiled.reduce((m, p) => Math.max(m, p.plug.url.length), 0)
+      : 10;
+
+    const COL_TIME = 9;
+    const urlW = Math.max(maxUrlLen, "plugin".length) + LIST_SPACE;
+
+    const header = [
+      sprintf(`%-${urlW}s`, "plugin") +
+      SEP + sprintf(`%${COL_TIME}s`, "total") +
+      SEP + sprintf(`%${COL_TIME}s`, "add") +
+      SEP + sprintf(`%${COL_TIME}s`, "before") +
+      SEP + sprintf(`%${COL_TIME}s`, "source") +
+      SEP + sprintf(`%${COL_TIME}s`, "after") +
+      SEP + sprintf(`%${COL_TIME}s`, "build") +
+      SEP + "bar",
+      "-".repeat(urlW) +
+      SEP + "-".repeat(COL_TIME) +
+      SEP + "-".repeat(COL_TIME) +
+      SEP + "-".repeat(COL_TIME) +
+      SEP + "-".repeat(COL_TIME) +
+      SEP + "-".repeat(COL_TIME) +
+      SEP + "-".repeat(COL_TIME) +
+      SEP + "-".repeat(BAR_WIDTH),
+    ];
+
+    const sorted = [...profiled].sort((a, b) => b.info.profile!.total - a.info.profile!.total);
+
+    const rows = sorted.map((p) => {
+      const prof = p.info.profile!;
+      return sprintf(`%-${urlW}s`, p.plug.url) +
+        SEP + fmtFixed(prof.total, COL_TIME) +
+        SEP + fmtFixed(prof.add, COL_TIME) +
+        SEP + fmtFixed(prof.before, COL_TIME) +
+        SEP + fmtFixed(prof.source + prof.sourceAfter + prof.runtimepath + prof.denopsLoad, COL_TIME) +
+        SEP + fmtFixed(prof.after, COL_TIME) +
+        SEP + fmtFixed(prof.build, COL_TIME) +
+        SEP + bar(prof.total);
+    });
+
+    const separator = "-".repeat(
+      urlW + SEP.length + (COL_TIME + SEP.length) * 6 + BAR_WIDTH,
+    );
+
+    await this.bufWrite("dvpm://profile", [
+      `DVPM Plugin Performance Profile`,
+      `Total startup time: ${fmt(this.totalElaps)}  Profiled plugins: ${profiled.length}`,
+      "",
+      ...header,
+      ...rows,
+      separator,
+      sprintf(`%-${urlW}s`, "Total") + SEP +
+        fmtFixed(profiled.reduce((s, p) => s + p.info.profile!.total, 0), COL_TIME),
+    ]);
+  }
+
+  /**
    * Add a plugin to the management list.
    *
    * @param plug - Plugin definition.
@@ -670,7 +748,20 @@ export class Dvpm {
       const lazyPlugins = enabledPlugins.filter((p) => lazyPluginsSet.has(p));
 
       for (const p of enabledPlugins) {
+        const _addStart = performance.now();
         await p.add();
+        const _addElaps = performance.now() - _addStart;
+        p.info.profile = {
+          add: _addElaps,
+          before: 0,
+          runtimepath: 0,
+          source: 0,
+          denopsLoad: 0,
+          after: 0,
+          sourceAfter: 0,
+          build: 0,
+          total: _addElaps,
+        };
       }
 
       logger().debug(`[end] Enable plugins: ${eagerPlugins.map((p) => p.info.url).join(", ")}`);
@@ -973,7 +1064,12 @@ export class Dvpm {
 
           const name = p.info.name;
           logger().debug(`[loadPlugins] ${p.info.url} start !`);
+          const _profileStart = performance.now();
+
+          const _beforeStart = performance.now();
           await p.before();
+          const _beforeElaps = performance.now() - _beforeStart;
+
           await autocmd.emit(this.denops, "User", `DvpmPluginLoadPre:${name}`);
 
           const lazy = p.info.lazy;
@@ -1023,14 +1119,29 @@ export class Dvpm {
             }
           }
 
+          const _rtpStart = performance.now();
           const added = await p.addRuntimepath();
+          const _rtpElaps = performance.now() - _rtpStart;
+
+          const _sourceStart = performance.now();
           if (added) {
             await p.source();
           }
+          const _sourceElaps = performance.now() - _sourceStart;
+
+          const _denopsStart = performance.now();
           await p.denopsPluginLoad();
+          const _denopsElaps = performance.now() - _denopsStart;
+
+          const _afterStart = performance.now();
           await p.after();
+          const _afterElaps = performance.now() - _afterStart;
+
+          let _buildElaps = 0;
           if (p.initialClone) {
+            const _buildStart = performance.now();
             await p.build();
+            _buildElaps = performance.now() - _buildStart;
           }
 
           // Setup KEYS mappings (Post-load: for explicit mappings)
@@ -1048,7 +1159,25 @@ export class Dvpm {
             }
           }
 
+          const _sourceAfterStart = performance.now();
           await p.sourceAfter();
+          const _sourceAfterElaps = performance.now() - _sourceAfterStart;
+
+          const _loadElaps = performance.now() - _profileStart;
+          p.info.elaps = _loadElaps;
+          const _addElaps = p.info.profile?.add ?? 0;
+          p.info.profile = {
+            add: _addElaps,
+            before: _beforeElaps,
+            runtimepath: _rtpElaps,
+            source: _sourceElaps,
+            denopsLoad: _denopsElaps,
+            after: _afterElaps,
+            sourceAfter: _sourceAfterElaps,
+            build: _buildElaps,
+            total: _addElaps + _loadElaps,
+          };
+
           p.info.isLoaded = true;
           await autocmd.emit(this.denops, "User", `DvpmPluginLoadPost:${name}`);
         } catch (e) {
