@@ -427,3 +427,48 @@ test({
     }
   },
 });
+
+test({
+  mode: "all",
+  name: "keys with same lhs but different modes returns mode-specific rhs",
+  ignore: Deno.build.os === "windows" && Deno.env.get("CI") === "true",
+  fn: async (denops) => {
+    const base = await Deno.makeTempDir();
+    const dvpm = await Dvpm.begin(denops, { base, health: false });
+
+    const lhs = "gN";
+    const rhsX = ":let g:dvpm_test_mode_rhs = 'x'<CR>";
+    const rhsN = ":let g:dvpm_test_mode_rhs = 'n'<CR>";
+    await denops.cmd("let g:dvpm_test_mode_rhs = ''");
+
+    // x-mode entry is placed first to reproduce the bug:
+    // without the fix, the first entry (x-mode) is always returned regardless of current mode
+    await dvpm.add({
+      url: "lazy/keys_mode_specific",
+      lazy: {
+        keys: [
+          { lhs, rhs: rhsX, mode: "x" },
+          { lhs, rhs: rhsN, mode: "n" },
+        ],
+      },
+    });
+
+    const plugin = dvpm.plugins[0];
+    plugin.install = () => Promise.resolve([]);
+    plugin.update = () => Promise.resolve([]);
+    plugin.build = () => Promise.resolve();
+    await Deno.mkdir(plugin.info.dst, { recursive: true });
+
+    await dvpm.end();
+
+    // Call the is_expr path directly (test env is in normal mode)
+    // Without fix: returns rhsX (first entry, mode ignored)
+    // With fix: returns rhsN (mode-aware, detects normal mode)
+    const result = await dvpm.load(plugin.info.url, "keys", lhs, { is_expr: true });
+    assertEquals(
+      result,
+      rhsN,
+      "Should return n-mode rhs when in normal mode, not x-mode rhs",
+    );
+  },
+});

@@ -902,9 +902,44 @@ export class Dvpm {
       }
       if (loadType === "keys" && arg) {
         if (params?.is_expr) {
-          // 1. Try to find explicit rhs from config
+          // Determine current mode first (needed for mode-aware rhs lookup)
+          const modes: mapping.Mode[] = ["o", "x", "n", "v", "s", "i", "c"];
+          let currentMode: mapping.Mode = "n";
+          try {
+            const m = type("string").assert(await this.denops.call("mode"));
+            if (m.startsWith("no")) {
+              currentMode = "o";
+            } else if (m === "v" || m === "V" || m === "\x16") {
+              currentMode = "x";
+            } else if (m === "s" || m === "S" || m === "\x13") {
+              currentMode = "s";
+            } else if (m.startsWith("i")) {
+              currentMode = "i";
+            } else if (m.startsWith("c")) {
+              currentMode = "c";
+            }
+            // Prioritize current mode
+            const idx = modes.indexOf(currentMode);
+            if (idx > -1) {
+              modes.splice(idx, 1);
+              modes.unshift(currentMode);
+            }
+          } catch {
+            // Ignore
+          }
+
+          // 1. Try to find explicit rhs from config (mode-aware)
           const lazy = p.info.lazy;
           const keys = Array.isArray(lazy.keys) ? lazy.keys : [lazy.keys];
+          for (const k of keys) {
+            if (k && typeof k !== "string" && k.lhs === arg && k.rhs) {
+              const keyModes = Array.isArray(k.mode) ? k.mode : [k.mode ?? "n"];
+              if (keyModes.includes(currentMode)) {
+                return k.rhs;
+              }
+            }
+          }
+          // Fallback: return first matching key regardless of mode (backwards compatibility)
           for (const k of keys) {
             if (k && typeof k !== "string" && k.lhs === arg && k.rhs) {
               return k.rhs;
@@ -912,31 +947,6 @@ export class Dvpm {
           }
 
           // 2. Try to find defined mapping from Vim
-          const modes: mapping.Mode[] = ["o", "x", "n", "v", "s", "i", "c"];
-          try {
-            const m = type("string").assert(await this.denops.call("mode"));
-            let mode: mapping.Mode = "n";
-            if (m.startsWith("no")) {
-              mode = "o";
-            } else if (m === "v" || m === "V" || m === "\x16") {
-              mode = "x";
-            } else if (m === "s" || m === "S" || m === "\x13") {
-              mode = "s";
-            } else if (m.startsWith("i")) {
-              mode = "i";
-            } else if (m.startsWith("c")) {
-              mode = "c";
-            }
-            // Prioritize current mode
-            const idx = modes.indexOf(mode);
-            if (idx > -1) {
-              modes.splice(idx, 1);
-              modes.unshift(mode);
-            }
-          } catch {
-            // Ignore
-          }
-
           for (const mode of modes) {
             try {
               const info = await mapping.read(this.denops, arg, { mode });
