@@ -22,6 +22,18 @@ permissions:
   pull-requests: write
 
 jobs:
+  publish:
+    name: Publish to JSR
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+      - run: deno publish
+
   test:
     name: Test
     runs-on: ${{ matrix.os }}
