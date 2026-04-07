@@ -28,6 +28,7 @@ import {
   LoadArgsSchema,
   type LoadType,
   type Plug,
+  type ProfileData,
 } from "./types.ts";
 import { type } from "arktype";
 
@@ -622,52 +623,55 @@ export class Dvpm {
     const COL_TIME = 9;
     const urlW = Math.max(maxUrlLen, "plugin".length) + LIST_SPACE;
 
-    const header = [
-      sprintf(`%-${urlW}s`, "plugin") +
-      SEP + sprintf(`%${COL_TIME}s`, "total") +
-      SEP + sprintf(`%${COL_TIME}s`, "add") +
-      SEP + sprintf(`%${COL_TIME}s`, "before") +
-      SEP + sprintf(`%${COL_TIME}s`, "load") +
-      SEP + sprintf(`%${COL_TIME}s`, "after") +
-      SEP + sprintf(`%${COL_TIME}s`, "build") +
-      SEP + "bar",
-      "-".repeat(urlW) +
-      SEP + "-".repeat(COL_TIME) +
-      SEP + "-".repeat(COL_TIME) +
-      SEP + "-".repeat(COL_TIME) +
-      SEP + "-".repeat(COL_TIME) +
-      SEP + "-".repeat(COL_TIME) +
-      SEP + "-".repeat(COL_TIME) +
-      SEP + "-".repeat(BAR_WIDTH),
+    // Column definitions: label + value extractor
+    const cols: { label: string; get: (prof: ProfileData) => string }[] = [
+      { label: "total", get: (prof) => fmtFixed(prof.total, COL_TIME) },
+      { label: "add", get: (prof) => fmtFixed(prof.add, COL_TIME) },
+      { label: "before", get: (prof) => fmtFixed(prof.before, COL_TIME) },
+      {
+        label: "load",
+        get: (prof) =>
+          fmtFixed(
+            prof.source + prof.sourceAfter + prof.runtimepath + prof.denopsLoad,
+            COL_TIME,
+          ),
+      },
+      { label: "after", get: (prof) => fmtFixed(prof.after, COL_TIME) },
+      { label: "build", get: (prof) => fmtFixed(prof.build, COL_TIME) },
     ];
 
-    const sorted = [...profiled].sort((a, b) => b.info.profile!.total - a.info.profile!.total);
+    const row = (url: string, values: string[], barStr?: string): string =>
+      [sprintf(`%-${urlW}s`, url), ...values, ...(barStr ? [barStr] : [])].join(SEP);
 
-    const rows = sorted.map((p) => {
+    const headerRow = row(
+      "plugin",
+      cols.map((c) => sprintf(`%${COL_TIME}s`, c.label)),
+      "bar",
+    );
+    const separatorRow = row(
+      "-".repeat(urlW),
+      cols.map(() => "-".repeat(COL_TIME)),
+      "-".repeat(BAR_WIDTH),
+    );
+
+    const sorted = [...profiled].sort((a, b) => b.info.profile!.total - a.info.profile!.total);
+    const dataRows = sorted.map((p) => {
       const prof = p.info.profile!;
-      return sprintf(`%-${urlW}s`, p.plug.url) +
-        SEP + fmtFixed(prof.total, COL_TIME) +
-        SEP + fmtFixed(prof.add, COL_TIME) +
-        SEP + fmtFixed(prof.before, COL_TIME) +
-        SEP + fmtFixed(prof.source + prof.sourceAfter + prof.runtimepath + prof.denopsLoad, COL_TIME) +
-        SEP + fmtFixed(prof.after, COL_TIME) +
-        SEP + fmtFixed(prof.build, COL_TIME) +
-        SEP + bar(prof.total);
+      return row(p.plug.url, cols.map((c) => c.get(prof)), bar(prof.total));
     });
 
-    const separator = "-".repeat(
-      urlW + SEP.length + (COL_TIME + SEP.length) * 6 + BAR_WIDTH,
-    );
+    const grandTotal = profiled.reduce((s, p) => s + p.info.profile!.total, 0);
+    const totalRow = row("Total", [fmtFixed(grandTotal, COL_TIME)]);
 
     await this.bufWrite("dvpm://profile", [
       `DVPM Plugin Performance Profile`,
-      `Total startup time: ${fmt(this.totalElaps)}  Profiled plugins: ${profiled.length}`,
+      `Total profiled load time: ${fmt(this.totalElaps)}  Profiled plugins: ${profiled.length}`,
       "",
-      ...header,
-      ...rows,
-      separator,
-      sprintf(`%-${urlW}s`, "Total") + SEP +
-        fmtFixed(profiled.reduce((s, p) => s + p.info.profile!.total, 0), COL_TIME),
+      headerRow,
+      separatorRow,
+      ...dataRows,
+      separatorRow,
+      totalRow,
     ]);
   }
 

@@ -489,18 +489,18 @@ Each row shows the time spent in every loading phase:
 | `total`  | Total time charged to this plugin                        |
 | `add`    | Time spent in the `add` / `addFile` hook                 |
 | `before` | Time spent in the `before` / `beforeFile` hook           |
-| `load`   | Time for runtimepath + sourcing scripts + denops loading |
+| `load`   | Time for runtimepath + source + sourceAfter + denops loading |
 | `after`  | Time spent in the `after` / `afterFile` hook             |
 | `build`  | Time spent in the `build` hook (first install only)      |
 | `bar`    | ASCII bar chart scaled to the slowest plugin             |
 
 Example output:
 
-```
+```text
 DVPM Plugin Performance Profile
-Total startup time: 312.5ms  Profiled plugins: 8
+Total profiled load time: 312.5ms  Profiled plugins: 8
 
-plugin                            total     add    before    source     after     build    bar
+plugin                            total     add    before    load       after     build    bar
 --------------------------------  ---------  ---------  ---------  ---------  ---------  ---------  ------------------------------
 nvim-treesitter                    210.3ms    0.5ms    1.2ms   207.8ms    0.8ms    0.0ms  ██████████████████████████████
 telescope.nvim                      55.1ms    0.3ms    0.6ms    53.4ms    0.8ms    0.0ms  ███████░░░░░░░░░░░░░░░░░░░░░░░
