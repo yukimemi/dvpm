@@ -605,19 +605,21 @@ export class Dvpm {
    */
   public async bufWriteProfile() {
     const BAR_WIDTH = 30;
-    const profiled = this.uniqueUrlByIsLoaded().filter((p) => p.info.profile != null);
+    const allProfiled = this.uniqueUrlByIsLoaded().filter((p) => p.info.profile != null);
+    const loaded = allProfiled.filter((p) => p.info.isLoaded);
+    const notLoaded = allProfiled.filter((p) => !p.info.isLoaded);
 
     const fmt = (ms: number) => `${ms.toFixed(1)}ms`;
     const fmtFixed = (ms: number, width: number) => sprintf(`%${width}s`, fmt(ms));
 
-    const maxTotal = profiled.reduce((m, p) => Math.max(m, p.info.profile!.total), 0);
+    const maxTotal = loaded.reduce((m, p) => Math.max(m, p.info.profile!.total), 0);
     const bar = (total: number) => {
       const filled = maxTotal > 0 ? Math.round((total / maxTotal) * BAR_WIDTH) : 0;
       return "█".repeat(filled) + "░".repeat(BAR_WIDTH - filled);
     };
 
-    const maxUrlLen = profiled.length > 0
-      ? profiled.reduce((m, p) => Math.max(m, p.plug.url.length), 0)
+    const maxUrlLen = allProfiled.length > 0
+      ? allProfiled.reduce((m, p) => Math.max(m, p.plug.url.length), 0)
       : 10;
 
     const COL_TIME = 9;
@@ -654,25 +656,50 @@ export class Dvpm {
       "-".repeat(BAR_WIDTH),
     );
 
-    const sorted = [...profiled].sort((a, b) => b.info.profile!.total - a.info.profile!.total);
-    const dataRows = sorted.map((p) => {
+    // Loaded plugins sorted by total time (slowest first)
+    const sortedLoaded = [...loaded].sort((a, b) => b.info.profile!.total - a.info.profile!.total);
+    const dataRows = sortedLoaded.map((p) => {
       const prof = p.info.profile!;
       return row(p.plug.url, cols.map((c) => c.get(prof)), bar(prof.total));
     });
 
-    const grandTotal = profiled.reduce((s, p) => s + p.info.profile!.total, 0);
+    const grandTotal = loaded.reduce((s, p) => s + p.info.profile!.total, 0);
     const totalRow = row("Total", [fmtFixed(grandTotal, COL_TIME)]);
 
-    await this.bufWrite("dvpm://profile", [
+    // Lazy plugins not yet loaded — only add hook has run
+    const lazyRows = notLoaded.map((p) =>
+      row(
+        p.plug.url,
+        [
+          fmtFixed(p.info.profile!.add, COL_TIME),
+          ...cols.slice(1).map(() => sprintf(`%${COL_TIME}s`, "-")),
+        ],
+        "(not loaded)",
+      )
+    );
+
+    const lines = [
       `DVPM Plugin Performance Profile`,
-      `Total profiled load time: ${fmt(this.totalElaps)}  Profiled plugins: ${profiled.length}`,
+      `Total profiled load time: ${fmt(this.totalElaps)}  Loaded: ${loaded.length}  Lazy (not loaded): ${notLoaded.length}`,
       "",
       headerRow,
       separatorRow,
       ...dataRows,
       separatorRow,
       totalRow,
-    ]);
+    ];
+
+    if (lazyRows.length > 0) {
+      lines.push(
+        "",
+        `Lazy plugins (not yet loaded) — only add hook measured:`,
+        separatorRow,
+        ...lazyRows,
+        separatorRow,
+      );
+    }
+
+    await this.bufWrite("dvpm://profile", lines);
   }
 
   /**
