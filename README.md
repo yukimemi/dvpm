@@ -240,6 +240,10 @@ export type DvpmOption = {
   // If set to true, yukimemi/dvpm will be automatically added to the plugin list
   // to support Neovim's built-in :checkhealth command.
   health?: boolean;
+  // Whether to enable plugin performance profiling. Default is false.
+  // When enabled, per-phase timing data is collected for each plugin and
+  // can be viewed with :DvpmProfile.
+  profile?: boolean;
   // Whether to clean local changes before update. Default is false.
   clean?: Bool;
 };
@@ -470,6 +474,13 @@ It outputs the health check results to the dvpm://checkhealth buffer. (Vim / Neo
 It outputs the plugin performance profile to the `dvpm://profile` buffer.
 Plugins are sorted by total load time (slowest first), with a visual bar chart
 showing relative time so you can immediately spot bottlenecks.
+
+> **Note:** Requires `profile: true` in `Dvpm.begin` options. Profiling is
+> disabled by default to avoid any overhead during normal startup.
+>
+> ```typescript
+> const dvpm = await Dvpm.begin(denops, { base, profile: true });
+> ```
 
 Each row shows the time spent in every loading phase:
 

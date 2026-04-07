@@ -750,18 +750,20 @@ export class Dvpm {
       for (const p of enabledPlugins) {
         const _addStart = performance.now();
         await p.add();
-        const _addElaps = performance.now() - _addStart;
-        p.info.profile = {
-          add: _addElaps,
-          before: 0,
-          runtimepath: 0,
-          source: 0,
-          denopsLoad: 0,
-          after: 0,
-          sourceAfter: 0,
-          build: 0,
-          total: _addElaps,
-        };
+        if (this.option.profile) {
+          const _addElaps = performance.now() - _addStart;
+          p.info.profile = {
+            add: _addElaps,
+            before: 0,
+            runtimepath: 0,
+            source: 0,
+            denopsLoad: 0,
+            after: 0,
+            sourceAfter: 0,
+            build: 0,
+            total: _addElaps,
+          };
+        }
       }
 
       logger().debug(`[end] Enable plugins: ${eagerPlugins.map((p) => p.info.url).join(", ")}`);
@@ -1165,18 +1167,20 @@ export class Dvpm {
 
           const _loadElaps = performance.now() - _profileStart;
           p.info.elaps = _loadElaps;
-          const _addElaps = p.info.profile?.add ?? 0;
-          p.info.profile = {
-            add: _addElaps,
-            before: _beforeElaps,
-            runtimepath: _rtpElaps,
-            source: _sourceElaps,
-            denopsLoad: _denopsElaps,
-            after: _afterElaps,
-            sourceAfter: _sourceAfterElaps,
-            build: _buildElaps,
-            total: _addElaps + _loadElaps,
-          };
+          if (this.option.profile) {
+            const _addElaps = p.info.profile?.add ?? 0;
+            p.info.profile = {
+              add: _addElaps,
+              before: _beforeElaps,
+              runtimepath: _rtpElaps,
+              source: _sourceElaps,
+              denopsLoad: _denopsElaps,
+              after: _afterElaps,
+              sourceAfter: _sourceAfterElaps,
+              build: _buildElaps,
+              total: _addElaps + _loadElaps,
+            };
+          }
 
           p.info.isLoaded = true;
           await autocmd.emit(this.denops, "User", `DvpmPluginLoadPost:${name}`);

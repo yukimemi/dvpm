@@ -419,6 +419,7 @@ const _DvpmOptionSchema = type({
   notify: "boolean = false",
   logarg: type("string[]").default(() => []),
   health: "boolean = false",
+  profile: "boolean = false",
   clean: BoolSchema.default(false),
 });
 export const DvpmOptionSchema: Type<DvpmOption> = _DvpmOptionSchema as unknown as Type<DvpmOption>;
@@ -455,6 +456,12 @@ export type DvpmOption = {
    * Whether to enable health check. Default is true.
    */
   health?: boolean;
+  /**
+   * Whether to enable plugin performance profiling. Default is false.
+   * When enabled, timing data for each loading phase is collected and
+   * can be viewed with :DvpmProfile.
+   */
+  profile?: boolean;
   /**
    * Whether to clean local changes before update.
    */
