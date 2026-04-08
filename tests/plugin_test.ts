@@ -7,7 +7,7 @@
 import * as path from "@std/path";
 import { test } from "@denops/test";
 import { Plugin } from "../plugin.ts";
-import { assertEquals } from "@std/assert";
+import { assert, assertEquals } from "@std/assert";
 
 test({
   mode: "all",
@@ -124,5 +124,35 @@ test({
     // 4. No dst, but explicit clean: false -> should be false
     const p4 = await Plugin.create(denops, { url: "owner/p4", clean: false }, option);
     assertEquals(p4.info.clean, false, "p4: should be false (explicit clean)");
+  },
+});
+
+test({
+  mode: "all",
+  name: "Plugin cache() generates script in correct order (init before runtimepath)",
+  fn: async (denops) => {
+    const base = await Deno.makeTempDir();
+    const option = { base, profiles: [], logarg: [], clean: false };
+
+    const plugin = await Plugin.create(denops, {
+      url: "owner/repo",
+      cache: {
+        init: "let g:cache_init = 1",
+        before: "let g:cache_before = 1",
+        after: "let g:cache_after = 1",
+      },
+    }, option);
+
+    const script = await plugin.cache();
+    const lines = script.split("\n").filter(Boolean);
+
+    const initIdx = lines.findIndex((l) => l.includes("cache_init"));
+    const rtpIdx = lines.findIndex((l) => l.startsWith("set runtimepath+="));
+    const beforeIdx = lines.findIndex((l) => l.includes("cache_before"));
+    const afterIdx = lines.findIndex((l) => l.includes("cache_after"));
+
+    assert(initIdx < rtpIdx, "init must come before runtimepath");
+    assert(rtpIdx < beforeIdx, "runtimepath must come before before");
+    assert(beforeIdx < afterIdx, "before must come before after");
   },
 });

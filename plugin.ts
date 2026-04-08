@@ -117,6 +117,7 @@ export class Plugin {
   private async initCache() {
     this.info.cache.enabled = await this.is(this.info.cache.enabled);
     if (
+      this.info.cache?.init || this.info.cache?.initFile ||
       this.info.cache?.before || this.info.cache?.after || this.info.cache?.beforeFile ||
       this.info.cache?.afterFile
     ) {
@@ -166,7 +167,14 @@ export class Plugin {
       return "";
     }
     this.info.isCache = true;
-    const cacheStr = [`set runtimepath+=${this.info.dst}`];
+    const cacheStr: string[] = [];
+    if (this.info.cache?.init) {
+      cacheStr.push(this.info.cache.init);
+    }
+    if (this.info.cache?.initFile) {
+      cacheStr.push(await getExecuteStr(this.denops, this.info.cache.initFile));
+    }
+    cacheStr.push(`set runtimepath+=${this.info.dst}`);
     cacheStr.push(this.info.cache?.before || "");
     if (this.info.cache?.beforeFile) {
       cacheStr.push(await getExecuteStr(this.denops, this.info.cache.beforeFile));

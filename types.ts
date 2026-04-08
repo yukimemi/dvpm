@@ -252,6 +252,8 @@ export type Plug = {
    */
   cache?: {
     enabled?: Bool;
+    init?: string;
+    initFile?: string;
     before?: string;
     after?: string;
     beforeFile?: string;
@@ -310,6 +312,8 @@ const _PlugSchema = type({
   dependencies: type("string[]").default(() => []),
   cache: type({
     enabled: BoolSchema.default(false),
+    "init?": "string",
+    "initFile?": "string",
     "before?": "string",
     "after?": "string",
     "beforeFile?": "string",
@@ -376,6 +380,8 @@ export type PlugInfo = {
   dependencies: string[];
   cache: {
     enabled: Bool;
+    init?: string;
+    initFile?: string;
     before?: string;
     after?: string;
     beforeFile?: string;

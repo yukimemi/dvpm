@@ -13,7 +13,11 @@
       "Bash(gh run:*)",
       "Bash(python -c \"import sys,json; comments=json.load\\(sys.stdin\\); [print\\(f'--- {c[\\\\\"path\\\\\"]}:{c[\\\\\"line\\\\\"]}\\\\n{c[\\\\\"body\\\\\"]}\\\\n'\\) for c in comments]\")",
       "Bash(python -c \"import sys,json; comments=json.load\\(sys.stdin\\); [print\\(c['id']\\) for c in comments]\")",
-      "Bash(python -c ':*)"
+      "Bash(python -c ':*)",
+      "Bash(deno publish:*)",
+      "Bash(DENOPS_TEST_VIM_EXECUTABLE=\"\" deno test -A --no-check tests/lazy_keys_test.ts tests/expr_map_test.ts)",
+      "Bash(DENOPS_TEST_VIM_EXECUTABLE=\"\" deno run -A scripts/test_runner.ts tests/lazy_keys_test.ts tests/expr_map_test.ts)",
+      "Bash(jj st:*)"
     ]
   }
 }
