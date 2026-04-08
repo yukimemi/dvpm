@@ -175,7 +175,9 @@ export class Plugin {
       cacheStr.push(await getExecuteStr(this.denops, this.info.cache.initFile));
     }
     cacheStr.push(`set runtimepath+=${this.info.dst}`);
-    cacheStr.push(this.info.cache?.before || "");
+    if (this.info.cache?.before) {
+      cacheStr.push(this.info.cache.before);
+    }
     if (this.info.cache?.beforeFile) {
       cacheStr.push(await getExecuteStr(this.denops, this.info.cache.beforeFile));
     }
@@ -188,7 +190,9 @@ export class Plugin {
     if (this.info.cache?.afterFile) {
       cacheStr.push(await getExecuteStr(this.denops, this.info.cache.afterFile));
     }
-    cacheStr.push(this.info.cache?.after || "");
+    if (this.info.cache?.after) {
+      cacheStr.push(this.info.cache.after);
+    }
     return cacheStr.join("\n");
   }
 

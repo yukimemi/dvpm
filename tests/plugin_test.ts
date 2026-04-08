@@ -151,8 +151,42 @@ test({
     const beforeIdx = lines.findIndex((l) => l.includes("cache_before"));
     const afterIdx = lines.findIndex((l) => l.includes("cache_after"));
 
+    assert(initIdx >= 0, "cache_init should be present in script");
+    assert(rtpIdx >= 0, "set runtimepath should be present in script");
+    assert(beforeIdx >= 0, "cache_before should be present in script");
+    assert(afterIdx >= 0, "cache_after should be present in script");
+
     assert(initIdx < rtpIdx, "init must come before runtimepath");
     assert(rtpIdx < beforeIdx, "runtimepath must come before before");
     assert(beforeIdx < afterIdx, "before must come before after");
+  },
+});
+
+test({
+  mode: "all",
+  name: "Plugin cache() places initFile content before runtimepath",
+  fn: async (denops) => {
+    const base = await Deno.makeTempDir();
+    const option = { base, profiles: [], logarg: [], clean: false };
+
+    const initFile = await Deno.makeTempFile({ suffix: ".vim" });
+    // Extract basename to avoid path separator differences across OS/Vim expansion
+    const initFileBase = initFile.replace(/\\/g, "/").split("/").pop()!;
+
+    const plugin = await Plugin.create(denops, {
+      url: "owner/repo",
+      cache: { initFile },
+    }, option);
+
+    const script = await plugin.cache();
+    const lines = script.split("\n").filter(Boolean);
+
+    // getExecuteStr generates `execute 'source' fnameescape('/path/to/file.vim')`
+    const initFileIdx = lines.findIndex((l) => l.includes(initFileBase));
+    const rtpIdx = lines.findIndex((l) => l.startsWith("set runtimepath+="));
+
+    assert(initFileIdx >= 0, "initFile source command should be present in script");
+    assert(rtpIdx >= 0, "set runtimepath should be present in script");
+    assert(initFileIdx < rtpIdx, "initFile source command must come before runtimepath");
   },
 });
