@@ -50,9 +50,10 @@ export class Plugin {
     this.plug = PlugSchema.assert(this.plug);
     this.option = PlugOptionSchema.assert(this.option);
     this.info = PlugInfoSchema.assert({
-      dst: "",
       name: "",
       ...this.plug,
+      // dst must be a string in PlugInfo; resolve Str (function) later in initDst()
+      dst: typeof this.plug.dst === "string" ? this.plug.dst : "",
       lazy: this.plug.lazy ?? { enabled: false },
     });
     this.initialClone = false;
