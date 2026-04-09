@@ -201,7 +201,7 @@ test({
 
     const plugin = await Plugin.create(denops, {
       url: "owner/repo",
-      dst: async () => customDst,
+      dst: () => Promise.resolve(customDst),
     }, option);
 
     assertEquals(plugin.info.dst, customDst);
@@ -218,7 +218,7 @@ test({
 
     const plugin = await Plugin.create(denops, {
       url: "owner/repo",
-      rev: async ({ info }) => info.dst ? "main" : "fallback",
+      rev: ({ info }) => Promise.resolve(info.dst ? "main" : "fallback"),
     }, option);
 
     assertEquals(plugin.info.rev, "main");
@@ -236,8 +236,8 @@ test({
 
     const plugin = await Plugin.create(denops, {
       url: "owner/repo",
-      rev: async () => "stable",
-      beforeFile: async ({ info }) => info.rev === "stable" ? fileA : fileB,
+      rev: () => Promise.resolve("stable"),
+      beforeFile: ({ info }) => Promise.resolve(info.rev === "stable" ? fileA : fileB),
     }, option);
 
     assertEquals(plugin.info.beforeFile, fileA);
