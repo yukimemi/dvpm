@@ -93,9 +93,14 @@ export class Plugin {
 
   private async initDst() {
     if (this.plug.dst) {
-      const dst = await this.str(this.plug.dst);
-      logger().debug(`[create] set dst to ${dst}`);
-      this.info.dst = type("string").assert(await fn.expand(this.denops, dst));
+      if (typeof this.plug.dst === "function") {
+        // Function already returns a fully resolved path; skip fn.expand to avoid
+        // platform-specific path normalization (e.g. backslash → slash on Windows/Vim).
+        this.info.dst = await this.str(this.plug.dst);
+      } else {
+        this.info.dst = type("string").assert(await fn.expand(this.denops, this.plug.dst));
+      }
+      logger().debug(`[create] set dst to ${this.info.dst}`);
     } else {
       const { hostname, pathname } = parseUrl(this.info.url);
       this.info.dst = path.join(this.option.base, hostname, pathname);

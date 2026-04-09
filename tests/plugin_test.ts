@@ -231,8 +231,9 @@ test({
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
     const option = { base, profiles: [], logarg: [], clean: false };
-    const fileA = await Deno.makeTempFile({ suffix: ".vim" });
-    const fileB = await Deno.makeTempFile({ suffix: ".vim" });
+    // Use path strings (not actual files) to avoid resource sanitizer hangs on Windows/nvim.
+    const fileA = path.join(base, "before_a.vim");
+    const fileB = path.join(base, "before_b.vim");
 
     const plugin = await Plugin.create(denops, {
       url: "owner/repo",
