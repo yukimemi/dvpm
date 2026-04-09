@@ -7,7 +7,7 @@
 import * as fn from "@denops/std/function";
 import * as op from "@denops/std/option";
 import * as path from "@std/path";
-import type { Bool, Plug, PlugInfo, PlugOption } from "./types.ts";
+import type { Bool, Plug, PlugInfo, PlugOption, Str } from "./types.ts";
 import type { Denops } from "@denops/std";
 import { Git } from "./git.ts";
 import { PlugInfoSchema, PlugOptionSchema, PlugSchema } from "./types.ts";
@@ -78,6 +78,8 @@ export class Plugin {
 
     await p.initDst();
     p.info.name = p.plug.name ?? path.basename(p.info.dst);
+    await p.initRev();
+    await p.initFileFields();
     await p.initEnabled();
     await p.initClone();
     await p.initCache();
@@ -90,11 +92,39 @@ export class Plugin {
 
   private async initDst() {
     if (this.plug.dst) {
-      logger().debug(`[create] set dst to ${this.plug.dst}`);
-      this.info.dst = type("string").assert(await fn.expand(this.denops, this.plug.dst));
+      const dst = await this.str(this.plug.dst);
+      logger().debug(`[create] set dst to ${dst}`);
+      this.info.dst = type("string").assert(await fn.expand(this.denops, dst));
     } else {
       const { hostname, pathname } = parseUrl(this.info.url);
       this.info.dst = path.join(this.option.base, hostname, pathname);
+    }
+  }
+
+  private async initRev() {
+    if (this.plug.rev) {
+      this.info.rev = await this.str(this.plug.rev);
+    }
+  }
+
+  private async initFileFields() {
+    if (this.plug.initFile) {
+      this.info.initFile = await this.str(this.plug.initFile);
+    }
+    if (this.plug.beforeFile) {
+      this.info.beforeFile = await this.str(this.plug.beforeFile);
+    }
+    if (this.plug.afterFile) {
+      this.info.afterFile = await this.str(this.plug.afterFile);
+    }
+    if (this.plug.cache?.initFile) {
+      this.info.cache.initFile = await this.str(this.plug.cache.initFile);
+    }
+    if (this.plug.cache?.beforeFile) {
+      this.info.cache.beforeFile = await this.str(this.plug.cache.beforeFile);
+    }
+    if (this.plug.cache?.afterFile) {
+      this.info.cache.afterFile = await this.str(this.plug.cache.afterFile);
     }
   }
 
@@ -155,6 +185,13 @@ export class Plugin {
       return b;
     }
     return await b({ denops: this.denops, info: this.info });
+  }
+
+  private async str(s: Str): Promise<string> {
+    if (typeof s === "string") {
+      return s;
+    }
+    return await s({ denops: this.denops, info: this.info });
   }
 
   /**

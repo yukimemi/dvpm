@@ -190,3 +190,56 @@ test({
     assert(initFileIdx < rtpIdx, "initFile source command must come before runtimepath");
   },
 });
+
+test({
+  mode: "all",
+  name: "Plugin dst as async function",
+  fn: async (denops) => {
+    const base = await Deno.makeTempDir();
+    const option = { base, profiles: [], logarg: [], clean: false };
+    const customDst = await Deno.makeTempDir();
+
+    const plugin = await Plugin.create(denops, {
+      url: "owner/repo",
+      dst: async () => customDst,
+    }, option);
+
+    assertEquals(plugin.info.dst, customDst);
+    assertEquals(plugin.info.name, path.basename(customDst));
+  },
+});
+
+test({
+  mode: "all",
+  name: "Plugin rev as async function receives resolved dst in info",
+  fn: async (denops) => {
+    const base = await Deno.makeTempDir();
+    const option = { base, profiles: [], logarg: [], clean: false };
+
+    const plugin = await Plugin.create(denops, {
+      url: "owner/repo",
+      rev: async ({ info }) => info.dst ? "main" : "fallback",
+    }, option);
+
+    assertEquals(plugin.info.rev, "main");
+  },
+});
+
+test({
+  mode: "all",
+  name: "Plugin beforeFile as async function receives resolved rev in info",
+  fn: async (denops) => {
+    const base = await Deno.makeTempDir();
+    const option = { base, profiles: [], logarg: [], clean: false };
+    const fileA = await Deno.makeTempFile({ suffix: ".vim" });
+    const fileB = await Deno.makeTempFile({ suffix: ".vim" });
+
+    const plugin = await Plugin.create(denops, {
+      url: "owner/repo",
+      rev: async () => "stable",
+      beforeFile: async ({ info }) => info.rev === "stable" ? fileA : fileB,
+    }, option);
+
+    assertEquals(plugin.info.beforeFile, fileA);
+  },
+});
