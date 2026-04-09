@@ -231,7 +231,6 @@ test({
   fn: async (denops) => {
     const base = await Deno.makeTempDir();
     const option = { base, profiles: [], logarg: [], clean: false };
-    // Use path strings (not actual files) to avoid resource sanitizer hangs on Windows/nvim.
     const fileA = path.join(base, "before_a.vim");
     const fileB = path.join(base, "before_b.vim");
 
@@ -242,5 +241,8 @@ test({
     }, option);
 
     assertEquals(plugin.info.beforeFile, fileA);
+    // Make a denops round-trip to ensure proper session teardown on Windows/nvim.
+    // Without any denops call, the last test's nvim session may hang during cleanup.
+    assertEquals(typeof await denops.call("expand", "."), "string");
   },
 });
