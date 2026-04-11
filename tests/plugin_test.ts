@@ -195,6 +195,9 @@ test({
   mode: "all",
   name: "Plugin dst as async function",
   fn: async (denops) => {
+    // Warm up denops session before any logic to avoid nvim hang on Windows.
+    await denops.call("abs", 1);
+
     const base = await Deno.makeTempDir();
     const option = { base, profiles: [], logarg: [], clean: false };
     const customDst = await Deno.makeTempDir();
@@ -213,6 +216,9 @@ test({
   mode: "all",
   name: "Plugin rev as async function receives resolved dst in info",
   fn: async (denops) => {
+    // Warm up denops session before any logic to avoid nvim hang on Windows.
+    await denops.call("abs", 1);
+
     const base = await Deno.makeTempDir();
     const option = { base, profiles: [], logarg: [], clean: false };
 
@@ -229,6 +235,9 @@ test({
   mode: "all",
   name: "Plugin beforeFile as async function receives resolved rev in info",
   fn: async (denops) => {
+    // Warm up denops session before any logic to avoid nvim hang on Windows.
+    await denops.call("abs", 1);
+
     const base = await Deno.makeTempDir();
     const option = { base, profiles: [], logarg: [], clean: false };
     const fileA = path.join(base, "before_a.vim");
