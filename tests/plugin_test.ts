@@ -250,8 +250,5 @@ test({
     }, option);
 
     assertEquals(plugin.info.beforeFile, fileA);
-    // Make a denops round-trip to ensure proper session teardown on Windows/nvim.
-    // Without any denops call, the last test's nvim session may hang during cleanup.
-    assertEquals(typeof await denops.call("expand", "."), "string");
   },
 });
