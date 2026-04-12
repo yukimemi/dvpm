@@ -245,7 +245,7 @@ test({
 
     const plugin = await Plugin.create(denops, {
       url: "owner/repo",
-      rev: () => Promise.resolve("stable"),
+      rev: "stable",
       beforeFile: ({ info }) => Promise.resolve(info.rev === "stable" ? fileA : fileB),
     }, option);
 
