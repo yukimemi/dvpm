@@ -12,6 +12,10 @@ export type Bool =
   | boolean
   | (({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<boolean>);
 
+export type Str =
+  | string
+  | (({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<string>);
+
 /**
  * Per-plugin performance profile data collected during loading.
  */
@@ -41,6 +45,12 @@ export type ProfileData = {
  * Corresponds to the `Bool` type.
  */
 export const BoolSchema = type("boolean | Function") as Type<Bool>;
+
+/**
+ * Represents a string or a function that returns a Promise<string>.
+ * Corresponds to the `Str` type.
+ */
+export const StrSchema = type("string | Function") as Type<Str>;
 
 export const ConfigSchema = type("Function") as Type<
   ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>
@@ -193,12 +203,14 @@ export type Plug = {
   name?: string;
   /**
    * Destination directory path. If omitted, it's calculated from the URL.
+   * Supports an async function receiving `{ denops, info }` (info has `url` resolved).
    */
-  dst?: string;
+  dst?: Str;
   /**
    * Git revision (branch, tag, or commit hash).
+   * Supports an async function receiving `{ denops, info }` (info has `url`, `dst`, `name` resolved).
    */
-  rev?: string;
+  rev?: Str;
   /**
    * Whether the plugin is enabled. Can be a boolean or a function.
    */
@@ -221,16 +233,19 @@ export type Plug = {
   after?: ({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<void>;
   /**
    * Path to a Vim/Lua file to source at startup (always, before runtimepath is set, ignores lazy).
+   * Supports an async function receiving `{ denops, info }` (info has `url`, `dst`, `name`, `rev` resolved).
    */
-  initFile?: string;
+  initFile?: Str;
   /**
    * Path to a Vim/Lua file to source after adding to runtimepath, before sourcing plugin/*.vim.
+   * Supports an async function receiving `{ denops, info }` (info has `url`, `dst`, `name`, `rev` resolved).
    */
-  beforeFile?: string;
+  beforeFile?: Str;
   /**
    * Path to a Vim/Lua file to source after adding to runtimepath.
+   * Supports an async function receiving `{ denops, info }` (info has `url`, `dst`, `name`, `rev` resolved).
    */
-  afterFile?: string;
+  afterFile?: Str;
   /**
    * Build configuration to run after installation or update.
    */
@@ -253,11 +268,11 @@ export type Plug = {
   cache?: {
     enabled?: Bool;
     init?: string;
-    initFile?: string;
+    initFile?: Str;
     before?: string;
     after?: string;
-    beforeFile?: string;
-    afterFile?: string;
+    beforeFile?: Str;
+    afterFile?: Str;
   };
   /**
    * Lazy loading configuration.
@@ -296,16 +311,16 @@ export type Plug = {
 const _PlugSchema = type({
   url: "string",
   "name?": "string",
-  "dst?": "string",
-  "rev?": "string",
+  "dst?": StrSchema,
+  "rev?": StrSchema,
   enabled: BoolSchema.default(true),
   profiles: type("string[]").default(() => []),
   "init?": ConfigSchema,
   "before?": ConfigSchema,
   "after?": ConfigSchema,
-  "initFile?": "string",
-  "beforeFile?": "string",
-  "afterFile?": "string",
+  "initFile?": StrSchema,
+  "beforeFile?": StrSchema,
+  "afterFile?": StrSchema,
   "build?": ConfigSchema,
   clone: BoolSchema.default(false),
   depth: "number = 0",
@@ -313,11 +328,11 @@ const _PlugSchema = type({
   cache: type({
     enabled: BoolSchema.default(false),
     "init?": "string",
-    "initFile?": "string",
+    "initFile?": StrSchema,
     "before?": "string",
     "after?": "string",
-    "beforeFile?": "string",
-    "afterFile?": "string",
+    "beforeFile?": StrSchema,
+    "afterFile?": StrSchema,
   }).default(() => ({ enabled: false })),
   "lazy?": _LazyParamsSchema,
   "clean?": BoolSchema,

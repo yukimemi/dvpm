@@ -95,6 +95,31 @@ export const main: Entrypoint = async (denops: Denops) => {
   // With branch/rev
   await dvpm.add({ url: "neoclide/coc.nvim", rev: "release" });
 
+  // rev as async function (switch by Neovim version)
+  await dvpm.add({
+    url: "neoclide/coc.nvim",
+    rev: async ({ denops }) =>
+      (await fn.has(denops, "nvim-0.11")) ? "master" : "release",
+  });
+
+  // dst as async function (integrate with vim.pack install path)
+  await dvpm.add({
+    url: "vim-denops/denops.vim",
+    dst: async ({ denops }) => {
+      const data = await fn.stdpath(denops, "data") as string;
+      return `${data}/site/pack/core/opt/denops.vim`;
+    },
+  });
+
+  // beforeFile as async function (dynamic path using stdpath)
+  await dvpm.add({
+    url: "rcarriga/nvim-notify",
+    beforeFile: async ({ denops }) => {
+      const config = await fn.stdpath(denops, "config") as string;
+      return `${config}/rc/before/nvim-notify.lua`;
+    },
+  });
+
   // Execute at startup (regardless of lazy loading)
   await dvpm.add({
     url: "thinca/vim-quickrun",
@@ -192,8 +217,8 @@ public async add(plug: Plug): Promise<void>
 export type Plug = {
   url: string;           // GitHub `username/repo` or full git URL.
   name?: string;         // Plugin name (auto-calculated if omitted).
-  dst?: string;          // Custom clone path (for local development).
-  rev?: string;          // Git branch or revision.
+  dst?: Str;             // Custom clone path. Supports async function (info has `url` resolved).
+  rev?: Str;             // Git branch or revision. Supports async function (info has `url`, `dst`, `name` resolved).
   depth?: number;        // Clone depth (shallow clone).
   enabled?: Bool;        // Enable/disable. Default: true.
   profiles?: string[];   // Enable only when DvpmOption.profiles includes one of these.
@@ -203,16 +228,16 @@ export type Plug = {
   init?: ({ denops, info }) => Promise<void>;       // Run at startup before runtimepath is set (always, ignores lazy).
   before?: ({ denops, info }) => Promise<void>;     // Run after the plugin is added to runtimepath, before sourcing plugin/*.vim.
   after?: ({ denops, info }) => Promise<void>;      // Run after the plugin is added to runtimepath and sourcing plugin/*.vim.
-  initFile?: string;     // Vim/Lua file to source at startup before runtimepath is set (always, ignores lazy).
-  beforeFile?: string;   // File to source after the plugin is added to runtimepath, before sourcing plugin/*.vim.
-  afterFile?: string;    // File to source after the plugin is added to runtimepath and sourcing plugin/*.vim.
+  initFile?: Str;        // Vim/Lua file to source at startup before runtimepath is set (always, ignores lazy). Supports async function.
+  beforeFile?: Str;      // File to source after the plugin is added to runtimepath, before sourcing plugin/*.vim. Supports async function.
+  afterFile?: Str;       // File to source after the plugin is added to runtimepath and sourcing plugin/*.vim. Supports async function.
   build?: ({ denops, info }) => Promise<void>;      // Run after install or update (even if no changes). Check info.isInstalled / info.isUpdated.
   cache?: {
     enabled?: Bool;
     before?: string;
     after?: string;
-    beforeFile?: string;
-    afterFile?: string;
+    beforeFile?: Str;    // Supports async function.
+    afterFile?: Str;     // Supports async function.
   };
   lazy?: Lazy;
 };
@@ -245,6 +270,10 @@ export type KeyMap = {
 export type Bool =
   | boolean
   | (({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<boolean>);
+
+export type Str =
+  | string
+  | (({ denops, info }: { denops: Denops; info: PlugInfo }) => Promise<string>);
 ```
 
 `PlugInfo` is similar to `Plug` but with all values resolved (e.g. `enabled` is always a `boolean`).
