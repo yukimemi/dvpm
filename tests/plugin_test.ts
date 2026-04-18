@@ -236,10 +236,12 @@ test({
   name: "Plugin beforeFile as async function receives resolved rev in info",
   sanitizeOps: false,
   sanitizeResources: false,
+  // Schedule editor exit via postlude to prevent session.shutdown() hang on Windows nvim.
+  // @denops/test's withDenops() calls session.shutdown() after the test fn returns.
+  // On Windows, nvim may not respond to the RPC shutdown message, causing a deadlock.
+  // The timer fires only if the normal teardown hangs; otherwise nvim exits before it.
+  postlude: ["call timer_start(10000, {_ -> execute('qall!')})"],
   fn: async (denops) => {
-    // Warm up denops session before any logic to avoid nvim hang on Windows.
-    await denops.call("abs", 1);
-
     const base = await Deno.makeTempDir();
     const option = { base, profiles: [], logarg: [], clean: false };
     const fileA = path.join(base, "before_a.vim");
@@ -252,11 +254,5 @@ test({
     }, option);
 
     assertEquals(plugin.info.beforeFile, fileA);
-
-    // Schedule editor exit to prevent session.shutdown() hang on Windows nvim.
-    // @denops/test's withDenops() calls session.shutdown() after the test fn returns.
-    // On Windows, nvim may not respond to the RPC shutdown message, causing a deadlock.
-    // Scheduling qall! via timer ensures nvim exits, breaking the deadlock.
-    await denops.cmd("call timer_start(100, {_ -> execute('qall!')})");
   },
 });
