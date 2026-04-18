@@ -257,6 +257,6 @@ test({
     // @denops/test's withDenops() calls session.shutdown() after the test fn returns.
     // On Windows, nvim may not respond to the RPC shutdown message, causing a deadlock.
     // Scheduling qall! via timer ensures nvim exits, breaking the deadlock.
-    await denops.cmd("call timer_start(100, {-> execute('qall!')})");
+    await denops.cmd("call timer_start(100, {_ -> execute('qall!')})");
   },
 });
