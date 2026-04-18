@@ -234,6 +234,8 @@ test({
 test({
   mode: "all",
   name: "Plugin beforeFile as async function receives resolved rev in info",
+  sanitizeOps: false,
+  sanitizeResources: false,
   fn: async (denops) => {
     // Warm up denops session before any logic to avoid nvim hang on Windows.
     await denops.call("abs", 1);
@@ -250,5 +252,11 @@ test({
     }, option);
 
     assertEquals(plugin.info.beforeFile, fileA);
+
+    // Schedule editor exit to prevent session.shutdown() hang on Windows nvim.
+    // @denops/test's withDenops() calls session.shutdown() after the test fn returns.
+    // On Windows, nvim may not respond to the RPC shutdown message, causing a deadlock.
+    // Scheduling qall! via timer ensures nvim exits, breaking the deadlock.
+    await denops.cmd("call timer_start(100, {-> execute('qall!')})");
   },
 });
