@@ -190,3 +190,69 @@ test({
     assert(initFileIdx < rtpIdx, "initFile source command must come before runtimepath");
   },
 });
+
+test({
+  mode: "all",
+  name: "Plugin dst as async function",
+  fn: async (denops) => {
+    // Warm up denops session before any logic to avoid nvim hang on Windows.
+    await denops.call("abs", 1);
+
+    const base = await Deno.makeTempDir();
+    const option = { base, profiles: [], logarg: [], clean: false };
+    const customDst = await Deno.makeTempDir();
+
+    const plugin = await Plugin.create(denops, {
+      url: "owner/repo",
+      dst: () => Promise.resolve(customDst),
+    }, option);
+
+    assertEquals(plugin.info.dst, customDst);
+    assertEquals(plugin.info.name, path.basename(customDst));
+  },
+});
+
+test({
+  mode: "all",
+  name: "Plugin rev as async function receives resolved dst in info",
+  fn: async (denops) => {
+    // Warm up denops session before any logic to avoid nvim hang on Windows.
+    await denops.call("abs", 1);
+
+    const base = await Deno.makeTempDir();
+    const option = { base, profiles: [], logarg: [], clean: false };
+
+    const plugin = await Plugin.create(denops, {
+      url: "owner/repo",
+      rev: ({ info }) => Promise.resolve(info.dst ? "main" : "fallback"),
+    }, option);
+
+    assertEquals(plugin.info.rev, "main");
+  },
+});
+
+test({
+  mode: "all",
+  name: "Plugin beforeFile as async function receives resolved rev in info",
+  sanitizeOps: false,
+  sanitizeResources: false,
+  // Schedule editor exit via postlude to prevent session.shutdown() hang on Windows nvim.
+  // @denops/test's withDenops() calls session.shutdown() after the test fn returns.
+  // On Windows, nvim may not respond to the RPC shutdown message, causing a deadlock.
+  // The timer fires only if the normal teardown hangs; otherwise nvim exits before it.
+  postlude: ["call timer_start(10000, {_ -> execute('qall!')})"],
+  fn: async (denops) => {
+    const base = await Deno.makeTempDir();
+    const option = { base, profiles: [], logarg: [], clean: false };
+    const fileA = path.join(base, "before_a.vim");
+    const fileB = path.join(base, "before_b.vim");
+
+    const plugin = await Plugin.create(denops, {
+      url: "owner/repo",
+      rev: "stable",
+      beforeFile: ({ info }) => Promise.resolve(info.rev === "stable" ? fileA : fileB),
+    }, option);
+
+    assertEquals(plugin.info.beforeFile, fileA);
+  },
+});
