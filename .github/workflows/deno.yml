@@ -65,7 +65,7 @@ jobs:
         id: nvim
         with:
           neovim: true
-          version: "v0.11.6" # renovate: datasource=github-releases depName=neovim/neovim
+          version: "v0.12.2" # renovate: datasource=github-releases depName=neovim/neovim
 
       - uses: denoland/setup-deno@v2
 
