@@ -33,7 +33,7 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - uses: denoland/setup-deno@v2
       - run: deno publish
 
@@ -46,22 +46,22 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
-      - uses: rhysd/action-setup-vim@v1
+      - uses: rhysd/action-setup-vim@febef33995d6649302e9d88dda81e071b68f16a7 # v1
         if: matrix.os == 'ubuntu-latest'
         id: vim-rhysd
         with:
           version: "v9.2.0148" # renovate: datasource=github-releases depName=vim/vim-win32-installer
 
-      - uses: thinca/action-setup-vim@v3
+      - uses: thinca/action-setup-vim@5cd81cc774094a684018d40e87d5bcf5b86ea9c8 # v3
         if: matrix.os != 'ubuntu-latest'
         id: vim-thinca
         with:
           vim_type: "Vim"
           vim_version: "v9.2.0148" # renovate: datasource=github-releases depName=vim/vim-win32-installer
 
-      - uses: rhysd/action-setup-vim@v1
+      - uses: rhysd/action-setup-vim@febef33995d6649302e9d88dda81e071b68f16a7 # v1
         id: nvim
         with:
           neovim: true
