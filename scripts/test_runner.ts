@@ -36,10 +36,19 @@ async function main() {
   // Set environment variable
   Deno.env.set("DENOPS_TEST_DENOPS_PATH", denopsPath);
   Deno.env.set("DENOPS_TEST_VERBOSE", "1"); // Optional: for detailed output
-  Deno.env.set("DENOPS_TEST_CONNECT_TIMEOUT", "60000"); // 60 sec timeout
+  const connectTimeout = "60000";
+  Deno.env.set("DENOPS_TEST_CONNECT_TIMEOUT", connectTimeout); // 60 sec timeout
+
+  // Parse arguments
+  const printTimeout = Deno.args.includes("--print-timeout");
+  if (printTimeout) {
+    console.log(`DENOPS_TEST_CONNECT_TIMEOUT: ${connectTimeout}ms`);
+  }
+
+  const filteredArgs = Deno.args.filter((arg) => arg !== "--print-timeout");
 
   // Run deno test
-  const args = Deno.args.length > 0 ? Deno.args : ["tests/"];
+  const args = filteredArgs.length > 0 ? filteredArgs : ["tests/"];
   const testCmd = ["deno", "test", "-A", "--no-check", ...args];
 
   console.log(`Running: ${testCmd.join(" ")}`);

@@ -18,11 +18,12 @@ Write PR titles and bodies in English.
 ## Commands
 
 ```sh
-deno task check    # type-check all source files
-deno task lint     # lint
-deno task fmt      # format (--check to verify only)
-deno task test     # run tests (clones denops.vim into .test_cache/ if needed)
-deno task ci       # check + lint + fmt --check + publish dry-run + test
+deno task check                # type-check all source files
+deno task lint                 # lint
+deno task fmt                  # format (--check to verify only)
+deno task test                 # run tests (clones denops.vim into .test_cache/ if needed)
+deno task test --print-timeout # print connection timeout and run tests
+deno task ci                   # check + lint + fmt --check + publish dry-run + test
 ```
 
 Run a specific test file:
