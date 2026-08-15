@@ -109,7 +109,7 @@ jobs:
             exit 1
           fi
 
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 1
           # persist-credentials stays ON (the default) on purpose: the
@@ -121,7 +121,7 @@ jobs:
           # (anthropics/claude-code-action#1236). The App token the
           # action exchanges covers API calls, not that first fetch.
 
-      - uses: anthropics/claude-code-action@9d7150bc8a3dae8149739a88019d192b579ad90c # v1
+      - uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           # The same list `claude-review.yml.tera` carries, and for the
