@@ -1,13 +1,13 @@
-preset = "C:/Users/yukimemi/src/github.com/yukimemi/pj-presets/denops-local.toml"
+preset = "github.com/yukimemi/pj-presets:denops"
 applied_at = "2026-08-15T06:43:58.2118066Z"
 
 [[templates]]
-source = "C:/Users/yukimemi/src/github.com/yukimemi/pj-base"
+source = "github.com/yukimemi/pj-base"
 rev = "local"
 version = "0.13.0"
 
 [[templates]]
-source = "C:/Users/yukimemi/src/github.com/yukimemi/pj-denops"
+source = "github.com/yukimemi/pj-denops"
 rev = "local"
 version = "0.1.0"
 
