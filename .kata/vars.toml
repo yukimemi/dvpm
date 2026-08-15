@@ -36,6 +36,8 @@ automerge_action = "v0.16.4"
 rhysd_action_setup_vim = "v1"
 # renovate: datasource=github-tags depName=thinca/action-setup-vim
 thinca_action_setup_vim = "v3"
+# renovate: datasource=github-tags depName=actions/create-github-app-token
+create_github_app_token = "v3"
 
 [denops]
 # renovate: datasource=github-releases depName=vim/vim-win32-installer
