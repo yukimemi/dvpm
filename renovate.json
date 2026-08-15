@@ -4,15 +4,5 @@
     "github>yukimemi/pj-base",
     ":prHourlyLimitNone",
     ":prConcurrentLimitNone"
-  ],
-  "packageRules": [
-    {
-      "description": "Deno / JSR deps are automerged regardless of update type. Deno-side versioning does not map cleanly onto semver risk here, and every bump is gated by ci.yml on three OSes anyway.",
-      "matchDatasources": ["deno"],
-      "automerge": true
-    }
-  ],
-  "deno": {
-    "enabled": true
-  }
+  ]
 }
