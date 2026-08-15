@@ -14,7 +14,22 @@
     "lineWidth": 100,
     "indentWidth": 2,
     "singleQuote": false,
-    "exclude": ["README.md"]
+    "exclude": [
+      "README.md",
+      "AGENTS.md",
+      "CLAUDE.md",
+      "GEMINI.md",
+      "OPENCODE.md",
+      "apm.yml",
+      "apm.lock.yaml",
+      "renri.toml",
+      "opencode.json",
+      ".agents/",
+      ".claude/",
+      ".gemini/",
+      ".github/",
+      ".kata/"
+    ]
   },
   "lock": false,
   "exclude": [
