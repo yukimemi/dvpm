@@ -30,7 +30,9 @@ checkout = "v6"
 create_pull_request = "v7"
 # renovate: datasource=github-tags depName=anthropics/claude-code-action
 claude_code_action = "v1"
+# renovate: datasource=github-tags depName=denoland/setup-deno
 deno_setup = "v2"
+# renovate: datasource=github-tags depName=pascalgn/automerge-action
 automerge_action = "v0.16.4"
 # renovate: datasource=github-tags depName=rhysd/action-setup-vim
 rhysd_action_setup_vim = "v1"
