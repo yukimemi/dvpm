@@ -1,0 +1,33 @@
+# JSR publish. Repo-owned, NOT kata-managed: dvpm is the only package in
+# the denops set that ships to JSR, so this does not belong in pj-denops.
+#
+# The `test` job that used to live here was removed when CI moved to
+# kata's `.github/workflows/ci.yml` (3 OS x vim/nvim, sourced from
+# yukimemi/pj-denops). Keeping it would have meant maintaining the editor
+# matrix in two places.
+#
+# Dropping the old `needs: test` gate does not publish untested code:
+# dvpm's `deno task ci` includes `deno publish --dry-run --allow-dirty`,
+# and ci.yml runs that task on ubuntu / macos / windows for every push to
+# main and every PR. A tag is therefore always cut from a commit whose
+# publishability and test suite already passed.
+
+name: publish
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+"
+
+jobs:
+  publish:
+    name: Publish to JSR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: denoland/setup-deno@v2
+      - run: deno publish
