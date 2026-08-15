@@ -1,5 +1,5 @@
 preset = "github.com/yukimemi/pj-presets:denops"
-applied_at = "2026-08-15T08:44:55.2264207Z"
+applied_at = "2026-08-15T09:21:47.5039214Z"
 
 [[templates]]
 source = "github.com/yukimemi/pj-base"

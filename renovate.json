@@ -1,39 +1,18 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:best-practices",
+    "github>yukimemi/pj-base",
     ":prHourlyLimitNone",
     ":prConcurrentLimitNone"
   ],
-  "labels": ["automerge"],
-  "platformAutomerge": true,
   "packageRules": [
     {
-      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
-      "automerge": true
-    },
-    {
+      "description": "Deno / JSR deps are automerged regardless of update type. Deno-side versioning does not map cleanly onto semver risk here, and every bump is gated by ci.yml on three OSes anyway.",
       "matchDatasources": ["deno"],
-      "automerge": true
-    },
-    {
-      "matchDatasources": ["github-actions"],
-      "groupName": "github-actions",
       "automerge": true
     }
   ],
   "deno": {
     "enabled": true
-  },
-  "customManagers": [
-    {
-      "customType": "regex",
-      "managerFilePatterns": [
-        "/^\\.github/workflows/.*\\.yml$/"
-      ],
-      "matchStrings": [
-        "(?:vim_version|version): \"(?<currentValue>v\\d+\\.\\d+\\.\\d+)\"\\s+# renovate: datasource=(?<datasource>.*) depName=(?<depName>.*)"
-      ]
-    }
-  ]
+  }
 }
