@@ -28,8 +28,8 @@
   "customManagers": [
     {
       "customType": "regex",
-      "fileMatch": [
-        "^\\.github/workflows/.*\\.yml$"
+      "managerFilePatterns": [
+        "/^\\.github/workflows/.*\\.yml$/"
       ],
       "matchStrings": [
         "(?:vim_version|version): \"(?<currentValue>v\\d+\\.\\d+\\.\\d+)\"\\s+# renovate: datasource=(?<datasource>.*) depName=(?<depName>.*)"
