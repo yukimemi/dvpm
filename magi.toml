@@ -1,0 +1,68 @@
+# magi competing on the dvpm repository.
+#
+# **Only what is peculiar to this checkout lives here.** The roster, the seat
+# assignment, the shape of a run and the update policy live at the machine
+# layer (`<config_dir>/magi/config.toml`), because none of them are facts
+# about this repository: they are facts about which agent CLIs are installed
+# and what the operator is willing to spend. Stating them once there is the
+# point of having layers, and it keeps this file to the things a different
+# machine would still need to be told.
+#
+# What that leaves, and why each one has to be here:
+#
+# - `[verify]` runs `deno`. The machine layer doesn't know this checkout
+#   is a Deno project, let alone which commands verify it. Without it
+#   `verify.gate` is an empty array and magi skips the gate entirely,
+#   reporting every run clean regardless of whether it actually passes CI.
+# - `[merge] base` names this repository's branch (see below).
+# - `[prompts]` are this project's conventions.
+#
+# Note that an array may be declared in exactly one layer
+# (`Config::refuse_split_arrays`), so `[verify]`'s arrays being here is also
+# why the roster's arrays are *only* over there.
+#
+# Rendered by teravars. Tera braces are live everywhere in this file, but
+# comments are stripped before Tera sees them (teravars >= 0.2.2), so a
+# comment may quote `{{ ... }}` freely.
+
+[verify]
+# No `[vars]` build cache, unlike the Rust repos: Deno keeps its module cache
+# in the global DENO_DIR, so every candidate worktree already shares it and
+# there is nothing per-checkout to rebuild from scratch.
+#
+# The final gate before merge. ci.yml (kata-managed, from yukimemi/pj-denops)
+# has a single job, `ci`, whose only verification step is `deno task ci`.
+# deno.json defines that task as
+#   deno task check && deno task lint && deno task fmt --check
+#   && deno publish --dry-run --allow-dirty && deno task test
+# and the gate spells out every step but the last, so keep it in step with
+# deno.json. The `deno publish --dry-run` step matters here specifically —
+# dvpm is published to JSR (`publish.yml`), and a change that breaks the
+# package's slow-types / export checks fails CI even when every test passes.
+#
+# `deno task test` (every test spawns Vim and Neovim via `@denops/test`) is
+# left to CI, because it needs tools the magi machine doesn't have.
+gate = [
+  "deno task check",
+  "deno task lint",
+  "deno task fmt --check",
+  "deno publish --dry-run --allow-dirty",
+]
+
+[merge]
+# `base` is set explicitly because this is a jj-colocated checkout: jj keeps
+# git's HEAD detached at the working-copy commit, so the `git symbolic-ref
+# HEAD` fallback magi would otherwise use to infer the base branch fails
+# here.
+base = "main"
+
+# Project conventions appended to the node prompts, never merged into them.
+# Repository-wide context lives in AGENTS.md, which every agent already reads
+# from the checkout; this is the one thing specific to how a magi *node*'s
+# worktree sits inside this checkout.
+[prompts]
+all = """
+This repository uses jj (Jujutsu) with a colocated git repo. `git commit` works \
+in a candidate worktree and is what magi expects, but never run `jj` commands \
+and never touch the main working copy.
+"""
