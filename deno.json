@@ -47,6 +47,6 @@
     "@std/streams": "jsr:@std/streams@^1.2.0",
     "@std/testing": "jsr:@std/testing@^1.0.21",
     "@octokit/rest": "npm:@octokit/rest@^22.0.1",
-    "arktype": "npm:arktype@^2.2.5"
+    "arktype": "npm:arktype@^2.2.6"
   }
 }
