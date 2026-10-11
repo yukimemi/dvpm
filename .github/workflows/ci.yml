@@ -26,14 +26,14 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         id: vim-rhysd
         with:
-          version: "v9.2.0148"
+          version: "v9.2.1172"
 
       - uses: thinca/action-setup-vim@v3.0.3
         if: matrix.os != 'ubuntu-latest'
         id: vim-thinca
         with:
           vim_type: "Vim"
-          vim_version: "v9.2.0148"
+          vim_version: "v9.2.1172"
 
       - uses: rhysd/action-setup-vim@v1.6.1
         id: nvim
