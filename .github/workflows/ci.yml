@@ -39,7 +39,7 @@ jobs:
         id: nvim
         with:
           neovim: true
-          version: "v0.12.5"
+          version: "v0.12.6"
 
       - uses: denoland/setup-deno@v2
 
