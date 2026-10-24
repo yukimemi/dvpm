@@ -1,5 +1,5 @@
 preset = "github.com/yukimemi/pj-presets:denops"
-applied_at = "2026-10-19T03:31:55.769395453Z"
+applied_at = "2026-10-24T03:28:21.052950836Z"
 
 [[templates]]
 source = "github.com/yukimemi/pj-base"
@@ -33,7 +33,7 @@ content_hash = "0ac5ed2847ab6e1041e34209dcc2396a582722ea9537d03bd950e1db1851a4b7
 once_applied = true
 
 [files.".github/workflows/ci.yml"]
-content_hash = "9410dc393f046963a9058eab44beed64197adc64692071433a9d9e71959d1315"
+content_hash = "0d5d3a60a922f0eda5f0e7e177c8be0c1c98afe852a971dfeb714bfbd8b9b6ba"
 
 [files.".github/workflows/claude-review.yml"]
 content_hash = "4a8e47aabb3cdf2a59030d5194467022f0efb53bb1819d4495752020d10be773"
