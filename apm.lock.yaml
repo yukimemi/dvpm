@@ -1,11 +1,11 @@
 lockfile_version: '1'
-generated_at: '2026-10-19T04:23:41.142544+00:00'
-apm_version: 0.33.0
+generated_at: '2026-10-26T04:24:00.806005+00:00'
+apm_version: 0.35.0
 dependencies:
 - repo_url: yukimemi/renri
   name: renri
   host: github.com
-  resolved_commit: 39b48eaec2f27e60a93c047f07cfdc0865b63ed3
+  resolved_commit: 5dd00b6d074a2cb711335a0ae720def2a0550c0a
   resolved_ref: main
   version: 0.1.17
   package_type: apm_package
@@ -17,7 +17,7 @@ dependencies:
   deployed_file_hashes:
     .agents/skills/renri/SKILL.md: sha256:b0ef8bb599b5dc116a39dc2d3712dd95c722974b91f109a26263052c8d1090d6
     .claude/skills/renri/SKILL.md: sha256:b0ef8bb599b5dc116a39dc2d3712dd95c722974b91f109a26263052c8d1090d6
-  content_hash: sha256:63a1128be9867bb282c8f0d9c67919f93ae73e6212eaebbfd0b418b3fec5a25a
+  content_hash: sha256:710af718f91a3e11b600cf7535d0c959773119c1cdb30a9731bdb0476cb907e0
 deployments:
 - kind: project-relative
   target: claude
