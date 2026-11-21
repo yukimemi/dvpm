@@ -64,14 +64,35 @@ jobs:
           # Don't leave KATA_APPLY_TOKEN in the local git credential helper for the "Install kata" step (downloads and runs the untrusted `kata` binary from GitHub's `latest` release) to read: kata update/apply never push, and the later create-pull-request / gh pr merge steps each bring their own explicit token.
           persist-credentials: false
 
+      # Download with the job's own GITHUB_TOKEN, not anonymously: the
+      # unauthenticated api.github.com / github.com calls share a rate
+      # limit per runner IP and fail intermittently with HTTP 403 (blog,
+      # kotonoha). Only this step sees a token, and it is the read-only
+      # job token, never KATA_APPLY_TOKEN. The extract / install step
+      # below runs the downloaded binary and gets no token at all.
+      - name: Download kata
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/kata-dl"
+          for attempt in 1 2 3; do
+            if gh release download --repo yukimemi/kata \
+                --pattern 'kata-x86_64-unknown-linux-musl.tar.gz' \
+                --dir "$RUNNER_TEMP/kata-dl" --clobber; then
+              exit 0
+            fi
+            echo "::warning::kata download failed (attempt ${attempt}/3)"
+            sleep $((attempt * 5))
+          done
+          echo "::error::could not download the latest kata release (not a push failure)"
+          exit 1
+
       - name: Install kata
         run: |
           set -euo pipefail
-          KATA_VERSION="$(curl -fsSL https://api.github.com/repos/yukimemi/kata/releases/latest | jq -r .tag_name)"
-          echo "Installing kata ${KATA_VERSION}"
-          curl -fsSL "https://github.com/yukimemi/kata/releases/download/${KATA_VERSION}/kata-x86_64-unknown-linux-musl.tar.gz" \
-            | tar xz -C /tmp
-          sudo mv /tmp/kata /usr/local/bin/kata
+          tar xz -C "$RUNNER_TEMP/kata-dl" -f "$RUNNER_TEMP/kata-dl/kata-x86_64-unknown-linux-musl.tar.gz"
+          sudo mv "$RUNNER_TEMP/kata-dl/kata" /usr/local/bin/kata
           kata --version
 
       # `kata update` refreshes cached template revs against
